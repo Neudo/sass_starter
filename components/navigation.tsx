@@ -4,6 +4,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { Logo } from "./logo";
 import { Menu, X, LogOut, User } from "lucide-react";
 import { useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   DropdownMenu,
@@ -14,30 +15,24 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 
-interface NavigationProps {
-  currentPage:
-    | "home"
-    | "pricing"
-    | "login"
-    | "signup"
-    | "forgot-password"
-    | "demo"
-    | "dashboard";
-  onNavigate: (
-    page:
-      | "home"
-      | "pricing"
-      | "login"
-      | "signup"
-      | "forgot-password"
-      | "demo"
-      | "dashboard"
-  ) => void;
-}
-
-export function Navigation({ currentPage, onNavigate }: NavigationProps) {
+export function Navigation() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const currentPage = pathname.startsWith("/pricing")
+    ? "pricing"
+    : pathname.startsWith("/demo")
+    ? "demo"
+    : pathname.startsWith("/dashboard")
+    ? "dashboard"
+    : pathname.startsWith("/auth/login")
+    ? "login"
+    : pathname.startsWith("/auth/sign-up")
+    ? "signup"
+    : pathname.startsWith("/auth/forgot-password")
+    ? "forgot-password"
+    : "home";
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const isLoggedIn = false;
 
   return (
     <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border transition-colors">
@@ -45,7 +40,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
         <div className="flex justify-between items-center h-16">
           {/* Dana Analytics Logo */}
           <button
-            onClick={() => onNavigate("home")}
+            onClick={() => router.push("/")}
             className="flex items-center hover:opacity-80 transition-opacity"
           >
             <Logo size="md" showText={true} />
@@ -54,7 +49,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             <button
-              onClick={() => onNavigate("home")}
+              onClick={() => router.push("/")}
               className={`transition-colors duration-200 ${
                 currentPage === "home"
                   ? "text-primary font-medium"
@@ -64,7 +59,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
               Home
             </button>
             <button
-              onClick={() => onNavigate("demo")}
+              onClick={() => router.push("/demo")}
               className={`transition-colors duration-200 ${
                 currentPage === "demo"
                   ? "text-primary font-medium"
@@ -75,7 +70,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
             </button>
             {isLoggedIn && (
               <button
-                onClick={() => onNavigate("dashboard")}
+                onClick={() => router.push("/dashboard")}
                 className={`transition-colors duration-200 ${
                   currentPage === "dashboard"
                     ? "text-primary font-medium"
@@ -86,7 +81,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
               </button>
             )}
             <button
-              onClick={() => onNavigate("pricing")}
+              onClick={() => router.push("/pricing")}
               className={`transition-colors duration-200 ${
                 currentPage === "pricing"
                   ? "text-primary font-medium"
@@ -135,7 +130,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => onNavigate("dashboard")}>
+                  <DropdownMenuItem onClick={() => router.push("/dashboard")}>
                     <User className="mr-2 h-4 w-4" />
                     <span>Dashboard</span>
                   </DropdownMenuItem>
@@ -161,7 +156,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
               <>
                 <Button
                   variant="ghost"
-                  onClick={() => onNavigate("login")}
+                  onClick={() => router.push("/auth/login")}
                   className={`hover:bg-primary/10 hover:text-primary transition-colors duration-200 ${
                     currentPage === "login" ? "text-primary bg-primary/10" : ""
                   }`}
@@ -169,7 +164,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
                   Sign In
                 </Button>
                 <Button
-                  onClick={() => onNavigate("signup")}
+                  onClick={() => router.push("/auth/sign-up")}
                   className={`bg-secondary hover:bg-ring text-secondary-foreground transition-colors duration-200 ${
                     currentPage === "signup" ? "bg-ring" : ""
                   }`}
@@ -204,7 +199,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-border">
               <button
                 onClick={() => {
-                  onNavigate("home");
+                  router.push("/");
                   setIsMenuOpen(false);
                 }}
                 className={`block px-3 py-2 rounded-md text-base transition-colors w-full text-left ${
@@ -217,7 +212,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
               </button>
               <button
                 onClick={() => {
-                  onNavigate("demo");
+                  router.push("/demo");
                   setIsMenuOpen(false);
                 }}
                 className={`block px-3 py-2 rounded-md text-base transition-colors w-full text-left ${
@@ -231,7 +226,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
               {isLoggedIn && (
                 <button
                   onClick={() => {
-                    onNavigate("dashboard");
+                    router.push("/dashboard");
                     setIsMenuOpen(false);
                   }}
                   className={`block px-3 py-2 rounded-md text-base transition-colors w-full text-left ${
@@ -245,7 +240,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
               )}
               <button
                 onClick={() => {
-                  onNavigate("pricing");
+                  router.push("/pricing");
                   setIsMenuOpen(false);
                 }}
                 className={`block px-3 py-2 rounded-md text-base transition-colors w-full text-left ${
@@ -295,7 +290,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
                       variant="outline"
                       className="w-full justify-start"
                       onClick={() => {
-                        onNavigate("dashboard");
+                        router.push("/dashboard");
                         setIsMenuOpen(false);
                       }}
                     >
@@ -320,7 +315,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
                       variant="ghost"
                       className="w-full hover:bg-primary/10 hover:text-primary"
                       onClick={() => {
-                        onNavigate("login");
+                        router.push("/auth/login");
                         setIsMenuOpen(false);
                       }}
                     >
@@ -329,7 +324,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
                     <Button
                       className="w-full bg-secondary hover:bg-ring text-secondary-foreground"
                       onClick={() => {
-                        onNavigate("signup");
+                        router.push("/auth/sign-up");
                         setIsMenuOpen(false);
                       }}
                     >

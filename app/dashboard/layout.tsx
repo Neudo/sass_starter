@@ -12,7 +12,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { ChevronDown, Clock, LogOut } from "lucide-react";
+import { ChevronDown, Clock } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { LogoutButton } from "@/components/logout-button";
 
 export default function ProtectedLayout({
@@ -20,6 +21,7 @@ export default function ProtectedLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
   return (
     <main className="min-h-screen flex flex-col items-center">
       <div className="flex-1 w-full flex flex-col gap-20 items-center">
@@ -30,7 +32,7 @@ export default function ProtectedLayout({
                 {/* Logo + Trial badge */}
                 <div className="flex items-center gap-6">
                   <button
-                    onClick={() => onNavigate("home")}
+                    onClick={() => router.push("/")}
                     className="flex items-center hover:opacity-80 transition-opacity"
                   >
                     <Logo size="md" showText={true} />

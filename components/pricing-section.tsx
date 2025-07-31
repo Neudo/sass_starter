@@ -12,16 +12,15 @@ import { Switch } from "./ui/switch";
 import { Check, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { motion } from "motion/react";
+import { useRouter } from "next/navigation";
 
 interface PricingSectionProps {
   showFullPage?: boolean;
-  onNavigateToPricing?: () => void;
 }
 
-export function PricingSection({
-  showFullPage = false,
-  onNavigateToPricing,
-}: PricingSectionProps) {
+export function PricingSection({ showFullPage = false }: PricingSectionProps) {
+  const router = useRouter();
+  const onNavigateToPricing = () => router.push("/pricing");
   const [isYearly, setIsYearly] = useState(false);
 
   const plans = [
