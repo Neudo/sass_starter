@@ -24,7 +24,7 @@ export default function ProtectedLayout({
     <main className="min-h-screen flex flex-col items-center">
       <div className="flex-1 w-full flex flex-col gap-20 items-center">
         <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
-          <header className="bg-background border-b border-border">
+          <header className="bg-background border-b border-border max-w-7xl mx-auto w-full">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-between h-16">
                 {/* Logo + Trial badge */}

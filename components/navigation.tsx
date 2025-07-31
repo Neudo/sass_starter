@@ -333,7 +333,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
                         setIsMenuOpen(false);
                       }}
                     >
-                      Free Trial
+                      Start free trial
                     </Button>
                   </div>
                 )}
