@@ -96,7 +96,7 @@ export function Features() {
           >
             <Badge
               variant="secondary"
-              className="mb-4 bg-secondary/10 text-secondary border-secondary/20"
+              className="mb-4 bg-primary/10 text-primary border-primary/20"
             >
               Features
             </Badge>
@@ -167,7 +167,7 @@ export function Features() {
           viewport={{ once: true }}
           className="text-center mt-16"
         >
-          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-secondary/10 rounded-2xl p-8 sm:p-12 border border-border/50 theme-transition">
+          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-2xl p-8 sm:p-12 border border-border/50 theme-transition">
             <h3 className="text-2xl sm:text-3xl font-bold mb-4 text-foreground">
               Over 30 detailed metrics
             </h3>

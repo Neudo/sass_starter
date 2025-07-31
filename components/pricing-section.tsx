@@ -29,7 +29,7 @@ export function PricingSection({
       name: "Starter",
       description: "Perfect for small websites",
       monthlyPrice: 9,
-      yearlyPrice: 86.4, // 20% discount
+      yearlyPrice: 90, // 20% discount
       features: [
         "Up to 10,000 page views/month",
         "1 website",
@@ -38,15 +38,15 @@ export function PricingSection({
         "Email support",
         "GDPR compliant",
       ],
-      cta: "Get Started",
+      cta: "Start free trial",
       popular: false,
       color: "secondary",
     },
     {
       name: "Pro",
       description: "For growing businesses",
-      monthlyPrice: 29,
-      yearlyPrice: 278.4, // 20% discount
+      monthlyPrice: 14,
+      yearlyPrice: 140, // 20% discount
       features: [
         "Up to 100,000 page views/month",
         "3 websites",
@@ -57,7 +57,7 @@ export function PricingSection({
         "Custom dashboards",
         "Custom alerts",
       ],
-      cta: "Get Started",
+      cta: "Start free trial",
       popular: true,
       color: "primary",
     },
@@ -78,7 +78,7 @@ export function PricingSection({
         "Custom training",
         "Custom integrations",
       ],
-      cta: "Contact Us",
+      cta: "Start free trial",
       popular: false,
       color: "secondary",
     },

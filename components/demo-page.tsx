@@ -135,11 +135,11 @@ export function DemoPage({ onNavigate }: DemoPageProps) {
               <div className="flex items-center gap-4">
                 <Badge
                   variant="outline"
-                  className="border-secondary/20 text-secondary bg-secondary/5"
+                  className="border-primary/20 text-primary bg-primary/5"
                 >
                   {isLive ? (
                     <>
-                      <div className="w-2 h-2 bg-secondary rounded-full mr-2 animate-pulse"></div>
+                      <div className="w-2 h-2 bg-primary rounded-full mr-2 animate-pulse"></div>
                       Live AI
                     </>
                   ) : (
@@ -523,7 +523,7 @@ export function DemoPage({ onNavigate }: DemoPageProps) {
           transition={{ duration: 0.5, delay: 0.9 }}
           className="mt-16 text-center"
         >
-          <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
+          <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
             <CardContent className="p-8">
               <div className="flex justify-center mb-4">
                 <Logo size="lg" showText={false} />
@@ -539,7 +539,7 @@ export function DemoPage({ onNavigate }: DemoPageProps) {
                 <Button
                   size="lg"
                   onClick={() => onNavigate("signup")}
-                  className="bg-secondary hover:bg-ring text-secondary-foreground"
+                  className="bg-primary hover:bg-ring text-primary-foreground"
                 >
                   Start with Dana AI
                   <ArrowUpRight className="ml-2 w-4 h-4" />

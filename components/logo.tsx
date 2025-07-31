@@ -24,12 +24,12 @@ export function Logo({
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <motion.div
-        className={`${sizes.container} relative rounded-xl bg-gradient-to-br from-primary via-ring to-secondary shadow-lg overflow-hidden`}
+        className={`${sizes.container} relative rounded-xl bg-gradient-to-br from-primary via-primary/70 to-primary/90 shadow-lg overflow-hidden`}
         whileHover={{ scale: 1.05 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
       >
         {/* Fond avec effet de brillance */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/90 via-ring/80 to-secondary/90" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/90 via-primary/70 to-primary/50" />
 
         {/* Effet de brillance animé */}
         <motion.div

@@ -54,7 +54,7 @@ export function HomePage({
       <Features />
 
       {/* Testimonials */}
-      <section className="py-24 bg-muted/10 theme-transition">
+      {/* <section className="py-24 bg-muted/10 theme-transition">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <motion.div
@@ -65,7 +65,7 @@ export function HomePage({
             >
               <Badge
                 variant="secondary"
-                className="mb-4 bg-secondary/10 text-secondary border-secondary/20"
+                className="mb-4 bg-primary/10 text-primary border-primary/20"
               >
                 Success Stories
               </Badge>
@@ -123,12 +123,12 @@ export function HomePage({
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       <PricingSection onNavigateToPricing={onNavigateToPricing} />
 
       {/* Final CTA */}
-      <section className="py-24 bg-gradient-to-r from-primary/5 to-secondary/5 theme-transition">
+      <section className="py-24 bg-gradient-to-r from-primary/5 to-primary/10 theme-transition">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

@@ -16,12 +16,12 @@
   --popover-foreground: #1f2937;
 
   /* Brand / Logo - Bleu nuit */
-  --primary: #1f2937;
+  --primary: #3b82f6;
   --primary-foreground: #ffffff;
 
-  /* Accent - Turquoise clair */
-  --secondary: #2dd4bf;
-  --secondary-foreground: #1f2937;
+  /* Accent - Using primary with opacity */
+  --secondary: #3b82f6;
+  --secondary-foreground: #ffffff;
 
   /* Couleurs neutres */
   --muted: #f3f4f6;

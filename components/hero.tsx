@@ -9,7 +9,6 @@ import {
   Play,
   Settings,
   TrendingUp,
-  Users,
   Zap,
 } from "lucide-react";
 
@@ -75,7 +74,7 @@ export default function Hero() {
             <Button
               variant="outline"
               size="lg"
-              className="text-lg px-8 py-6 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground transition-colors duration-200"
+              className="text-lg px-8 py-6 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors duration-200"
             >
               <Play className="mr-2 w-5 h-5" />
               View live demo
@@ -137,8 +136,8 @@ export default function Hero() {
                           +23% IA boost
                         </div>
                       </div>
-                      <div className="bg-card p-4 rounded-lg border border-secondary/10 shadow-sm">
-                        <div className="text-2xl font-bold text-secondary">
+                      <div className="bg-card p-4 rounded-lg border border-primary/10 shadow-sm">
+                        <div className="text-2xl font-bold text-primary">
                           128,456
                         </div>
                         <div className="text-sm text-muted-foreground">
@@ -164,13 +163,13 @@ export default function Hero() {
                       <div className="text-sm text-muted-foreground mb-2">
                         Analytics IA - Tendances prédictives
                       </div>
-                      <div className="h-20 bg-gradient-to-r from-primary/20 via-ring/30 to-secondary/20 rounded relative">
+                      <div className="h-20 bg-gradient-to-r from-primary/20 via-primary/30 to-primary/10 rounded relative">
                         {/* Ligne de tendance simulée */}
                         <div className="absolute inset-0 flex items-end justify-around p-2">
                           {[40, 55, 48, 72, 65, 85, 78, 95].map((height, i) => (
                             <div
                               key={i}
-                              className="bg-secondary rounded-sm w-2 transition-all duration-300 hover:bg-ring"
+                              className="bg-primary rounded-sm w-2 transition-all duration-300 hover:bg-ring"
                               style={{ height: `${height}%` }}
                             />
                           ))}
@@ -190,7 +189,7 @@ export default function Hero() {
 
             {/* Éléments décoratifs avec les nouvelles couleurs */}
             <div className="absolute -top-4 -left-4 w-24 h-24 bg-primary/10 rounded-full blur-xl"></div>
-            <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-secondary/10 rounded-full blur-xl"></div>
+            <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-primary/10 rounded-full blur-xl"></div>
             <div className="absolute top-1/2 -right-8 w-16 h-16 bg-ring/10 rounded-full blur-lg"></div>
           </div>
         </motion.div>
