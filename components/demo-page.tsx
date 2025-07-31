@@ -1,16 +1,22 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/logo";
-
-import { Navigation } from "@/components/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Logo } from "./logo";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import {
   TrendingUp,
+  TrendingDown,
   Users,
+  Eye,
   Clock,
+  Globe,
+  Smartphone,
+  Monitor,
+  Tablet,
   ArrowUpRight,
+  ArrowDownRight,
   Play,
   Pause,
   Brain,
@@ -18,8 +24,8 @@ import {
   Target,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useRouter } from "next/navigation";
 import {
+  LineChart,
   Line,
   AreaChart,
   Area,
@@ -28,10 +34,20 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 
-export default function Page() {
-  const router = useRouter();
+interface DemoPageProps {
+  onNavigate: (
+    page: "home" | "pricing" | "login" | "signup" | "forgot-password" | "demo"
+  ) => void;
+}
+
+export function DemoPage({ onNavigate }: DemoPageProps) {
   const [isLive, setIsLive] = useState(true);
   const [timeRange, setTimeRange] = useState("30d");
   const [visitors, setVisitors] = useState(47892);
@@ -69,6 +85,11 @@ export default function Page() {
     { date: "14 Jan", visitors: 9890, pageviews: 21200, prediction: 9500 },
   ];
 
+  const deviceData = [
+    { name: "Desktop", value: 45, color: "#1f2937" },
+    { name: "Mobile", value: 38, color: "#2dd4bf" },
+    { name: "Tablet", value: 17, color: "#14b8a6" },
+  ];
 
   const aiInsightsData = [
     {
@@ -95,7 +116,6 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-muted/20">
-      <Navigation />
       {/* Demo header with new branding */}
       <div className="bg-background border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -154,7 +174,7 @@ export default function Page() {
                 {isLive ? "Pause AI" : "Start AI"}
               </Button>
               <Button
-                onClick={() => router.push("/auth/sign-up")}
+                onClick={() => onNavigate("signup")}
                 className="bg-secondary hover:bg-ring text-secondary-foreground"
               >
                 Join Dana AI
@@ -518,7 +538,7 @@ export default function Page() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
                   size="lg"
-                  onClick={() => router.push("/auth/sign-up")}
+                  onClick={() => onNavigate("signup")}
                   className="bg-primary hover:bg-ring text-primary-foreground"
                 >
                   Start with Dana AI
@@ -527,7 +547,7 @@ export default function Page() {
                 <Button
                   variant="outline"
                   size="lg"
-                  onClick={() => router.push("/")}
+                  onClick={() => onNavigate("home")}
                   className="border-primary text-primary hover:bg-primary/5"
                 >
                   Back to home

@@ -1,10 +1,435 @@
-import { SignUpForm } from "@/components/sign-up-form";
+"use client";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { motion } from "motion/react";
+import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  User,
+  ArrowRight,
+  AlertCircle,
+  Check,
+} from "lucide-react";
+
+interface SignupFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  acceptTerms: boolean;
+  acceptMarketing: boolean;
+}
 
 export default function Page() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [signupError, setSignupError] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<SignupFormData>();
+
+  const password = watch("password");
+
+  const getPasswordStrength = (password: string) => {
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[a-z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    return strength;
+  };
+
+  const passwordStrength = password ? getPasswordStrength(password) : 0;
+
+  const onSubmit = async (data: SignupFormData) => {
+    setIsLoading(true);
+    setSignupError(null);
+
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      console.log("Signup successful!", data);
+      // Redirect to login page after successful signup
+      window.location.href = "/auth/login";
+    } catch (error) {
+      setSignupError("An error occurred during signup");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        <SignUpForm />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background p-4">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+
+      <div className="w-full max-w-md">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* Logo and title with new Dana brand */}
+          <div className="text-center mb-8">
+            <div className="flex justify-center mb-4">
+              <Logo size="xl" showText={false} />
+            </div>
+            <h1 className="text-2xl font-bold mb-2 text-primary">
+              Create your Dana account
+            </h1>
+            <p className="text-muted-foreground">
+              Join Dana Analytics and start analyzing your data with AI
+            </p>
+          </div>
+
+          <Card className="border-0 shadow-xl bg-card">
+            <CardHeader className="space-y-1 pb-4">
+              <CardTitle className="text-xl text-center text-primary">
+                Sign Up
+              </CardTitle>
+              <CardDescription className="text-center">
+                Create your account in a few simple steps
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="space-y-4">
+              {signupError && (
+                <Alert variant="destructive" className="border-destructive/20">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{signupError}</AlertDescription>
+                </Alert>
+              )}
+
+              <Badge
+                variant="outline"
+                className="w-full justify-center bg-ring py-2 border-success text-success"
+              >
+                30 days free on all plans
+              </Badge>
+
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName" className="text-foreground">
+                      First Name
+                    </Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="firstName"
+                        placeholder="John"
+                        className="pl-10 border-border focus:border-primary focus:ring-primary/20"
+                        {...register("firstName", {
+                          required: "First name is required",
+                          minLength: {
+                            value: 2,
+                            message: "First name must be at least 2 characters",
+                          },
+                        })}
+                      />
+                    </div>
+                    {errors.firstName && (
+                      <p className="text-sm text-destructive">
+                        {errors.firstName.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName" className="text-foreground">
+                      Last Name
+                    </Label>
+                    <Input
+                      id="lastName"
+                      placeholder="Doe"
+                      className="border-border focus:border-primary focus:ring-primary/20"
+                      {...register("lastName", {
+                        required: "Last name is required",
+                        minLength: {
+                          value: 2,
+                          message: "Last name must be at least 2 characters",
+                        },
+                      })}
+                    />
+                    {errors.lastName && (
+                      <p className="text-sm text-destructive">
+                        {errors.lastName.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-foreground">
+                    Email
+                  </Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="john.doe@example.com"
+                      className="pl-10 border-border focus:border-primary focus:ring-primary/20"
+                      {...register("email", {
+                        required: "Email is required",
+                        pattern: {
+                          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                          message: "Invalid email address",
+                        },
+                      })}
+                    />
+                  </div>
+                  {errors.email && (
+                    <p className="text-sm text-destructive">
+                      {errors.email.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password" className="text-foreground">
+                      Password
+                    </Label>
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      className="pl-10 pr-10 border-border focus:border-primary focus:ring-primary/20"
+                      {...register("password", {
+                        required: "Password is required",
+                        minLength: {
+                          value: 8,
+                          message: "Password must be at least 8 characters",
+                        },
+                        validate: (value) =>
+                          getPasswordStrength(value) >= 3 ||
+                          "Password is too weak",
+                      })}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <p className="text-sm text-destructive">
+                      {errors.password.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-foreground">
+                    Confirm Password
+                  </Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      className="pl-10 pr-10 border-border focus:border-primary focus:ring-primary/20"
+                      {...register("confirmPassword", {
+                        required: "Please confirm your password",
+                        validate: (value) =>
+                          value === password || "Passwords do not match",
+                      })}
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && (
+                    <p className="text-sm text-destructive">
+                      {errors.confirmPassword.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="acceptTerms"
+                    {...register("acceptTerms", {
+                      required: "You must accept the terms and conditions",
+                    })}
+                  />
+                  <Label
+                    htmlFor="acceptTerms"
+                    className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    I accept the{" "}
+                    <Button
+                      variant="link"
+                      className="h-auto p-0 text-primary hover:text-ring"
+                    >
+                      terms and conditions
+                    </Button>
+                  </Label>
+                </div>
+                {errors.acceptTerms && (
+                  <p className="text-sm text-destructive">
+                    {errors.acceptTerms.message}
+                  </p>
+                )}
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="acceptMarketing"
+                    {...register("acceptMarketing")}
+                  />
+                  <Label
+                    htmlFor="acceptMarketing"
+                    className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    I want to receive updates about products and services
+                  </Label>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full bg-primary hover:bg-primary/90"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
+                      Creating account...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      Create my Dana account
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
+                  )}
+                </Button>
+              </form>
+
+              {/* Separator */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">
+                    Or sign up with
+                  </span>
+                </div>
+              </div>
+
+              {/* Social login */}
+              <div className="grid grid-cols-2 gap-4">
+                <Button
+                  variant="outline"
+                  className="w-full border-border hover:bg-primary/5 hover:border-primary/20"
+                  type="button"
+                >
+                  <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
+                    <path
+                      fill="currentColor"
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    />
+                    <path
+                      fill="currentColor"
+                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    />
+                    <path
+                      fill="currentColor"
+                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                    />
+                    <path
+                      fill="currentColor"
+                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    />
+                  </svg>
+                  Google
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full border-border hover:bg-primary/5 hover:border-primary/20"
+                  type="button"
+                >
+                  <svg
+                    className="w-4 h-4 mr-2"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                  </svg>
+                  Facebook
+                </Button>
+              </div>
+            </CardContent>
+
+            <CardFooter className="flex flex-col space-y-2">
+              <div className="text-sm text-center text-muted-foreground">
+                Already have an account?{" "}
+                <Button
+                  variant="link"
+                  className="px-0 text-primary hover:text-ring"
+                  onClick={() => (window.location.href = "/auth/login")}
+                >
+                  Sign in
+                </Button>
+              </div>
+            </CardFooter>
+          </Card>
+
+          <div className="text-center mt-6">
+            <Button
+              variant="link"
+              className="text-muted-foreground hover:text-primary"
+              onClick={() => (window.location.href = "/")}
+            >
+              ← Back to home
+            </Button>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

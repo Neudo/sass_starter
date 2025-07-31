@@ -3,18 +3,54 @@ import Hero from "./hero";
 import { Features } from "@/components/features";
 import { PricingSection } from "./pricing-section";
 import { Button } from "./ui/button";
+import { Card, CardContent } from "./ui/card";
+import { Badge } from "./ui/badge";
 import { Logo } from "./logo";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Star, Quote } from "lucide-react";
 import { motion } from "motion/react";
-import { useRouter } from "next/navigation";
 
-export function HomePage() {
-  const router = useRouter();
-  const onNavigateToDemo = () => router.push("/demo");
+interface HomePageProps {
+  onNavigateToPricing: () => void;
+  onNavigateToDemo: () => void;
+}
+
+export function HomePage({
+  onNavigateToPricing,
+  onNavigateToDemo,
+}: HomePageProps) {
+  const testimonials = [
+    {
+      name: "Sarah Chen",
+      role: "CEO, TechVision",
+      avatar:
+        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
+      content:
+        "Dana Analytics revolutionized our customer understanding. The integrated AI gives us insights impossible to obtain elsewhere.",
+      rating: 5,
+    },
+    {
+      name: "Marc Dubois",
+      role: "CMO, GrowthLab",
+      avatar:
+        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+      content:
+        "Transition from GA4 to Dana in 3 minutes. AI predictions boosted our ROI by 340%. Incredible!",
+      rating: 5,
+    },
+    {
+      name: "Emma Rodriguez",
+      role: "Data Scientist, InnovateCorp",
+      avatar:
+        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
+      content:
+        "Dana's privacy + AI combination is unique. My teams love the depth of predictive analytics.",
+      rating: 5,
+    },
+  ];
 
   return (
     <div className="min-h-screen theme-transition">
-      <Hero />
+      <Hero onNavigateToDemo={onNavigateToDemo} />
       <Features />
 
       {/* Testimonials */}
@@ -89,7 +125,7 @@ export function HomePage() {
         </div>
       </section> */}
 
-      <PricingSection />
+      <PricingSection onNavigateToPricing={onNavigateToPricing} />
 
       {/* Final CTA */}
       <section className="py-24 bg-gradient-to-r from-primary/5 to-primary/10 theme-transition">

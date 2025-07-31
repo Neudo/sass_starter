@@ -1,11 +1,11 @@
 "use client";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/logo";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { Button } from "./ui/button";
+import { Logo } from "./logo";
+import { ThemeToggle } from "./theme-toggle";
 import { motion } from "motion/react";
-import { LoginForm } from "@/components/login-form";
+import { LoginForm } from "./login-form";
 
 interface LoginPageProps {
   onNavigate: (
@@ -25,7 +25,9 @@ interface LoginFormData {
   password: string;
 }
 
-export default function LoginPage({ onNavigate }: LoginPageProps) {
+export function LoginPage({ onNavigate }: LoginPageProps) {
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
   const {
@@ -35,6 +37,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
   } = useForm<LoginFormData>();
 
   const onSubmit = async (data: LoginFormData) => {
+    setIsLoading(true);
     setLoginError(null);
 
     try {
