@@ -1,51 +1,123 @@
-import { DeployButton } from "@/components/deploy-button";
-import { EnvVarWarning } from "@/components/env-var-warning";
-import { AuthButton } from "@/components/auth-button";
-import Hero from "@/components/hero";
-import { ThemeSwitcher } from "@/components/theme-switcher";
-import { ConnectSupabaseSteps } from "@/components/tutorial/connect-supabase-steps";
-import { SignUpUserSteps } from "@/components/tutorial/sign-up-user-steps";
-import { hasEnvVars } from "@/lib/utils";
-import Link from "next/link";
+"use client";
+import { useState, useEffect } from "react";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Navigation } from "@/components/navigation";
+import { HomePage } from "@/components/home-page";
+import { PricingPage } from "@/components/pricing-page";
+import { LoginPage } from "@/components/login-page";
+import { SignupPage } from "@/components/signup-page";
+import { ForgotPasswordPage } from "@/components/forgot-password-page";
+import { DemoPage } from "@/components/demo-page";
+import { Dashboard } from "@/components/dashboard";
+import { Logo } from "@/components/logo";
 
-export default function Home() {
-  return (
-    <main className="min-h-screen flex flex-col items-center">
-      <div className="flex-1 w-full flex flex-col gap-20 items-center">
-        <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
-          <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
-            <div className="flex gap-5 items-center font-semibold">
-              <Link href={"/"}>Next.js Supabase Starter</Link>
-              <div className="flex items-center gap-2">
-                <DeployButton />
-              </div>
-            </div>
-            {!hasEnvVars ? <EnvVarWarning /> : <AuthButton />}
-          </div>
-        </nav>
-        <div className="flex-1 flex flex-col gap-20 max-w-5xl p-5">
-          <Hero />
-          <main className="flex-1 flex flex-col gap-6 px-4">
-            <h2 className="font-medium text-xl mb-4">Next steps</h2>
-            {hasEnvVars ? <SignUpUserSteps /> : <ConnectSupabaseSteps />}
-          </main>
+export default function App() {
+  const [currentPage, setCurrentPage] = useState<
+    | "home"
+    | "pricing"
+    | "login"
+    | "signup"
+    | "forgot-password"
+    | "demo"
+    | "dashboard"
+  >("home");
+  const [isThemeReady, setIsThemeReady] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const handleNavigate = (
+    page:
+      | "home"
+      | "pricing"
+      | "login"
+      | "signup"
+      | "forgot-password"
+      | "demo"
+      | "dashboard"
+  ) => {
+    setCurrentPage(page);
+  };
+
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+    setCurrentPage("dashboard");
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setCurrentPage("home");
+  };
+
+  // Ensure theme is ready before rendering the app
+  useEffect(() => {
+    // Small delay to let the theme script execute
+    const timer = setTimeout(() => {
+      setIsThemeReady(true);
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Simulate automatic login for development
+  useEffect(() => {
+    // Auto-login for demo
+    const timer = setTimeout(() => {
+      setIsLoggedIn(true);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Loading screen with the new Dana Analytics logo
+  if (!isThemeReady) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <div className="animate-pulse">
+          <Logo size="lg" showText={true} />
         </div>
-
-        <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
-          <p>
-            Powered by{" "}
-            <a
-              href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
-              target="_blank"
-              className="font-bold hover:underline"
-              rel="noreferrer"
-            >
-              Supabase
-            </a>
-          </p>
-          <ThemeSwitcher />
-        </footer>
       </div>
-    </main>
+    );
+  }
+
+  return (
+    <ThemeProvider>
+      <div className="min-h-screen bg-background text-foreground theme-transition">
+        {/* Navigation hidden on auth pages but visible on dashboard */}
+        {!["login", "signup", "forgot-password"].includes(currentPage) && (
+          <Navigation
+            currentPage={currentPage}
+            onNavigate={handleNavigate}
+            isLoggedIn={isLoggedIn}
+            onLogout={handleLogout}
+          />
+        )}
+
+        {currentPage === "home" && (
+          <HomePage
+            onNavigateToPricing={() => handleNavigate("pricing")}
+            onNavigateToDemo={() => handleNavigate("demo")}
+          />
+        )}
+
+        {currentPage === "pricing" && <PricingPage />}
+
+        {currentPage === "demo" && <DemoPage onNavigate={handleNavigate} />}
+
+        {currentPage === "dashboard" && (
+          <Dashboard onNavigate={handleNavigate} onLogout={handleLogout} />
+        )}
+
+        {currentPage === "login" && (
+          <LoginPage onNavigate={handleNavigate} onLogin={handleLogin} />
+        )}
+
+        {currentPage === "signup" && (
+          <SignupPage onNavigate={handleNavigate} onLogin={handleLogin} />
+        )}
+
+        {currentPage === "forgot-password" && (
+          <ForgotPasswordPage onNavigate={handleNavigate} />
+        )}
+      </div>
+    </ThemeProvider>
   );
 }

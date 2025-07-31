@@ -1,8 +1,17 @@
 "use client";
 import { motion } from "framer-motion";
 import { Button } from "./ui/button";
-// import { Badge } from "./ui/badge";
-import { ArrowRight, Play, TrendingUp, Users, Zap } from "lucide-react";
+import { Badge } from "./ui/badge";
+import {
+  ArrowRight,
+  Calendar,
+  CreditCard,
+  Play,
+  Settings,
+  TrendingUp,
+  Users,
+  Zap,
+} from "lucide-react";
 
 export default function Hero() {
   return (
@@ -10,7 +19,7 @@ export default function Hero() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 sm:pt-24 sm:pb-20 lg:pt-32 lg:pb-28">
         <div className="text-center">
           {/* Badge announcement avec les nouvelles couleurs */}
-          {/* <motion.div
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -20,9 +29,9 @@ export default function Hero() {
               className="mb-8 px-4 py-2 bg-secondary/10 text-secondary border-secondary/20"
             >
               <Zap className="w-4 h-4 mr-2" />
-              Dana Analytics - Nouvelle génération
+              Dana Analytics - simple to use
             </Badge>
-          </motion.div> */}
+          </motion.div>
 
           {/* Main headline avec gradient bleu-turquoise */}
           <motion.h1
@@ -31,13 +40,11 @@ export default function Hero() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight mb-6"
           >
-            Analytics
+            The{" "}
             <span className="bg-gradient-to-r from-primary via-ring to-secondary bg-clip-text text-transparent">
-              {" "}
-              Intelligents
+              lightweight,{" "}
             </span>
-            <br />
-            pour votre croissance
+            privacy-first alternative to Google Analytics
           </motion.h1>
 
           {/* Subtitle */}
@@ -47,9 +54,8 @@ export default function Hero() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto mb-10"
           >
-            Transformez vos données en décisions stratégiques avec Dana
-            Analytics. Intelligence artificielle, respect de la vie privée,
-            insights révolutionnaires.
+            Drop the complexity. Dana Analytics, simple to use and GRPD
+            compliant. No cookies needed.
           </motion.p>
 
           {/* CTA Buttons avec les nouvelles couleurs */}
@@ -63,7 +69,7 @@ export default function Hero() {
               size="lg"
               className="text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
             >
-              Démarrer avec Dana
+              Get started
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
             <Button
@@ -72,7 +78,7 @@ export default function Hero() {
               className="text-lg px-8 py-6 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground transition-colors duration-200"
             >
               <Play className="mr-2 w-5 h-5" />
-              Voir la démo live
+              View live demo
             </Button>
           </motion.div>
 
@@ -84,16 +90,16 @@ export default function Hero() {
             className="flex flex-col sm:flex-row items-center justify-center gap-8 text-sm text-muted-foreground"
           >
             <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-secondary" />
-              <span>+15,000 entreprises conquises</span>
+              <Settings className="w-4 h-4 text-secondary" />
+              <span>Quick setup</span>
             </div>
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-ring" />
-              <span>+340% croissance moyenne</span>
+              <Calendar className="w-4 h-4 text-ring" />
+              <span>30 days free</span>
             </div>
             <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-secondary" />
-              <span>IA intégrée & RGPD</span>
+              <CreditCard className="w-4 h-4 text-secondary" />
+              <span>No credit card needed</span>
             </div>
           </motion.div>
         </div>
