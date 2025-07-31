@@ -18,6 +18,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "./ui/alert";
 import { motion } from "motion/react";
+import { LoginForm } from "./login-form";
 
 interface LoginPageProps {
   onNavigate: (
@@ -30,7 +31,6 @@ interface LoginPageProps {
       | "demo"
       | "dashboard"
   ) => void;
-  onLogin: () => void;
 }
 
 interface LoginFormData {
@@ -38,7 +38,7 @@ interface LoginFormData {
   password: string;
 }
 
-export function LoginPage({ onNavigate, onLogin }: LoginPageProps) {
+export function LoginPage({ onNavigate }: LoginPageProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -75,6 +75,7 @@ export function LoginPage({ onNavigate, onLogin }: LoginPageProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background p-4">
       {/* Theme toggle in absolute position */}
+      <LoginForm />
       <div className="absolute top-4 right-4">
         <ThemeToggle />
       </div>

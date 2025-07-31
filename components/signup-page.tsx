@@ -40,7 +40,6 @@ interface SignupPageProps {
       | "demo"
       | "dashboard"
   ) => void;
-  onLogin: () => void;
 }
 
 interface SignupFormData {
@@ -53,7 +52,7 @@ interface SignupFormData {
   acceptMarketing: boolean;
 }
 
-export function SignupPage({ onNavigate, onLogin }: SignupPageProps) {
+export function SignupPage({ onNavigate }: SignupPageProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

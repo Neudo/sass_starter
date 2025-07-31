@@ -22,7 +22,6 @@ export default function App() {
     | "dashboard"
   >("home");
   const [isThemeReady, setIsThemeReady] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const handleNavigate = (
     page:
@@ -37,32 +36,12 @@ export default function App() {
     setCurrentPage(page);
   };
 
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-    setCurrentPage("dashboard");
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setCurrentPage("home");
-  };
-
   // Ensure theme is ready before rendering the app
   useEffect(() => {
     // Small delay to let the theme script execute
     const timer = setTimeout(() => {
       setIsThemeReady(true);
     }, 50);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Simulate automatic login for development
-  useEffect(() => {
-    // Auto-login for demo
-    const timer = setTimeout(() => {
-      setIsLoggedIn(true);
-    }, 1000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -83,12 +62,7 @@ export default function App() {
       <div className="min-h-screen bg-background text-foreground theme-transition">
         {/* Navigation hidden on auth pages but visible on dashboard */}
         {!["login", "signup", "forgot-password"].includes(currentPage) && (
-          <Navigation
-            currentPage={currentPage}
-            onNavigate={handleNavigate}
-            isLoggedIn={isLoggedIn}
-            onLogout={handleLogout}
-          />
+          <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
         )}
 
         {currentPage === "home" && (
@@ -103,16 +77,12 @@ export default function App() {
         {currentPage === "demo" && <DemoPage onNavigate={handleNavigate} />}
 
         {currentPage === "dashboard" && (
-          <Dashboard onNavigate={handleNavigate} onLogout={handleLogout} />
+          <Dashboard onNavigate={handleNavigate} />
         )}
 
-        {currentPage === "login" && (
-          <LoginPage onNavigate={handleNavigate} onLogin={handleLogin} />
-        )}
+        {currentPage === "login" && <LoginPage onNavigate={handleNavigate} />}
 
-        {currentPage === "signup" && (
-          <SignupPage onNavigate={handleNavigate} onLogin={handleLogin} />
-        )}
+        {currentPage === "signup" && <SignupPage onNavigate={handleNavigate} />}
 
         {currentPage === "forgot-password" && (
           <ForgotPasswordPage onNavigate={handleNavigate} />

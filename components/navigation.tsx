@@ -33,17 +33,11 @@ interface NavigationProps {
       | "demo"
       | "dashboard"
   ) => void;
-  isLoggedIn: boolean;
-  onLogout: () => void;
 }
 
-export function Navigation({
-  currentPage,
-  onNavigate,
-  isLoggedIn,
-  onLogout,
-}: NavigationProps) {
+export function Navigation({ currentPage, onNavigate }: NavigationProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   return (
     <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border transition-colors">
@@ -155,7 +149,7 @@ export function Navigation({
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={onLogout}
+                    // onClick={onLogout}
                     className="text-destructive"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
@@ -312,7 +306,7 @@ export function Navigation({
                       variant="outline"
                       className="w-full justify-start text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
                       onClick={() => {
-                        onLogout();
+                        // onLogout();
                         setIsMenuOpen(false);
                       }}
                     >
