@@ -3,9 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Logo } from "./logo";
-import { ThemeToggle } from "./theme-toggle";
+
 import {
   Calendar,
   ChevronDown,
@@ -18,12 +16,9 @@ import {
   Globe,
   Settings,
   Filter,
-  LogOut,
 } from "lucide-react";
 import { motion } from "motion/react";
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
   XAxis,
@@ -32,18 +27,10 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
 
 export function Dashboard() {
   const [onlineVisitors, setOnlineVisitors] = useState(47);
-  const [dateRange, setDateRange] = useState("7 days");
+  const dateRange = "7 days";
 
   // Simulate online visitors
   useEffect(() => {

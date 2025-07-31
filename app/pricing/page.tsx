@@ -1,7 +1,8 @@
-import { PricingSection } from "./pricing-section";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+"use client";
+import { PricingSection } from "@/components/pricing-section";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Check, X, ArrowRight, HelpCircle } from "lucide-react";
 import { motion } from "motion/react";
 import {
@@ -9,9 +10,10 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "./ui/accordion";
+} from "@/components/ui/accordion";
+import { Navigation } from "@/components/navigation";
 
-export function PricingPage() {
+export default function Page() {
   const comparisonFeatures = [
     {
       category: "Basic Analytics",
@@ -144,7 +146,9 @@ export function PricingPage() {
   ];
 
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen">
+      <Navigation />
+      <div className="pt-16">
       {/* Hero Section */}
       <section className="py-24 bg-gradient-to-b from-background to-muted/20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -198,7 +202,7 @@ export function PricingPage() {
                 Detailed plan comparison
               </h2>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-                Discover in detail what's included in each plan to make the best
+                Discover in detail what&apos;s included in each plan to make the best
                 choice.
               </p>
             </motion.div>
@@ -236,7 +240,7 @@ export function PricingPage() {
               </CardHeader>
 
               <CardContent className="space-y-8">
-                {comparisonFeatures.map((category, categoryIndex) => (
+                {comparisonFeatures.map((category) => (
                   <div key={category.category}>
                     <h3 className="font-semibold text-lg mb-4 text-primary">
                       {category.category}
@@ -356,6 +360,7 @@ export function PricingPage() {
           </motion.div>
         </div>
       </section>
+      </div>
     </div>
   );
 }
