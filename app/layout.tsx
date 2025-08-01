@@ -26,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html suppressHydrationWarning lang="en">
       <body className={`${geistSans.className} antialiased`}>
         <ThemeProvider
           attribute="class"
@@ -36,7 +36,11 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
-        <Script src="/script.js" strategy="afterInteractive" />
+        <Script
+          src="/script.js"
+          strategy="afterInteractive"
+          type="text/javascript"
+        />
       </body>
     </html>
   );
