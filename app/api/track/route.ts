@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { Reader } from "@maxmind/geoip2-node";
+import path from "path";
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,7 +24,10 @@ export async function POST(req: NextRequest) {
     if (ip === "::1" || ip === null) {
       ip = "83.114.15.244";
     }
-    const reader = await Reader.open("@/data/GeoLite2-City.mmdb");
+    // Use absolute path with process.cwd() for Vercel compatibility
+    const dbPath = path.join(process.cwd(), "data", "GeoLite2-City.mmdb");
+    console.log("DB Path:", dbPath);
+    const reader = await Reader.open(dbPath);
     const response = reader.city(ip);
 
     // Extract location data
