@@ -1,11 +1,9 @@
 (function () {
-  const siteId = "a0f448fd-ef6a-428e-a8fe-7125e1671512"; // <--- remplacer avec l'ID réel du site
-
   function sendHeartbeat() {
-    let sessionId = localStorage.getItem("sa_session_id");
+    let sessionId = localStorage.getItem("user_session_id");
     if (!sessionId) {
       sessionId = crypto.randomUUID();
-      localStorage.setItem("sa_session_id", sessionId);
+      localStorage.setItem("user_session_id", sessionId);
     }
 
     fetch("/api/track", {
@@ -13,7 +11,6 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         sessionId,
-        siteId,
         page: location.pathname,
       }),
       keepalive: true,
