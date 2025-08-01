@@ -1,12 +1,11 @@
 // app/api/track/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import geoip from "geoip-lite";
+import { Reader } from "@maxmind/geoip2-node";
 
 export async function POST(req: NextRequest) {
   try {
     const { sessionId, page } = await req.json();
-    console.log("Start logging");
 
     if (!sessionId) {
       return NextResponse.json(
@@ -20,18 +19,17 @@ export async function POST(req: NextRequest) {
     const domain = req.headers.get("host");
     // Get client IP from headers
     const forwarded = req.headers.get("x-forwarded-for");
-    const ip = forwarded ? forwarded.split(",")[0].trim() : null;
-    // console.log(req.headers);
-
-    // Get geolocation data
-    const geo = ip ? geoip.lookup("83.114.15.244") : null;
-    console.log("IP:", ip);
-    console.log("Geo:", geo);
+    let ip = forwarded ? forwarded.split(",")[0].trim() : null;
+    if (ip === "::1" || ip === null) {
+      ip = "83.114.15.244";
+    }
+    const reader = await Reader.open("./data/GeoLite2-City.mmdb");
+    const response = reader.city(ip);
 
     // Extract location data
-    const country = geo?.country || null;
-    const region = geo?.region || null;
-    const city = geo?.city || null;
+    const country = response?.country?.names.fr || null;
+    const region = response?.subdivisions?.[0].names.fr || null;
+    const city = response?.city?.names.fr || null;
 
     const { data: site } = await supabase
       .from("sites")
