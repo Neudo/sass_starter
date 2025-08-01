@@ -36,11 +36,7 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
-        <Script
-          src="/script.js"
-          strategy="afterInteractive"
-          type="text/javascript"
-        />
+        <Script src="/script.js" type="text/javascript" />
       </body>
     </html>
   );
