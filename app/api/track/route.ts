@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     // Get client IP from headers
     const forwarded = req.headers.get("x-forwarded-for");
     const ip = forwarded ? forwarded.split(",")[0].trim() : null;
-    console.log(req.headers);
+    // console.log(req.headers);
 
     // Get geolocation data
     const geo = ip ? geoip.lookup("83.114.15.244") : null;
