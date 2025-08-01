@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
-import { Dashboard } from "@/components/dashboard";
+import DashboardStart from "@/components/dashboard-start";
 
 export default async function ProtectedPage() {
   const supabase = await createClient();
@@ -13,7 +13,7 @@ export default async function ProtectedPage() {
 
   return (
     <div className="flex-1 w-full flex flex-col gap-12">
-      <Dashboard />
+      <DashboardStart />
     </div>
   );
 }

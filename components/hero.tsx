@@ -111,7 +111,7 @@ export default function Hero() {
           className="mt-16 sm:mt-20"
         >
           <div className="relative max-w-5xl mx-auto">
-            <div className="relative bg-card rounded-xl border border-border shadow-2xl overflow-hidden cursor-pointer hover:shadow-3xl transition-all duration-300 hover:scale-[1.02]">
+            <div className="relative bg-card rounded-xl border border-border shadow-2xl overflow-hidden">
               <div className="aspect-[16/10] bg-gradient-to-br from-muted/50 to-muted/20">
                 <div className="p-6">
                   <div className="flex items-center gap-2 mb-4">
@@ -177,12 +177,6 @@ export default function Hero() {
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-              {/* Overlay pour indiquer que c'est cliquable */}
-              <div className="absolute inset-0 bg-primary/5 opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                <div className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium shadow-lg">
-                  Découvrir Dana Analytics en action
                 </div>
               </div>
             </div>

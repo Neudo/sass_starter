@@ -63,8 +63,8 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
     {
       name: "Enterprise",
       description: "For large organizations",
-      monthlyPrice: 99,
-      yearlyPrice: 950.4, // 20% discount
+      monthlyPrice: 24,
+      yearlyPrice: 240, // 20% discount
       features: [
         "Unlimited page views",
         "Unlimited websites",
@@ -110,7 +110,7 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
             {/* Annual/Monthly toggle */}
             <div className="flex items-center justify-center gap-4 mb-2">
               <span
-                className={`text-sm ${
+                className={`text-xl ${
                   !isYearly
                     ? "text-foreground font-medium"
                     : "text-muted-foreground"
@@ -120,18 +120,18 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
               </span>
               <Switch checked={isYearly} onCheckedChange={setIsYearly} />
               <span
-                className={`text-sm ${
+                className={`text-xl ${
                   isYearly
                     ? "text-foreground font-medium"
                     : "text-muted-foreground"
                 }`}
               >
-                Annual
+                Annual{" "}
+                <span className="text-muted-foreground text-md italic">
+                  (20% discount)
+                </span>
               </span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              💰 Save 20% with annual billing
-            </p>
           </motion.div>
         </div>
 
@@ -197,35 +197,9 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
                       </p>
                     )}
                   </div>
-
-                  <Badge
-                    variant="outline"
-                    className={`mt-4 ${
-                      plan.color === "primary"
-                        ? "border-primary/20 text-primary"
-                        : "border-secondary/20 text-secondary"
-                    }`}
-                  >
-                    🎉 30 days free
-                  </Badge>
                 </CardHeader>
 
                 <CardContent className="space-y-4">
-                  {plan.features.map((feature) => (
-                    <div key={feature} className="flex items-start gap-3">
-                      <Check
-                        className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
-                          plan.color === "primary"
-                            ? "text-primary"
-                            : "text-secondary"
-                        }`}
-                      />
-                      <span className="text-sm">{feature}</span>
-                    </div>
-                  ))}
-                </CardContent>
-
-                <CardFooter>
                   <Button
                     className={`w-full ${
                       plan.popular
@@ -243,11 +217,23 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
                     }
                   >
                     {plan.cta}
-                    {plan.cta !== "Contact Us" && (
-                      <ArrowRight className="ml-2 w-4 h-4" />
-                    )}
+                    <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
-                </CardFooter>
+                  {plan.features.map((feature) => (
+                    <div key={feature} className="flex items-start gap-3">
+                      <Check
+                        className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
+                          plan.color === "primary"
+                            ? "text-primary"
+                            : "text-secondary"
+                        }`}
+                      />
+                      <span className="text-sm">{feature}</span>
+                    </div>
+                  ))}
+                </CardContent>
+
+                <CardFooter></CardFooter>
               </Card>
             </motion.div>
           ))}
