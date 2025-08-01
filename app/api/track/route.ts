@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     if (ip === "::1" || ip === null) {
       ip = "83.114.15.244";
     }
-    const reader = await Reader.open("./data/GeoLite2-City.mmdb");
+    const reader = await Reader.open("@/data/GeoLite2-City.mmdb");
     const response = reader.city(ip);
 
     // Extract location data
