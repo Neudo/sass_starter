@@ -1,4 +1,5 @@
 "use client";
+import { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -12,7 +13,7 @@ import {
   Zap,
 } from "lucide-react";
 
-export default function Hero() {
+export default function Hero({ cta }: { cta?: ReactNode }) {
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-background via-muted/20 to-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 sm:pt-24 sm:pb-20 lg:pt-32 lg:pb-28">
@@ -57,29 +58,33 @@ export default function Hero() {
             compliant. No cookies needed.
           </motion.p>
 
-          {/* CTA Buttons avec les nouvelles couleurs */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12"
-          >
-            <Button
-              size="lg"
-              className="text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
+          {/* CTA area */}
+          {cta ? (
+            cta
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12"
             >
-              Get started
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="text-lg px-8 py-6 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors duration-200"
-            >
-              <Play className="mr-2 w-5 h-5" />
-              View live demo
-            </Button>
-          </motion.div>
+              <Button
+                size="lg"
+                className="text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
+              >
+                Get started
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="text-lg px-8 py-6 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors duration-200"
+              >
+                <Play className="mr-2 w-5 h-5" />
+                View live demo
+              </Button>
+            </motion.div>
+          )}
 
           {/* Trust indicators avec les nouvelles couleurs */}
           <motion.div
