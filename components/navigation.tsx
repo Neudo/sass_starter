@@ -5,6 +5,7 @@ import { Logo } from "./logo";
 import { Menu, X, LogOut, User } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { WaitlistModal } from "./waitlist-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   DropdownMenu,
@@ -106,21 +107,24 @@ export function Navigation() {
               </DropdownMenu>
             ) : (
               <>
-                <Button
+                {/* <Button
                   size="xl"
                   variant="ghost"
                   onClick={() => router.push("/auth/login")}
                   className={`hover:bg-primary/10 hover:text-primary transition-colors duration-200 `}
                 >
                   Sign In
-                </Button>
-                <Button
-                  size="xl"
-                  onClick={() => router.push("/auth/sign-up")}
-                  className={`bg-primary hover:bg-primary/90 text-primary-foreground transition-colors duration-200`}
-                >
-                  Start Free Trial
-                </Button>
+                </Button> */}
+                <WaitlistModal
+                  triggerComponent={
+                    <Button
+                      size="xl"
+                      className={`bg-primary hover:bg-primary/90 text-primary-foreground transition-colors duration-200`}
+                    >
+                      Start Free Trial
+                    </Button>
+                  }
+                />
                 <ThemeToggle />
               </>
             )}
