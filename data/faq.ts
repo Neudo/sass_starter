@@ -26,18 +26,12 @@ export const faqs: FAQItem[] = [
   },
   {
     title: "Is there a free trial available?",
-    description:
-      "Every new account includes a 30-day free trial with full access to all features.",
+    description: "Subscribe to our waitlist to get a free 30 days trial.",
   },
   {
     title: "How often are analytics updated?",
     description:
       "Metrics are updated in real time, letting you react instantly to changes in traffic.",
-  },
-  {
-    title: "Can I export my data?",
-    description:
-      "Data can be exported as CSV or accessed programmatically through our API at any time.",
   },
   {
     title: "Do you support GDPR compliance?",
