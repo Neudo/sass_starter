@@ -11,8 +11,6 @@ import {
   Users,
   Clock,
   ArrowUpRight,
-  Play,
-  Pause,
   Brain,
   Zap,
   Target,
@@ -32,7 +30,7 @@ import {
 
 export default function Page() {
   const router = useRouter();
-  const [isLive, setIsLive] = useState(true);
+  const [isLive] = useState(true);
   const [timeRange, setTimeRange] = useState("30d");
   const [visitors, setVisitors] = useState(47892);
   const [pageviews, setPageviews] = useState(128456);
