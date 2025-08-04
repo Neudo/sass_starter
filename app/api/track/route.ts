@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     }
     // Use absolute path with process.cwd() for Vercel compatibility
     const dbPath = path.join(process.cwd(), "data", "GeoLite2-City.mmdb");
-    console.log("DB Path:", dbPath);
+
     const reader = await Reader.open(dbPath);
     const response = reader.city(ip);
 

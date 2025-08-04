@@ -27,7 +27,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     };
 
     // Initialiser le thème au chargement
-    const savedTheme = localStorage.getItem("theme") || "light";
+    const savedTheme = localStorage.getItem("theme") || "system";
     applyTheme(savedTheme);
 
     // Écouter les changements de préférence système

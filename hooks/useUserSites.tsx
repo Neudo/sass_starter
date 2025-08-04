@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
 export function useUserSites(userId: string) {
-  console.log(userId);
   return useQuery({
     queryKey: ["sites", userId],
     queryFn: async () => {
