@@ -46,7 +46,7 @@ export function WaitlistForm() {
           placeholder="you@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="flex-1 py-6 border-slate-400"
+          className="flex-1 py-2 md:py-6 border-slate-400"
         />
         <Button type="submit" disabled={status === "loading"} size="xl">
           {status === "loading" ? "Submitting..." : "Join waitlist"}

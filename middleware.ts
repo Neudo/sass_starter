@@ -7,9 +7,17 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith("/dashboard")) {
     return await updateSession(request);
   }
-  return NextResponse.next();
 
-  // sinon, applique ta logique de session/auth
+  if (
+    pathname.startsWith("/pricing") ||
+    pathname.startsWith("/blog") ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/demo")
+  ) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {

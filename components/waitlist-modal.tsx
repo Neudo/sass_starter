@@ -64,7 +64,11 @@ export function WaitlistModal({ triggerComponent }: WaitlistModalProps) {
               onChange={(e) => setEmail(e.target.value)}
               className="flex-1 py-6 border-slate-400"
             />
-            <Button type="submit" disabled={status === "loading"}>
+            <Button
+              type="submit"
+              disabled={status === "loading"}
+              className="h-full"
+            >
               {status === "loading" ? "Submitting..." : "Join waitlist"}
             </Button>
           </form>

@@ -94,7 +94,7 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
           <div className="relative max-w-5xl mx-auto">
             <div className="relative bg-card rounded-xl border border-border shadow-2xl overflow-hidden">
               <div className="aspect-[16/10] bg-gradient-to-br from-muted/50 to-muted/20">
-                <div className="p-6">
+                <div className="p-2 md:p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="w-3 h-3 bg-destructive rounded-full"></div>
                     <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
@@ -104,7 +104,7 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
                     </div>
                   </div>
                   <div className="space-y-4">
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                       <div className="bg-card p-4 rounded-lg border border-primary/10 shadow-sm">
                         <div className="text-2xl font-bold text-primary">
                           7,892
@@ -141,11 +141,11 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
                           +3%
                         </div>
                       </div>
-                      <div className="bg-card p-4 rounded-lg border border-primary/10 shadow-sm col-span-3">
+                      <div className="bg-card p-4 rounded-lg border border-primary/10 shadow-sm col-span-2 sm:col-span-3">
                         <ChartDemo />
                       </div>
                     </div>
-                    <div className="bg-card p-4 rounded-lg border border-primary/10 shadow-sm w-full">
+                    <div className="bg-card p-4 rounded-lg border border-primary/10 shadow-sm w-full ">
                       <div className="text-2xl font-bold text-primary">
                         And more...
                       </div>
