@@ -69,7 +69,6 @@ export default function Page() {
     { date: "14 Jan", visitors: 9890, pageviews: 21200, prediction: 9500 },
   ];
 
-
   const aiInsightsData = [
     {
       insight: "Traffic spike predicted tomorrow at 2pm",
@@ -105,7 +104,7 @@ export default function Page() {
                 <Logo size="lg" showText={false} />
                 <div>
                   <h1 className="text-2xl font-bold text-primary">
-                    Dana Analytics Dashboard
+                    Hector Analytics Dashboard
                   </h1>
                   <p className="text-sm text-muted-foreground">
                     danaanalytics.com • Integrated artificial intelligence
@@ -512,7 +511,7 @@ export default function Page() {
                 Ready for Dana AI intelligence?
               </h3>
               <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-                This demo shows the real capabilities of Dana Analytics with
+                This demo shows the real capabilities of Hector Analytics with
                 integrated AI. Start your data-driven transformation today.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

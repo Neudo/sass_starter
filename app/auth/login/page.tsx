@@ -12,17 +12,28 @@ export default function Page() {
         <ThemeToggle />
       </div>
       <div className="w-full max-w-md">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
               <Logo size="xl" showText={false} />
             </div>
-            <h1 className="text-2xl font-bold mb-2 text-primary">Welcome back to Dana!</h1>
-            <p className="text-muted-foreground">Sign in to your Dana Analytics dashboard</p>
+            <h1 className="text-2xl font-bold mb-2 text-primary">
+              Welcome back to Dana!
+            </h1>
+            <p className="text-muted-foreground">
+              Sign in to your Hector Analytics dashboard
+            </p>
           </div>
           <LoginForm />
           <div className="text-center mt-6">
-            <Link href="/" className="text-muted-foreground hover:text-primary text-sm">
+            <Link
+              href="/"
+              className="text-muted-foreground hover:text-primary text-sm"
+            >
               ← Back to home
             </Link>
           </div>

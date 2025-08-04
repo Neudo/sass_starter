@@ -18,16 +18,19 @@ export async function POST(req: NextRequest) {
         Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Dana Analytics <onboarding@resend.dev>",
+        from: "Hector Analytics <onboarding@resend.dev>",
         to: email,
         subject: "You're on the Dana waitlist!",
-        html: `<p>Thanks for joining the Dana Analytics waitlist. You'll receive one month free when we launch. No credit card required.</p>`,
+        html: `<p>Thanks for joining the Hector Analytics waitlist. You'll receive one month free when we launch. No credit card required.</p>`,
       }),
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("waitlist error", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

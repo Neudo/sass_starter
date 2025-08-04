@@ -2,7 +2,6 @@
 import { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
 import {
   ArrowRight,
   Calendar,
@@ -18,33 +17,17 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
     <section className="relative overflow-hidden bg-gradient-to-br from-background via-muted/20 to-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 sm:pt-24 sm:pb-20 lg:pt-32 lg:pb-28">
         <div className="text-center">
-          {/* Badge announcement avec les nouvelles couleurs */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Badge
-              variant="secondary"
-              className="mb-8 px-4 py-2 bg-secondary/10 text-secondary border-secondary/20"
-            >
-              <Zap className="w-4 h-4 mr-2" />
-              Dana Analytics - simple to use
-            </Badge>
-          </motion.div>
-
-          {/* Main headline avec gradient bleu-turquoise */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight mb-6"
           >
-            The{" "}
+            The lightweight,{" "}
             <span className="bg-gradient-to-r from-primary via-ring to-secondary bg-clip-text text-transparent">
-              lightweight,{" "}
+              privacy-first{" "}
             </span>
-            privacy-first alternative to Google Analytics
+            alternative to Google Analytics
           </motion.h1>
 
           {/* Subtitle */}
@@ -54,7 +37,7 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto mb-10"
           >
-            Drop the complexity. Dana Analytics, simple to use and GRPD
+            Drop the complexity. Hector Analytics, simple to use and GRPD
             compliant. No cookies needed.
           </motion.p>
 
@@ -87,7 +70,7 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
           )}
 
           {/* Trust indicators avec les nouvelles couleurs */}
-          <motion.div
+          {/* <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
@@ -105,7 +88,7 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
               <CreditCard className="w-4 h-4 text-secondary" />
               <span>No credit card needed</span>
             </div>
-          </motion.div>
+          </motion.div> */}
         </div>
 
         {/* Hero Image/Dashboard Preview avec les nouvelles couleurs */}
@@ -124,7 +107,7 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
                     <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
                     <div className="w-3 h-3 bg-secondary rounded-full"></div>
                     <div className="ml-4 text-sm text-muted-foreground">
-                      Dana Analytics Dashboard
+                      Hector Analytics Dashboard
                     </div>
                   </div>
                   <div className="space-y-4">

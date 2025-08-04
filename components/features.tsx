@@ -104,8 +104,8 @@ export function Features() {
               Everything you need
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Dana Analytics gives you all the tools you need to understand your
-              audience without compromising on simplicity.
+              Hector Analytics gives you all the tools you need to understand
+              your audience without compromising on simplicity.
             </p>
           </motion.div>
         </div>

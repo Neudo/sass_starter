@@ -18,27 +18,30 @@ import {
 export function Navigation() {
   const router = useRouter();
   const pathname = usePathname();
-  const currentPage = pathname.startsWith("/pricing")
-    ? "pricing"
-    : pathname.startsWith("/demo")
-    ? "demo"
-    : pathname.startsWith("/dashboard")
-    ? "dashboard"
-    : pathname.startsWith("/auth/login")
-    ? "login"
-    : pathname.startsWith("/auth/sign-up")
-    ? "signup"
-    : pathname.startsWith("/auth/forgot-password")
-    ? "forgot-password"
-    : "home";
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isLoggedIn = false;
 
+  // Navigation items definition
+  const navItems = [
+    { name: "Pricing", path: "/pricing", id: "pricing" },
+    { name: "FAQ", path: "/faq", id: "faq" },
+    // { name: "Blog", path: "/blog", id: "blog" },
+    { name: "Contact", path: "/contact", id: "contact" },
+  ];
+
+  // Helper function to check if a path is active
+  const isActive = (path: string) => {
+    if (path === "/") {
+      return pathname === "/";
+    }
+    return pathname.startsWith(path);
+  };
+
   return (
-    <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border transition-colors">
+    <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border transition-colors py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Dana Analytics Logo */}
+          {/* Hector Analytics Logo */}
           <button
             onClick={() => router.push("/")}
             className="flex items-center hover:opacity-80 transition-opacity"
@@ -47,67 +50,40 @@ export function Navigation() {
           </button>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <button
-              onClick={() => router.push("/")}
-              className={`transition-colors duration-200 ${
-                currentPage === "home"
-                  ? "text-primary font-medium"
-                  : "text-muted-foreground hover:text-primary"
-              }`}
-            >
-              Home
-            </button>
-            <button
-              onClick={() => router.push("/demo")}
-              className={`transition-colors duration-200 ${
-                currentPage === "demo"
-                  ? "text-primary font-medium"
-                  : "text-muted-foreground hover:text-primary"
-              }`}
-            >
-              Demo
-            </button>
-            {isLoggedIn && (
-              <button
-                onClick={() => router.push("/dashboard")}
-                className={`transition-colors duration-200 ${
-                  currentPage === "dashboard"
-                    ? "text-primary font-medium"
-                    : "text-muted-foreground hover:text-primary"
-                }`}
-              >
-                Dashboard
-              </button>
-            )}
-            <button
-              onClick={() => router.push("/pricing")}
-              className={`transition-colors duration-200 ${
-                currentPage === "pricing"
-                  ? "text-primary font-medium"
-                  : "text-muted-foreground hover:text-primary"
-              }`}
-            >
-              Pricing
-            </button>
-            <a
-              href="#"
-              className="text-muted-foreground hover:text-primary transition-colors duration-200"
-            >
-              Documentation
-            </a>
-            <a
-              href="#"
-              className="text-muted-foreground hover:text-primary transition-colors duration-200"
-            >
-              Support
-            </a>
+          <div className="hidden md:flex items-center space-x-8 text-xl">
+            {navItems.map((item) => {
+              // External links (like docs, support)
+              if (item) {
+                return (
+                  <a
+                    key={item.id}
+                    href={item.path}
+                    className="text-muted-foreground hover:text-primary transition-colors duration-200"
+                  >
+                    {item.name}
+                  </a>
+                );
+              }
+
+              // Internal navigation buttons
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => router.push(item.path)}
+                  className={`transition-colors duration-200 ${
+                    isActive(item.path)
+                      ? "text-primary font-medium"
+                      : "text-muted-foreground hover:text-primary"
+                  }`}
+                >
+                  {item.name}
+                </button>
+              );
+            })}
           </div>
 
           {/* CTA Buttons + Theme Toggle */}
           <div className="hidden md:flex items-center space-x-4">
-            <ThemeToggle />
-
             {isLoggedIn ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -155,22 +131,21 @@ export function Navigation() {
             ) : (
               <>
                 <Button
+                  size="xl"
                   variant="ghost"
                   onClick={() => router.push("/auth/login")}
-                  className={`hover:bg-primary/10 hover:text-primary transition-colors duration-200 ${
-                    currentPage === "login" ? "text-primary bg-primary/10" : ""
-                  }`}
+                  className={`hover:bg-primary/10 hover:text-primary transition-colors duration-200 `}
                 >
                   Sign In
                 </Button>
                 <Button
+                  size="xl"
                   onClick={() => router.push("/auth/sign-up")}
-                  className={`bg-secondary hover:bg-ring text-secondary-foreground transition-colors duration-200 ${
-                    currentPage === "signup" ? "bg-ring" : ""
-                  }`}
+                  className={`bg-primary hover:bg-primary/90 text-primary-foreground transition-colors duration-200`}
                 >
-                  Free Trial
+                  Start Free Trial
                 </Button>
+                <ThemeToggle />
               </>
             )}
           </div>
@@ -197,72 +172,41 @@ export function Navigation() {
         {isMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-border">
-              <button
-                onClick={() => {
-                  router.push("/");
-                  setIsMenuOpen(false);
-                }}
-                className={`block px-3 py-2 rounded-md text-base transition-colors w-full text-left ${
-                  currentPage === "home"
-                    ? "text-primary bg-primary/10 font-medium"
-                    : "text-muted-foreground hover:text-primary hover:bg-primary/5"
-                }`}
-              >
-                Home
-              </button>
-              <button
-                onClick={() => {
-                  router.push("/demo");
-                  setIsMenuOpen(false);
-                }}
-                className={`block px-3 py-2 rounded-md text-base transition-colors w-full text-left ${
-                  currentPage === "demo"
-                    ? "text-primary bg-primary/10 font-medium"
-                    : "text-muted-foreground hover:text-primary hover:bg-primary/5"
-                }`}
-              >
-                Demo
-              </button>
-              {isLoggedIn && (
-                <button
-                  onClick={() => {
-                    router.push("/dashboard");
-                    setIsMenuOpen(false);
-                  }}
-                  className={`block px-3 py-2 rounded-md text-base transition-colors w-full text-left ${
-                    currentPage === "dashboard"
-                      ? "text-primary bg-primary/10 font-medium"
-                      : "text-muted-foreground hover:text-primary hover:bg-primary/5"
-                  }`}
-                >
-                  Dashboard
-                </button>
-              )}
-              <button
-                onClick={() => {
-                  router.push("/pricing");
-                  setIsMenuOpen(false);
-                }}
-                className={`block px-3 py-2 rounded-md text-base transition-colors w-full text-left ${
-                  currentPage === "pricing"
-                    ? "text-primary bg-primary/10 font-medium"
-                    : "text-muted-foreground hover:text-primary hover:bg-primary/5"
-                }`}
-              >
-                Pricing
-              </button>
-              <a
-                href="#"
-                className="block px-3 py-2 rounded-md text-base text-muted-foreground hover:text-primary hover:bg-primary/5"
-              >
-                Documentation
-              </a>
-              <a
-                href="#"
-                className="block px-3 py-2 rounded-md text-base text-muted-foreground hover:text-primary hover:bg-primary/5"
-              >
-                Support
-              </a>
+              {navItems.map((item) => {
+                // Skip items that require auth if user is not logged in
+                if (item.requiresAuth && !isLoggedIn) return null;
+
+                // External links (like docs, support)
+                if (item.isExternal) {
+                  return (
+                    <a
+                      key={item.id}
+                      href={item.path}
+                      className="block px-3 py-2 rounded-md text-base text-muted-foreground hover:text-primary hover:bg-primary/5"
+                    >
+                      {item.name}
+                    </a>
+                  );
+                }
+
+                // Internal navigation buttons
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      router.push(item.path);
+                      setIsMenuOpen(false);
+                    }}
+                    className={`block px-3 py-2 rounded-md text-base transition-colors w-full text-left ${
+                      isActive(item.path)
+                        ? "text-primary bg-primary/10 font-medium"
+                        : "text-muted-foreground hover:text-primary hover:bg-primary/5"
+                    }`}
+                  >
+                    {item.name}
+                  </button>
+                );
+              })}
 
               <div className="pt-4 pb-3 border-t border-border">
                 {isLoggedIn ? (

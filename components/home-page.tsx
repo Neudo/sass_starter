@@ -7,6 +7,7 @@ import { Logo } from "./logo";
 import { ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
+import { WaitlistForm } from "@/components/waitlist-form";
 
 export function HomePage() {
   const router = useRouter();
@@ -14,7 +15,7 @@ export function HomePage() {
 
   return (
     <div className="min-h-screen theme-transition">
-      <Hero />
+      <Hero cta={<WaitlistForm />} />
       <Features />
 
       {/* Testimonials */}

@@ -7,7 +7,9 @@ import { Button } from "./ui/button";
 
 export function WaitlistForm() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,14 +45,14 @@ export function WaitlistForm() {
           placeholder="you@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="flex-1"
+          className="flex-1 py-6 border-slate-400"
         />
-        <Button type="submit" disabled={status === "loading"}>
+        <Button type="submit" disabled={status === "loading"} size="xl">
           {status === "loading" ? "Submitting..." : "Join waitlist"}
         </Button>
       </form>
       <p className="text-sm text-muted-foreground text-center max-w-md">
-        Get notified at launch and enjoy 1 month free—no credit card required.
+        Get notified at launch and enjoy 1 month free.
       </p>
       {status === "success" && (
         <p className="text-sm text-green-500 text-center">
