@@ -2,31 +2,10 @@
 import { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Button } from "./ui/button";
-import { ArrowRight, Play, TrendingUp, Zap } from "lucide-react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-} from "recharts";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "./ui/chart";
+import { ArrowRight, Calendar, Play, TrendingUp } from "lucide-react";
+import { ChartDemo } from "./chart-demo";
 
 export default function Hero({ cta }: { cta?: ReactNode }) {
-  const values = [1200, 4500, 3800, 5400, 7200, 9600];
-  const chartData = values.map((value, index) => {
-    const date = new Date();
-    date.setMonth(date.getMonth() - (5 - index));
-    return {
-      month: date.toLocaleString("default", { month: "short" }),
-      visitors: value,
-    };
-  });
-
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-background via-muted/20 to-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 sm:pt-24 sm:pb-20 lg:pt-32 lg:pb-28">
@@ -135,62 +114,43 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
                         </div>
                         <div className="text-xs text-secondary flex items-center mt-1">
                           <TrendingUp className="w-3 h-3 mr-1" />
-                          +23% IA boost
+                          +23%
                         </div>
                       </div>
                       <div className="bg-card p-4 rounded-lg border border-primary/10 shadow-sm">
                         <div className="text-2xl font-bold text-primary">
-                          128,456
+                          8443
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          Insights générés
+                          Page views
                         </div>
                         <div className="text-xs text-ring flex items-center mt-1">
-                          <Zap className="w-3 h-3 mr-1" />
-                          Temps réel
+                          <Calendar className="w-3 h-3 mr-1" />
+                          This week
                         </div>
                       </div>
                       <div className="bg-card p-4 rounded-lg border border-ring/10 shadow-sm">
-                        <div className="text-2xl font-bold text-ring">8.7%</div>
+                        <div className="text-2xl font-bold text-ring">
+                          54.7%
+                        </div>
                         <div className="text-sm text-muted-foreground">
-                          Taux conversion
+                          Bounce rate
                         </div>
                         <div className="text-xs text-secondary flex items-center mt-1">
                           <TrendingUp className="w-3 h-3 mr-1" />
-                          Prédiction IA
+                          +3%
                         </div>
                       </div>
                       <div className="bg-card p-4 rounded-lg border border-primary/10 shadow-sm col-span-3">
-                        <ChartContainer
-                          config={{
-                            visitors: {
-                              label: "Visitors",
-                              color: "hsl(var(--chart-1))",
-                            },
-                          }}
-                        >
-                          <LineChart data={chartData}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="month" />
-                            <YAxis domain={[0, 10000]} />
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                            <Line
-                              type="monotone"
-                              dataKey="visitors"
-                              stroke="var(--color-visitors)"
-                              strokeWidth={2}
-                              dot={false}
-                            />
-                          </LineChart>
-                        </ChartContainer>
+                        <ChartDemo />
                       </div>
-                      <div className="bg-card p-4 rounded-lg border border-primary/10 shadow-sm">
-                        <div className="text-2xl font-bold text-primary">
-                          More data coming soon
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          Stay tuned for additional insights
-                        </div>
+                    </div>
+                    <div className="bg-card p-4 rounded-lg border border-primary/10 shadow-sm w-full">
+                      <div className="text-2xl font-bold text-primary">
+                        And more...
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Stay tuned for additional insights
                       </div>
                     </div>
                   </div>
@@ -198,10 +158,7 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
               </div>
             </div>
 
-            {/* Éléments décoratifs avec les nouvelles couleurs */}
             <div className="absolute -top-4 -left-4 w-24 h-24 bg-primary/10 rounded-full blur-xl"></div>
-            <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-primary/10 rounded-full blur-xl"></div>
-            <div className="absolute top-1/2 -right-8 w-16 h-16 bg-ring/10 rounded-full blur-lg"></div>
           </div>
         </motion.div>
       </div>

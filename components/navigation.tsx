@@ -4,7 +4,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { Logo } from "./logo";
 import { Menu, X, LogOut, User } from "lucide-react";
 import { useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   DropdownMenu,
@@ -17,7 +17,6 @@ import {
 
 export function Navigation() {
   const router = useRouter();
-  const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isLoggedIn = false;
 
@@ -28,14 +27,6 @@ export function Navigation() {
     // { name: "Blog", path: "/blog", id: "blog" },
     { name: "Contact", path: "/contact", id: "contact" },
   ];
-
-  // Helper function to check if a path is active
-  const isActive = (path: string) => {
-    if (path === "/") {
-      return pathname === "/";
-    }
-    return pathname.startsWith(path);
-  };
 
   return (
     <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border transition-colors py-8">
@@ -64,21 +55,6 @@ export function Navigation() {
                   </a>
                 );
               }
-
-              // Internal navigation buttons
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => router.push(item.path)}
-                  className={`transition-colors duration-200 ${
-                    isActive(item.path)
-                      ? "text-primary font-medium"
-                      : "text-muted-foreground hover:text-primary"
-                  }`}
-                >
-                  {item.name}
-                </button>
-              );
             })}
           </div>
 
@@ -173,11 +149,8 @@ export function Navigation() {
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-border">
               {navItems.map((item) => {
-                // Skip items that require auth if user is not logged in
-                if (item.requiresAuth && !isLoggedIn) return null;
-
                 // External links (like docs, support)
-                if (item.isExternal) {
+                if (item) {
                   return (
                     <a
                       key={item.id}
@@ -188,24 +161,6 @@ export function Navigation() {
                     </a>
                   );
                 }
-
-                // Internal navigation buttons
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      router.push(item.path);
-                      setIsMenuOpen(false);
-                    }}
-                    className={`block px-3 py-2 rounded-md text-base transition-colors w-full text-left ${
-                      isActive(item.path)
-                        ? "text-primary bg-primary/10 font-medium"
-                        : "text-muted-foreground hover:text-primary hover:bg-primary/5"
-                    }`}
-                  >
-                    {item.name}
-                  </button>
-                );
               })}
 
               <div className="pt-4 pb-3 border-t border-border">

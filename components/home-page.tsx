@@ -1,13 +1,9 @@
 "use client";
 import Hero from "./hero";
 import { Logo } from "./logo";
-import { useRouter } from "next/navigation";
 import { WaitlistForm } from "@/components/waitlist-form";
 
 export function HomePage() {
-  const router = useRouter();
-  const onNavigateToDemo = () => router.push("/demo");
-
   return (
     <div className="min-h-screen theme-transition">
       <Hero cta={<WaitlistForm />} />
@@ -136,12 +132,11 @@ export function HomePage() {
                 <Logo size="md" showText={true} />
               </div>
               <p className="text-muted-foreground mb-4 max-w-md">
-                Next-generation analytics with integrated artificial
-                intelligence. Privacy-respectful, GDPR compliant, and
-                revolutionary.
+                Next-generation analytics. Privacy-respectful, GDPR compliant,
+                and revolutionary, simlpe to use even for non-technical users.
               </p>
               <p className="text-sm text-muted-foreground">
-                © 2025 Dana Analytics. Powered by AI. All rights reserved.
+                © 2025 Hector Analytics. All rights reserved.
               </p>
             </div>
 
@@ -149,12 +144,18 @@ export function HomePage() {
               <h3 className="font-semibold mb-4 text-foreground">Product</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    AI Features
+                  <a
+                    href="/faq"
+                    className="hover:text-primary transition-colors"
+                  >
+                    FAQ
                   </a>
                 </li>
-                <li>
-                  <a href="#" className="hover:text-primary transition-colors">
+                {/* <li>
+                  <a
+                    href="/pricing"
+                    className="hover:text-primary transition-colors"
+                  >
                     Pricing
                   </a>
                 </li>
@@ -165,12 +166,7 @@ export function HomePage() {
                   >
                     Live Demo
                   </button>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    API & Integrations
-                  </a>
-                </li>
+                </li> */}
               </ul>
             </div>
 
@@ -178,23 +174,11 @@ export function HomePage() {
               <h3 className="font-semibold mb-4 text-foreground">Support</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    AI Documentation
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    Expert Guides
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    Help Center
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-primary transition-colors">
-                    Contact Team
+                  <a
+                    href="/contact"
+                    className="hover:text-primary transition-colors"
+                  >
+                    Contact
                   </a>
                 </li>
               </ul>
