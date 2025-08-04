@@ -13,6 +13,9 @@ export const metadata: Metadata = {
   title: "Hector Analytics | Privacy-first alternative to Google Analytics",
   description:
     "Get actionable insights with Hector Analytics, a lightweight, privacy-first alternative to Google Analytics. No cookies, easy setup, full data control.",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 const geistSans = Geist({
