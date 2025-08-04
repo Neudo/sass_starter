@@ -15,12 +15,13 @@ const badgeVariants = cva(
         destructive:
           "border-transparent bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/80",
         outline: "text-foreground",
+        success: "border-transparent bg-green-500 text-green-50 shadow-sm",
       },
     },
     defaultVariants: {
       variant: "default",
     },
-  },
+  }
 );
 
 export interface BadgeProps

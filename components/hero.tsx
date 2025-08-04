@@ -2,15 +2,7 @@
 import { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Button } from "./ui/button";
-import {
-  ArrowRight,
-  Calendar,
-  CreditCard,
-  Play,
-  Settings,
-  TrendingUp,
-  Zap,
-} from "lucide-react";
+import { ArrowRight, Play, TrendingUp, Zap } from "lucide-react";
 
 export default function Hero({ cta }: { cta?: ReactNode }) {
   return (
@@ -114,10 +106,10 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
                     <div className="grid grid-cols-3 gap-4">
                       <div className="bg-card p-4 rounded-lg border border-primary/10 shadow-sm">
                         <div className="text-2xl font-bold text-primary">
-                          47,892
+                          7,892
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          Visiteurs IA-analysés
+                          Visitors
                         </div>
                         <div className="text-xs text-secondary flex items-center mt-1">
                           <TrendingUp className="w-3 h-3 mr-1" />
@@ -144,23 +136,6 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
                         <div className="text-xs text-secondary flex items-center mt-1">
                           <TrendingUp className="w-3 h-3 mr-1" />
                           Prédiction IA
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-card p-4 rounded-lg border h-32 shadow-sm">
-                      <div className="text-sm text-muted-foreground mb-2">
-                        Analytics IA - Tendances prédictives
-                      </div>
-                      <div className="h-20 bg-gradient-to-r from-primary/20 via-primary/30 to-primary/10 rounded relative">
-                        {/* Ligne de tendance simulée */}
-                        <div className="absolute inset-0 flex items-end justify-around p-2">
-                          {[40, 55, 48, 72, 65, 85, 78, 95].map((height, i) => (
-                            <div
-                              key={i}
-                              className="bg-primary rounded-sm w-2 transition-all duration-300 hover:bg-ring"
-                              style={{ height: `${height}%` }}
-                            />
-                          ))}
                         </div>
                       </div>
                     </div>

@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         from: "Hector Analytics <onboarding@resend.dev>",
         to: email,
-        subject: "You're on the Dana waitlist!",
+        subject: "You're on the Hector Analytics waitlist!",
         html: `<p>Thanks for joining the Hector Analytics waitlist. You'll receive one month free when we launch. No credit card required.</p>`,
       }),
     });

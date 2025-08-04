@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
 
 export function WaitlistForm() {
   const [email, setEmail] = useState("");
@@ -55,14 +56,14 @@ export function WaitlistForm() {
         Get notified at launch and enjoy 1 month free.
       </p>
       {status === "success" && (
-        <p className="text-sm text-green-500 text-center">
+        <Badge variant="success">
           You&apos;re on the list! Please check your inbox.
-        </p>
+        </Badge>
       )}
       {status === "error" && (
-        <p className="text-sm text-red-500 text-center">
+        <Badge variant="destructive">
           Something went wrong. Please try again.
-        </p>
+        </Badge>
       )}
     </motion.div>
   );

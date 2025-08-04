@@ -1,11 +1,6 @@
 "use client";
 import Hero from "./hero";
-import { Features } from "@/components/features";
-import { PricingSection } from "./pricing-section";
-import { Button } from "./ui/button";
 import { Logo } from "./logo";
-import { ArrowRight } from "lucide-react";
-import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { WaitlistForm } from "@/components/waitlist-form";
 
@@ -16,7 +11,7 @@ export function HomePage() {
   return (
     <div className="min-h-screen theme-transition">
       <Hero cta={<WaitlistForm />} />
-      <Features />
+      {/* <Features /> */}
 
       {/* Testimonials */}
       {/* <section className="py-24 bg-muted/10 theme-transition">
@@ -90,10 +85,10 @@ export function HomePage() {
         </div>
       </section> */}
 
-      <PricingSection />
+      {/* <PricingSection /> */}
 
       {/* Final CTA */}
-      <section className="py-24 bg-gradient-to-r from-primary/5 to-primary/10 theme-transition">
+      {/* <section className="py-24 bg-gradient-to-r from-primary/5 to-primary/10 theme-transition">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -130,7 +125,7 @@ export function HomePage() {
             </p>
           </motion.div>
         </div>
-      </section>
+      </section> */}
 
       {/* Footer */}
       <footer className="bg-background border-t border-border py-16 theme-transition">
