@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
         Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Hector Analytics <onboarding@resend.dev>",
+        from: "Hector Analytics <bassalair.quentin@gmail.com>",
         to: email,
         subject: "You're on the Hector Analytics waitlist!",
         html: `<p>Thanks for joining the Hector Analytics waitlist. You'll receive one month free when we launch. No credit card required.</p>`,
