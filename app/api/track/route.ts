@@ -1,6 +1,6 @@
 // app/api/track/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { Reader } from "@maxmind/geoip2-node";
 import path from "path";
 
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Upsert : crée ou met à jour last_seen
-    const supabase = await createClient();
+    const supabase = await createAdminClient();
     const domain = req.headers.get("host");
     // Get client IP from headers
     const forwarded = req.headers.get("x-forwarded-for");

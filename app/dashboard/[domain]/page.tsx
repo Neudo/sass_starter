@@ -1,6 +1,6 @@
 import React from "react";
-import { createClient } from "@/lib/supabase/client";
 import { TotalVisitorsDisplay } from "@/hooks/useTotalVisitors";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export default async function Page({
   params,
@@ -10,7 +10,7 @@ export default async function Page({
   const { domain } = await params;
 
   const getSiteId = async (domain: string) => {
-    const { data, error } = await createClient()
+    const { data, error } = await createAdminClient()
       .from("sites")
       .select("id")
       .eq("domain", domain);

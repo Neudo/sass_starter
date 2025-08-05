@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import DashboardStart from "@/components/dashboard-start";
 
 export default async function ProtectedPage() {
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
 
   const { data, error } = await supabase.auth.getClaims();
   if (error || !data?.claims) {
