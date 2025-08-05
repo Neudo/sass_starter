@@ -19,10 +19,33 @@ export async function POST(req: NextRequest) {
         Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Hector Analytics <support@hectoranalytics.com>",
+        from: "Hector from Hector Analytics <support@hectoranalytics.com>",
         to: email,
-        subject: "You're on the Hector Analytics waitlist!",
-        html: `<p>Thanks for joining the Hector Analytics waitlist. You'll receive one month free when we launch. No credit card required.</p>`,
+        subject: "Welcome to Hector Analytics",
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px;">
+            <p>Hi there,</p>
+            
+            <p>Thank you for your interest in Hector Analytics. I wanted to personally confirm that you're now on our early access list.</p>
+            
+            <p>We're building something special - a analytics platform that actually makes sense for modern teams. As an early supporter, you'll get:</p>
+            
+            <ul style="margin: 16px 0; padding-left: 20px;">
+              <li>First access when we launch</li>
+              <li>30 days at no cost to try everything</li>
+              <li>Direct line to our team for feedback</li>
+            </ul>
+            
+            <p>I'll keep you updated on our progress. In the meantime, feel free to reply if you have any questions about what we're building.</p>
+            
+            <p>Best regards,<br>
+            Quentin<br>
+            Founder, Hector Analytics</p>
+            
+            <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;">
+            <p style="font-size: 12px; color: #666;">You're receiving this because you signed up for early access to Hector Analytics. If you'd prefer not to receive updates, just reply and let me know.</p>
+          </div>
+        `,
       }),
     });
 
