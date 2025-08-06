@@ -243,13 +243,12 @@ export function LocationCard({ siteId }: { siteId: string }) {
   }
 
   return (
-    <Tabs defaultValue="map" className="w-full">
+    <Tabs defaultValue="countries" className="w-full">
       <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="countries">Countries</TabsTrigger>
         <TabsTrigger value="regions">Regions</TabsTrigger>
         <TabsTrigger value="cities">Cities</TabsTrigger>
       </TabsList>
-      <TabsContent value="map" className="mt-4"></TabsContent>
       <TabsContent value="countries" className="mt-4">
         {renderStats(locationStats.countries, "country")}
       </TabsContent>
