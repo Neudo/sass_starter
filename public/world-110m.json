@@ -1,0 +1,27 @@
+{
+  "type": "Topology",
+  "arcs": [],
+  "objects": {
+    "countries": {
+      "type": "GeometryCollection",
+      "geometries": [
+        {
+          "type": "Polygon",
+          "properties": {
+            "NAME": "United States",
+            "ISO_A2": "US"
+          },
+          "arcs": [[0]]
+        },
+        {
+          "type": "Polygon", 
+          "properties": {
+            "NAME": "Canada",
+            "ISO_A2": "CA"
+          },
+          "arcs": [[1]]
+        }
+      ]
+    }
+  }
+}

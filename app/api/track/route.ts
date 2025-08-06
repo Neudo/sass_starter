@@ -47,10 +47,10 @@ export async function POST(req: NextRequest) {
     const reader = await Reader.open(dbPath);
     const response = reader.city(ip);
 
-    // Extract location data
-    const country = response?.country?.names.fr || null;
-    const region = response?.subdivisions?.[0].names.fr || null;
-    const city = response?.city?.names.fr || null;
+    // Extract location data in English
+    const country = response?.country?.names.en || null;
+    const region = response?.subdivisions?.[0].names.en || null;
+    const city = response?.city?.names.en || null;
 
     const { data: site } = await supabase
       .from("sites")

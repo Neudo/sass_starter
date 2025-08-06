@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Globe, Building, Flag, Users, Percent } from "lucide-react";
+import { WorldMap } from "./WorldMap";
 
 interface LocationData {
   country: string | null;
@@ -50,20 +51,24 @@ export function LocationCard({ siteId }: { siteId: string }) {
       data?.forEach((session: LocationData) => {
         // Count countries
         if (session.country) {
-          stats.countries[session.country] = (stats.countries[session.country] || 0) + 1;
+          stats.countries[session.country] =
+            (stats.countries[session.country] || 0) + 1;
         }
 
         // Count regions
         if (session.region) {
-          const regionKey = session.country ? `${session.region}, ${session.country}` : session.region;
+          const regionKey = session.country
+            ? `${session.region}, ${session.country}`
+            : session.region;
           stats.regions[regionKey] = (stats.regions[regionKey] || 0) + 1;
         }
 
         // Count cities
         if (session.city) {
-          const cityKey = session.region && session.country 
-            ? `${session.city}, ${session.region}` 
-            : session.city;
+          const cityKey =
+            session.region && session.country
+              ? `${session.city}, ${session.region}`
+              : session.city;
           stats.cities[cityKey] = (stats.cities[cityKey] || 0) + 1;
         }
       });
@@ -79,82 +84,85 @@ export function LocationCard({ siteId }: { siteId: string }) {
     // Map country names to ISO codes for flag emojis
     const countryToCode: Record<string, string> = {
       "United States": "🇺🇸",
-      "USA": "🇺🇸",
-      "US": "🇺🇸",
+      USA: "🇺🇸",
+      US: "🇺🇸",
       "United Kingdom": "🇬🇧",
-      "UK": "🇬🇧",
-      "France": "🇫🇷",
-      "Germany": "🇩🇪",
-      "Canada": "🇨🇦",
-      "Australia": "🇦🇺",
-      "Japan": "🇯🇵",
-      "China": "🇨🇳",
-      "India": "🇮🇳",
-      "Brazil": "🇧🇷",
-      "Mexico": "🇲🇽",
-      "Spain": "🇪🇸",
-      "Italy": "🇮🇹",
-      "Netherlands": "🇳🇱",
-      "Belgium": "🇧🇪",
-      "Switzerland": "🇨🇭",
-      "Sweden": "🇸🇪",
-      "Norway": "🇳🇴",
-      "Denmark": "🇩🇰",
-      "Finland": "🇫🇮",
-      "Poland": "🇵🇱",
-      "Portugal": "🇵🇹",
-      "Ireland": "🇮🇪",
-      "Austria": "🇦🇹",
+      UK: "🇬🇧",
+      France: "🇫🇷",
+      Germany: "🇩🇪",
+      Canada: "🇨🇦",
+      Australia: "🇦🇺",
+      Japan: "🇯🇵",
+      China: "🇨🇳",
+      India: "🇮🇳",
+      Brazil: "🇧🇷",
+      Mexico: "🇲🇽",
+      Spain: "🇪🇸",
+      Italy: "🇮🇹",
+      Netherlands: "🇳🇱",
+      Belgium: "🇧🇪",
+      Switzerland: "🇨🇭",
+      Sweden: "🇸🇪",
+      Norway: "🇳🇴",
+      Denmark: "🇩🇰",
+      Finland: "🇫🇮",
+      Poland: "🇵🇱",
+      Portugal: "🇵🇹",
+      Ireland: "🇮🇪",
+      Austria: "🇦🇹",
       "New Zealand": "🇳🇿",
-      "Singapore": "🇸🇬",
+      Singapore: "🇸🇬",
       "South Korea": "🇰🇷",
-      "Russia": "🇷🇺",
+      Russia: "🇷🇺",
       "South Africa": "🇿🇦",
-      "Argentina": "🇦🇷",
-      "Chile": "🇨🇱",
-      "Colombia": "🇨🇴",
-      "Peru": "🇵🇪",
-      "Venezuela": "🇻🇪",
-      "Egypt": "🇪🇬",
-      "Turkey": "🇹🇷",
-      "Greece": "🇬🇷",
-      "Israel": "🇮🇱",
+      Argentina: "🇦🇷",
+      Chile: "🇨🇱",
+      Colombia: "🇨🇴",
+      Peru: "🇵🇪",
+      Venezuela: "🇻🇪",
+      Egypt: "🇪🇬",
+      Turkey: "🇹🇷",
+      Greece: "🇬🇷",
+      Israel: "🇮🇱",
       "Saudi Arabia": "🇸🇦",
-      "UAE": "🇦🇪",
-      "Thailand": "🇹🇭",
-      "Indonesia": "🇮🇩",
-      "Malaysia": "🇲🇾",
-      "Philippines": "🇵🇭",
-      "Vietnam": "🇻🇳",
-      "Pakistan": "🇵🇰",
-      "Bangladesh": "🇧🇩",
-      "Nigeria": "🇳🇬",
-      "Kenya": "🇰🇪",
-      "Morocco": "🇲🇦",
-      "Tunisia": "🇹🇳",
+      UAE: "🇦🇪",
+      Thailand: "🇹🇭",
+      Indonesia: "🇮🇩",
+      Malaysia: "🇲🇾",
+      Philippines: "🇵🇭",
+      Vietnam: "🇻🇳",
+      Pakistan: "🇵🇰",
+      Bangladesh: "🇧🇩",
+      Nigeria: "🇳🇬",
+      Kenya: "🇰🇪",
+      Morocco: "🇲🇦",
+      Tunisia: "🇹🇳",
       "Czech Republic": "🇨🇿",
-      "Hungary": "🇭🇺",
-      "Romania": "🇷🇴",
-      "Bulgaria": "🇧🇬",
-      "Croatia": "🇭🇷",
-      "Serbia": "🇷🇸",
-      "Ukraine": "🇺🇦",
-      "Belarus": "🇧🇾",
-      "Lithuania": "🇱🇹",
-      "Latvia": "🇱🇻",
-      "Estonia": "🇪🇪",
-      "Slovenia": "🇸🇮",
-      "Slovakia": "🇸🇰",
-      "Luxembourg": "🇱🇺",
-      "Malta": "🇲🇹",
-      "Cyprus": "🇨🇾",
-      "Iceland": "🇮🇸",
+      Hungary: "🇭🇺",
+      Romania: "🇷🇴",
+      Bulgaria: "🇧🇬",
+      Croatia: "🇭🇷",
+      Serbia: "🇷🇸",
+      Ukraine: "🇺🇦",
+      Belarus: "🇧🇾",
+      Lithuania: "🇱🇹",
+      Latvia: "🇱🇻",
+      Estonia: "🇪🇪",
+      Slovenia: "🇸🇮",
+      Slovakia: "🇸🇰",
+      Luxembourg: "🇱🇺",
+      Malta: "🇲🇹",
+      Cyprus: "🇨🇾",
+      Iceland: "🇮🇸",
     };
 
     return countryToCode[countryName] || null;
   };
 
-  const renderStats = (data: Record<string, number>, type: 'country' | 'region' | 'city' = 'country') => {
+  const renderStats = (
+    data: Record<string, number>,
+    type: "country" | "region" | "city" = "country"
+  ) => {
     const sortedData = Object.entries(data).sort(([, a], [, b]) => b - a);
 
     const total = Object.values(data).reduce((sum, count) => sum + count, 0);
@@ -167,7 +175,12 @@ export function LocationCard({ siteId }: { siteId: string }) {
       <div className="space-y-3">
         <div className="flex items-center justify-between mb-2">
           <div className="text-xs text-muted-foreground">
-            Showing {sortedData.length} {type === 'country' ? 'countries' : type === 'region' ? 'regions' : 'cities'}
+            Showing {sortedData.length}{" "}
+            {type === "country"
+              ? "countries"
+              : type === "region"
+              ? "regions"
+              : "cities"}
           </div>
           <button
             onClick={() => setShowPercentage(!showPercentage)}
@@ -189,17 +202,17 @@ export function LocationCard({ siteId }: { siteId: string }) {
         </div>
         {sortedData.map(([name, count]) => {
           const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
-          const flag = type === 'country' ? getCountryFlag(name) : null;
-          
+          const flag = type === "country" ? getCountryFlag(name) : null;
+
           return (
             <div key={name} className="space-y-1">
               <div className="flex justify-between text-sm">
                 <div className="flex items-center gap-2 truncate mr-2">
-                  {type === 'country' && flag ? (
+                  {type === "country" && flag ? (
                     <span className="text-base">{flag}</span>
-                  ) : type === 'country' ? (
+                  ) : type === "country" ? (
                     <Flag className="h-4 w-4 text-muted-foreground" />
-                  ) : type === 'region' ? (
+                  ) : type === "region" ? (
                     <Globe className="h-4 w-4 text-muted-foreground" />
                   ) : (
                     <Building className="h-4 w-4 text-muted-foreground" />
@@ -224,25 +237,27 @@ export function LocationCard({ siteId }: { siteId: string }) {
   };
 
   if (loading) {
-    return <div className="text-muted-foreground">Loading location data...</div>;
+    return (
+      <div className="text-muted-foreground">Loading location data...</div>
+    );
   }
 
   return (
     <Tabs defaultValue="map" className="w-full">
-      <TabsList className="grid w-full grid-cols-4">
-        <TabsTrigger value="map">Map</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="countries">Countries</TabsTrigger>
         <TabsTrigger value="regions">Regions</TabsTrigger>
         <TabsTrigger value="cities">Cities</TabsTrigger>
       </TabsList>
+      <TabsContent value="map" className="mt-4"></TabsContent>
       <TabsContent value="countries" className="mt-4">
-        {renderStats(locationStats.countries, 'country')}
+        {renderStats(locationStats.countries, "country")}
       </TabsContent>
       <TabsContent value="regions" className="mt-4">
-        {renderStats(locationStats.regions, 'region')}
+        {renderStats(locationStats.regions, "region")}
       </TabsContent>
       <TabsContent value="cities" className="mt-4">
-        {renderStats(locationStats.cities, 'city')}
+        {renderStats(locationStats.cities, "city")}
       </TabsContent>
     </Tabs>
   );
