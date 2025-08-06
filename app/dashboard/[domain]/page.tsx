@@ -3,6 +3,9 @@ import { TotalVisitorsDisplay } from "@/hooks/useTotalVisitors";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeviceCard } from "@/components/SiteData/DeviceCard";
+import { LocationCard } from "@/components/SiteData/LocationCard";
+import { ActiveVisitors } from "@/components/SiteData/ActiveVisitors";
+import { AnalyticsMetrics } from "@/components/SiteData/AnalyticsMetrics";
 
 export default async function Page({
   params,
@@ -23,17 +26,23 @@ export default async function Page({
   const siteId = await getSiteId(domain);
 
   return (
-    <div>
-      <h1>Dashboard for: {domain}</h1>
-      <TotalVisitorsDisplay siteId={siteId} />
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Dashboard for: {domain}</h1>
+      
+      <AnalyticsMetrics siteId={siteId} />
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <ActiveVisitors siteId={siteId} />
+        <TotalVisitorsDisplay siteId={siteId} />
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>Cities</CardTitle>
+            <CardTitle>Locations</CardTitle>
           </CardHeader>
           <CardContent>
-            <TotalVisitorsDisplay siteId={siteId} />
+            <LocationCard siteId={siteId} />
           </CardContent>
         </Card>
         <Card>

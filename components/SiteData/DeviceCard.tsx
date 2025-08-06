@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Chrome, Globe, Smartphone, Monitor, Tablet, Apple, MonitorSmartphone } from "lucide-react";
+import { Chrome, Globe, Smartphone, Monitor, Tablet, Apple, MonitorSmartphone, Users, Percent } from "lucide-react";
 
 interface DeviceData {
   browser: string | null;
@@ -26,6 +26,7 @@ export function DeviceCard({ siteId }: { siteId: string }) {
     screenSizes: {},
   });
   const [loading, setLoading] = useState(true);
+  const [showPercentage, setShowPercentage] = useState(false);
 
   useEffect(() => {
     const fetchDeviceData = async () => {
@@ -122,8 +123,27 @@ export function DeviceCard({ siteId }: { siteId: string }) {
 
     return (
       <div className="space-y-3">
-        <div className="text-xs text-muted-foreground mb-2">
-          Showing {sortedData.length} item{sortedData.length !== 1 ? 's' : ''} • Total: {total} session{total !== 1 ? 's' : ''}
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-xs text-muted-foreground">
+            Showing {sortedData.length} item{sortedData.length !== 1 ? 's' : ''}
+          </div>
+          <button
+            onClick={() => setShowPercentage(!showPercentage)}
+            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors border border-transparent hover:border-border rounded cursor-pointer"
+            title="Click to toggle between visitors and percentage"
+          >
+            {showPercentage ? (
+              <>
+                <Percent className="h-3 w-3" />
+                <span>Percentage</span>
+              </>
+            ) : (
+              <>
+                <Users className="h-3 w-3" />
+                <span>Visitors</span>
+              </>
+            )}
+          </button>
         </div>
         {sortedData.map(([name, count]) => {
           const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
@@ -135,7 +155,9 @@ export function DeviceCard({ siteId }: { siteId: string }) {
                   {icon}
                   <span className="truncate">{name}</span>
                 </div>
-                <span className="text-muted-foreground">{percentage}%</span>
+                <span className="text-muted-foreground font-medium">
+                  {showPercentage ? `${percentage}%` : count.toLocaleString()}
+                </span>
               </div>
               <div className="w-full bg-muted rounded-full h-2">
                 <div
