@@ -23,9 +23,9 @@ export function Navigation() {
 
   // Navigation items definition
   const navItems = [
-    // { name: "Pricing", path: "/pricing", id: "pricing" },
+    { name: "Pricing", path: "/pricing", id: "pricing" },
     { name: "FAQ", path: "/faq", id: "faq" },
-    // { name: "Blog", path: "/blog", id: "blog" },
+    { name: "Blog", path: "/blog", id: "blog" },
     { name: "Contact", path: "/contact", id: "contact" },
   ];
 
@@ -107,14 +107,14 @@ export function Navigation() {
               </DropdownMenu>
             ) : (
               <>
-                {/* <Button
+                <Button
                   size="xl"
                   variant="ghost"
                   onClick={() => router.push("/auth/login")}
                   className={`hover:bg-primary/10 hover:text-primary transition-colors duration-200 `}
                 >
                   Sign In
-                </Button> */}
+                </Button>
                 <WaitlistModal
                   triggerComponent={
                     <Button

@@ -1,13 +1,16 @@
 import { redirect } from "next/navigation";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import DashboardStart from "@/components/dashboard-start";
 
 export default async function ProtectedPage() {
-  const supabase = await createAdminClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase.auth.getClaims();
   if (error || !data?.claims) {
+    console.log("Here ...", error);
+    console.log("Data", data);
+
     redirect("/auth/login");
   }
 

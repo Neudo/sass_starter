@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "./ui/button";
 import { ArrowRight, Calendar, Play, TrendingUp } from "lucide-react";
 import { ChartDemo } from "./chart-demo";
+import Link from "next/link";
 
 export default function Hero({ cta }: { cta?: ReactNode }) {
   return (
@@ -51,14 +52,16 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
                 Get started
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="text-lg px-8 py-6 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors duration-200"
-              >
-                <Play className="mr-2 w-5 h-5" />
-                View live demo
-              </Button>
+              <Link href="/demo">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="text-lg px-8 py-6 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors duration-200"
+                >
+                  <Play className="mr-2 w-5 h-5" />
+                  View live demo
+                </Button>
+              </Link>
             </motion.div>
           )}
 
