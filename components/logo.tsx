@@ -15,9 +15,9 @@ export function Logo({
   // Size mapping based on the size prop
   const sizeMap = {
     sm: { container: "w-8 h-8", text: "text-lg" },
-    md: { container: "w-20 h-20", text: "text-2xl leading-6" },
-    lg: { container: "w-12 h-12", text: "text-2xl" },
-    xl: { container: "w-16 h-16", text: "text-3xl" },
+    md: { container: "h-12 w-12 md:h-20 md:w-20", text: "text-2xl leading-6" },
+    lg: { container: "h-16 w-16", text: "text-2xl" },
+    xl: { container: "h-20 w-20", text: "text-3xl" },
   };
 
   // Get the correct size values
