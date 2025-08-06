@@ -8,9 +8,6 @@ export default async function ProtectedPage() {
 
   const { data, error } = await supabase.auth.getClaims();
   if (error || !data?.claims) {
-    console.log("Here ...", error);
-    console.log("Data", data);
-
     redirect("/auth/login");
   }
 

@@ -1,6 +1,7 @@
 import React from "react";
 import { TotalVisitorsDisplay } from "@/hooks/useTotalVisitors";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function Page({
   params,
@@ -24,6 +25,25 @@ export default async function Page({
     <div>
       <h1>Dashboard for: {domain}</h1>
       <TotalVisitorsDisplay siteId={siteId} />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Cities</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TotalVisitorsDisplay siteId={siteId} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Devices</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TotalVisitorsDisplay siteId={siteId} />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

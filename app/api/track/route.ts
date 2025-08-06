@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Reader } from "@maxmind/geoip2-node";
+import { UAParser } from "ua-parser-js";
 import path from "path";
 
 export async function POST(req: NextRequest) {
@@ -13,6 +14,22 @@ export async function POST(req: NextRequest) {
         { error: "Missing sessionId or siteId" },
         { status: 400 }
       );
+    }
+
+    const ua = req.headers.get("user-agent");
+    const parser = new UAParser(ua as string);
+    const { name: browser, version: browserVersion } = parser.getBrowser();
+    const { name: os, version: osVersion } = parser.getOS();
+    const { type: deviceType } = parser.getDevice();
+
+    // Determine device category
+    let deviceCategory: "mobile" | "tablet" | "desktop";
+    if (deviceType === "mobile") {
+      deviceCategory = "mobile";
+    } else if (deviceType === "tablet") {
+      deviceCategory = "tablet";
+    } else {
+      deviceCategory = "desktop";
     }
 
     // Upsert : crée ou met à jour last_seen
@@ -50,6 +67,11 @@ export async function POST(req: NextRequest) {
       country,
       region,
       city,
+      browser,
+      browser_version: browserVersion,
+      os,
+      os_version: osVersion,
+      screen_size: deviceCategory,
     });
 
     if (error) {
