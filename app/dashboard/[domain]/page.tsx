@@ -1,12 +1,11 @@
 import React from "react";
-import { TotalVisitorsDisplay } from "@/hooks/useTotalVisitors";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeviceCard } from "@/components/SiteData/DeviceCard";
 import { LocationCard } from "@/components/SiteData/LocationCard";
 import { ActiveVisitors } from "@/components/SiteData/ActiveVisitors";
 import { AnalyticsMetrics } from "@/components/SiteData/AnalyticsMetrics";
-import { WorldMap } from "@/components/SiteData/WorldMap";
+import WorldMap from "@/components/SiteData/WorldMap";
 
 export default async function Page({
   params,
@@ -31,7 +30,10 @@ export default async function Page({
       <h1 className="text-2xl font-bold">Dashboard for: {domain}</h1>
 
       <AnalyticsMetrics siteId={siteId} />
-      <WorldMap siteId={siteId} />
+      <div className="mt-6">
+        <h2 className="text-xl font-semibold mb-4">New Map Test (Visx)</h2>
+        <WorldMap width={800} height={650} siteId={siteId} events={true} />
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <ActiveVisitors siteId={siteId} />

@@ -1,21 +1,68 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { MapChart } from "./MapChart";
+import React, { useEffect, useState } from "react";
+import { Mercator, Graticule } from "@visx/geo";
+import * as topojson from "topojson-client";
 import { createClient } from "@/lib/supabase/client";
+
+export const background = "#0f172a"; // Fond bleu nuit comme WorldMap
 
 interface CountryData {
   [key: string]: number;
 }
 
-interface WorldMapProps {
+export type GeoMercatorProps = {
+  width: number;
+  height: number;
+  events?: boolean;
   siteId: string;
+};
+
+interface FeatureShape {
+  type: "Feature";
+  id: string;
+  geometry: { coordinates: [number, number][][]; type: "Polygon" };
+  properties: { name: string };
 }
 
-export function WorldMap({ siteId }: WorldMapProps) {
-  const [content, setContent] = useState("");
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+export default function WorldMap({
+  width,
+  height,
+  events = false,
+  siteId,
+}: GeoMercatorProps) {
+  const [world, setWorld] = useState<{
+    type: "FeatureCollection";
+    features: FeatureShape[];
+  } | null>(null);
   const [countryData, setCountryData] = useState<CountryData>({});
+  const [tooltip, setTooltip] = useState<{
+    content: string;
+    x: number;
+    y: number;
+  } | null>(null);
 
+  // Charger les données géographiques
+  useEffect(() => {
+    fetch("/features.json")
+      .then((response) => response.json())
+      .then((topology) => {
+        // features.json contient du TopoJSON, il faut le convertir
+        // @ts-expect-error topojson types don't match exactly with our topology structure
+        const worldData = topojson.feature(
+          topology,
+          topology.objects.world
+        ) as {
+          type: "FeatureCollection";
+          features: FeatureShape[];
+        };
+        setWorld(worldData);
+      })
+      .catch((error) => {
+        console.error("Error loading topology:", error);
+      });
+  }, []);
+
+  // Charger les données des visiteurs par pays
   useEffect(() => {
     const fetchCountryData = async () => {
       const supabase = createClient();
@@ -48,24 +95,123 @@ export function WorldMap({ siteId }: WorldMapProps) {
     }
   }, [siteId]);
 
-  const handleMouseMove = (event: React.MouseEvent) => {
-    setMousePosition({ x: event.clientX, y: event.clientY });
+  if (!world) {
+    return (
+      <div className="flex items-center justify-center text-gray-600">
+        Loading map...
+      </div>
+    );
+  }
+
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const scale = (width / 630) * 100;
+
+  // Calculer le maximum de visiteurs pour le gradient
+  const maxVisitors = Math.max(...Object.values(countryData), 1);
+
+  const getCountryFill = (countryName: string): string => {
+    const visitors = countryData[countryName] || 0;
+
+    if (visitors === 0) {
+      return "#1e293b"; // slate-800 - couleur de base pour les pays sans visiteurs
+    }
+
+    // Calculer l'intensité (0 à 1)
+    const intensity = visitors / maxVisitors;
+
+    // Générer des couleurs claires basées sur l'intensité
+    const baseOpacity = 0.4;
+    const maxOpacity = 0.9;
+    const opacity = baseOpacity + intensity * (maxOpacity - baseOpacity);
+
+    // Utiliser des couleurs cyan/bleu clair pour contraster avec le fond bleu nuit
+    return `rgba(103, 232, 249, ${opacity})`; // sky-300 with variable opacity
   };
 
-  return (
-    <div className="relative" onMouseMove={handleMouseMove}>
-      <MapChart setTooltipContent={setContent} countryData={countryData} />
+  const handleMouseEnter = (event: React.MouseEvent, countryName: string) => {
+    const visitors = countryData[countryName] || 0;
+    let content = countryName;
+    if (visitors > 0) {
+      content += `\n${visitors} visitor${visitors !== 1 ? "s" : ""}`;
+    } else {
+      content += `\nNo visitors`;
+    }
 
-      {/* Tooltip personnalisé */}
-      {content && (
+    setTooltip({
+      content,
+      x: event.clientX,
+      y: event.clientY - 40,
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setTooltip(null);
+  };
+
+  return width < 10 ? null : (
+    <div className="relative">
+      <svg width={width} height={height}>
+        <rect
+          x={0}
+          y={0}
+          width={width}
+          height={height}
+          fill={background}
+          rx={14}
+        />
+        <Mercator<FeatureShape>
+          data={world.features}
+          scale={scale}
+          translate={[centerX, centerY + 50]}
+        >
+          {(mercator) => (
+            <g>
+              <Graticule
+                graticule={(g) => mercator.path(g) || ""}
+                stroke="rgba(33,33,33,0.05)"
+              />
+              {mercator.features.map(({ feature, path }, i) => {
+                const countryName =
+                  feature.properties.name || feature.id || "Unknown Country";
+
+                return (
+                  <path
+                    key={`map-feature-${i}`}
+                    d={path || ""}
+                    fill={getCountryFill(countryName)}
+                    stroke="#314158"
+                    strokeWidth={0.7}
+                    style={{
+                      cursor: "pointer",
+                      transition: "all 0.2s ease-in-out",
+                    }}
+                    onMouseEnter={(event) =>
+                      handleMouseEnter(event, countryName)
+                    }
+                    onMouseLeave={handleMouseLeave}
+                    onClick={() => {
+                      if (events)
+                        alert(`Clicked: ${countryName} (${feature.id})`);
+                    }}
+                  />
+                );
+              })}
+            </g>
+          )}
+        </Mercator>
+      </svg>
+
+      {/* Tooltip */}
+      {tooltip && (
         <div
           className="fixed z-50 bg-slate-600 text-white text-sm px-3 py-2 rounded-lg shadow-lg pointer-events-none"
           style={{
-            left: mousePosition.x + 10,
-            top: mousePosition.y - 40,
+            left: tooltip.x + 10,
+            top: tooltip.y,
           }}
         >
-          {content.split("\n").map((line, index) => (
+          {tooltip.content.split("\n").map((line, index) => (
             <div
               key={index}
               className={index === 0 ? "font-semibold" : "text-slate-300"}
