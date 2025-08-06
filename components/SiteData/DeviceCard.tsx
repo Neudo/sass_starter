@@ -54,19 +54,17 @@ export function DeviceCard({ siteId }: { siteId: string }) {
       };
 
       data?.forEach((session: DeviceData) => {
-        // Count browsers
+        // Count browsers - group all versions together
         if (session.browser) {
-          const browserKey = session.browser_version
-            ? `${session.browser} ${session.browser_version}`
-            : session.browser;
+          // Use only the browser name, ignore version
+          const browserKey = session.browser;
           stats.browsers[browserKey] = (stats.browsers[browserKey] || 0) + 1;
         }
 
-        // Count OS
+        // Count OS - group all versions together
         if (session.os) {
-          const osKey = session.os_version
-            ? `${session.os} ${session.os_version}`
-            : session.os;
+          // Use only the OS name, ignore version
+          const osKey = session.os;
           stats.os[osKey] = (stats.os[osKey] || 0) + 1;
         }
 

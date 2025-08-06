@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
     const domain = req.headers.get("host");
     // Get client IP from headers
     const forwarded = req.headers.get("x-forwarded-for");
+
     let ip = forwarded ? forwarded.split(",")[0].trim() : null;
     if (ip === "::1" || ip === null) {
       ip = "83.114.15.244";
@@ -46,6 +47,8 @@ export async function POST(req: NextRequest) {
 
     const reader = await Reader.open(dbPath);
     const response = reader.city(ip);
+
+    console.log(response);
 
     // Extract location data in English
     const country = response?.country?.names.en || null;

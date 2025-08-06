@@ -105,7 +105,7 @@ export default function WorldMap({
 
   const centerX = width / 2;
   const centerY = height / 2;
-  const scale = (width / 800) * 100;
+  const scale = (width / 860) * 100;
 
   // Calculer le maximum de visiteurs pour le gradient
   const maxVisitors = Math.max(...Object.values(countryData), 1);
@@ -151,11 +151,11 @@ export default function WorldMap({
 
   return width < 10 ? null : (
     <div className="relative">
-      <svg width={width} height={height}>
+      <svg width="100%" height={height}>
         <rect
           x={0}
           y={0}
-          width={width}
+          width="100%"
           height={height}
           fill="rgb(12 20 37)"
           rx={14}

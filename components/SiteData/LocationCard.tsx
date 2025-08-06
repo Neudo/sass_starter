@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Globe, Building, Flag, Users, Percent } from "lucide-react";
-import { WorldMap } from "./WorldMap";
 
 interface LocationData {
   country: string | null;
@@ -14,8 +13,8 @@ interface LocationData {
 
 interface LocationStats {
   countries: Record<string, number>;
-  regions: Record<string, number>;
-  cities: Record<string, number>;
+  regions: Record<string, { count: number; country?: string }>;
+  cities: Record<string, { count: number; country?: string }>;
 }
 
 export function LocationCard({ siteId }: { siteId: string }) {
@@ -55,21 +54,30 @@ export function LocationCard({ siteId }: { siteId: string }) {
             (stats.countries[session.country] || 0) + 1;
         }
 
-        // Count regions
+        // Count regions with country info (display only region name)
         if (session.region) {
-          const regionKey = session.country
-            ? `${session.region}, ${session.country}`
-            : session.region;
-          stats.regions[regionKey] = (stats.regions[regionKey] || 0) + 1;
+          const regionKey = session.region;
+
+          if (!stats.regions[regionKey]) {
+            stats.regions[regionKey] = {
+              count: 0,
+              country: session.country || undefined,
+            };
+          }
+          stats.regions[regionKey].count++;
         }
 
-        // Count cities
+        // Count cities with country info (display only city name)
         if (session.city) {
-          const cityKey =
-            session.region && session.country
-              ? `${session.city}, ${session.region}`
-              : session.city;
-          stats.cities[cityKey] = (stats.cities[cityKey] || 0) + 1;
+          const cityKey = session.city;
+
+          if (!stats.cities[cityKey]) {
+            stats.cities[cityKey] = {
+              count: 0,
+              country: session.country || undefined,
+            };
+          }
+          stats.cities[cityKey].count++;
         }
       });
 
@@ -160,12 +168,22 @@ export function LocationCard({ siteId }: { siteId: string }) {
   };
 
   const renderStats = (
-    data: Record<string, number>,
+    data:
+      | Record<string, number>
+      | Record<string, { count: number; country?: string }>,
     type: "country" | "region" | "city" = "country"
   ) => {
-    const sortedData = Object.entries(data).sort(([, a], [, b]) => b - a);
+    // Convert data to consistent format for sorting
+    const sortedData = Object.entries(data).sort(([, a], [, b]) => {
+      const aCount = typeof a === "number" ? a : a.count;
+      const bCount = typeof b === "number" ? b : b.count;
+      return bCount - aCount;
+    });
 
-    const total = Object.values(data).reduce((sum, count) => sum + count, 0);
+    const total = Object.values(data).reduce((sum, item) => {
+      const count = typeof item === "number" ? item : item.count;
+      return sum + count;
+    }, 0);
 
     if (sortedData.length === 0) {
       return <p className="text-muted-foreground text-sm">No data available</p>;
@@ -200,15 +218,26 @@ export function LocationCard({ siteId }: { siteId: string }) {
             )}
           </button>
         </div>
-        {sortedData.map(([name, count]) => {
+        {sortedData.map(([name, item]) => {
+          const count = typeof item === 'number' ? item : item.count;
           const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
-          const flag = type === "country" ? getCountryFlag(name) : null;
+          
+          // Get flag based on type
+          let flag = null;
+          if (type === "country") {
+            flag = getCountryFlag(name);
+          } else if (type === "region" || type === "city") {
+            // Get country from the data structure
+            if (typeof item !== 'number' && item.country) {
+              flag = getCountryFlag(item.country);
+            }
+          }
 
           return (
             <div key={name} className="space-y-1">
               <div className="flex justify-between text-sm">
                 <div className="flex items-center gap-2 truncate mr-2">
-                  {type === "country" && flag ? (
+                  {flag ? (
                     <span className="text-base">{flag}</span>
                   ) : type === "country" ? (
                     <Flag className="h-4 w-4 text-muted-foreground" />
