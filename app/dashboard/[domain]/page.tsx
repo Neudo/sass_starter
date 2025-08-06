@@ -2,6 +2,7 @@ import React from "react";
 import { TotalVisitorsDisplay } from "@/hooks/useTotalVisitors";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DeviceCard } from "@/components/SiteData/DeviceCard";
 
 export default async function Page({
   params,
@@ -40,7 +41,7 @@ export default async function Page({
             <CardTitle>Devices</CardTitle>
           </CardHeader>
           <CardContent>
-            <TotalVisitorsDisplay siteId={siteId} />
+            <DeviceCard siteId={siteId} />
           </CardContent>
         </Card>
       </div>

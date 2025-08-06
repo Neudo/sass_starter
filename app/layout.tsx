@@ -30,8 +30,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html suppressHydrationWarning lang="en">
-      <body className={`${geistSans.className} antialiased`}>
+    <html suppressHydrationWarning lang="en" className={geistSans.variable}>
+      <body className="antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
