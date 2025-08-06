@@ -31,8 +31,7 @@ export default async function Page({
 
       <AnalyticsMetrics siteId={siteId} />
       <div className="mt-6">
-        <h2 className="text-xl font-semibold mb-4">New Map Test (Visx)</h2>
-        <WorldMap width={800} height={650} siteId={siteId} events={true} />
+        <WorldMap width={800} height={450} siteId={siteId} events={true} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -105,7 +105,7 @@ export default function WorldMap({
 
   const centerX = width / 2;
   const centerY = height / 2;
-  const scale = (width / 630) * 100;
+  const scale = (width / 800) * 100;
 
   // Calculer le maximum de visiteurs pour le gradient
   const maxVisitors = Math.max(...Object.values(countryData), 1);
@@ -157,7 +157,7 @@ export default function WorldMap({
           y={0}
           width={width}
           height={height}
-          fill={background}
+          fill="rgb(12 20 37)"
           rx={14}
         />
         <Mercator<FeatureShape>
