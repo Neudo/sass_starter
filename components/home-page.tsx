@@ -1,6 +1,5 @@
 "use client";
 import Hero from "./hero";
-import { WaitlistForm } from "@/components/waitlist-form";
 import { faqs } from "@/data/faq";
 import {
   Accordion,

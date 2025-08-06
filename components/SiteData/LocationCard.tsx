@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Globe, Building, Flag, Users, Percent } from "lucide-react";
+import { getCountryFlag } from "@/data/country-flags";
 
 interface LocationData {
   country: string | null;
@@ -88,84 +89,6 @@ export function LocationCard({ siteId }: { siteId: string }) {
     fetchLocationData();
   }, [siteId]);
 
-  const getCountryFlag = (countryName: string) => {
-    // Map country names to ISO codes for flag emojis
-    const countryToCode: Record<string, string> = {
-      "United States": "🇺🇸",
-      USA: "🇺🇸",
-      US: "🇺🇸",
-      "United Kingdom": "🇬🇧",
-      UK: "🇬🇧",
-      France: "🇫🇷",
-      Germany: "🇩🇪",
-      Canada: "🇨🇦",
-      Australia: "🇦🇺",
-      Japan: "🇯🇵",
-      China: "🇨🇳",
-      India: "🇮🇳",
-      Brazil: "🇧🇷",
-      Mexico: "🇲🇽",
-      Spain: "🇪🇸",
-      Italy: "🇮🇹",
-      Netherlands: "🇳🇱",
-      Belgium: "🇧🇪",
-      Switzerland: "🇨🇭",
-      Sweden: "🇸🇪",
-      Norway: "🇳🇴",
-      Denmark: "🇩🇰",
-      Finland: "🇫🇮",
-      Poland: "🇵🇱",
-      Portugal: "🇵🇹",
-      Ireland: "🇮🇪",
-      Austria: "🇦🇹",
-      "New Zealand": "🇳🇿",
-      Singapore: "🇸🇬",
-      "South Korea": "🇰🇷",
-      Russia: "🇷🇺",
-      "South Africa": "🇿🇦",
-      Argentina: "🇦🇷",
-      Chile: "🇨🇱",
-      Colombia: "🇨🇴",
-      Peru: "🇵🇪",
-      Venezuela: "🇻🇪",
-      Egypt: "🇪🇬",
-      Turkey: "🇹🇷",
-      Greece: "🇬🇷",
-      Israel: "🇮🇱",
-      "Saudi Arabia": "🇸🇦",
-      UAE: "🇦🇪",
-      Thailand: "🇹🇭",
-      Indonesia: "🇮🇩",
-      Malaysia: "🇲🇾",
-      Philippines: "🇵🇭",
-      Vietnam: "🇻🇳",
-      Pakistan: "🇵🇰",
-      Bangladesh: "🇧🇩",
-      Nigeria: "🇳🇬",
-      Kenya: "🇰🇪",
-      Morocco: "🇲🇦",
-      Tunisia: "🇹🇳",
-      "Czech Republic": "🇨🇿",
-      Hungary: "🇭🇺",
-      Romania: "🇷🇴",
-      Bulgaria: "🇧🇬",
-      Croatia: "🇭🇷",
-      Serbia: "🇷🇸",
-      Ukraine: "🇺🇦",
-      Belarus: "🇧🇾",
-      Lithuania: "🇱🇹",
-      Latvia: "🇱🇻",
-      Estonia: "🇪🇪",
-      Slovenia: "🇸🇮",
-      Slovakia: "🇸🇰",
-      Luxembourg: "🇱🇺",
-      Malta: "🇲🇹",
-      Cyprus: "🇨🇾",
-      Iceland: "🇮🇸",
-    };
-
-    return countryToCode[countryName] || null;
-  };
 
   const renderStats = (
     data:

@@ -16,11 +16,11 @@ export function ActiveVisitors({ siteId }: ActiveVisitorsProps) {
   useEffect(() => {
     const fetchActiveVisitors = async () => {
       const supabase = createClient();
-      
+
       // Consider visitors active if they were seen in the last 5 minutes
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-      
-      const { data, error, count } = await supabase
+
+      const { error, count } = await supabase
         .from("sessions")
         .select("id", { count: "exact", head: true })
         .eq("site_id", siteId)

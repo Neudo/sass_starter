@@ -48,8 +48,6 @@ export async function POST(req: NextRequest) {
     const reader = await Reader.open(dbPath);
     const response = reader.city(ip);
 
-    console.log(response);
-
     // Extract location data in English
     const country = response?.country?.names.en || null;
     const region = response?.subdivisions?.[0].names.en || null;

@@ -3,7 +3,17 @@
 import React, { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Chrome, Globe, Smartphone, Monitor, Tablet, Apple, MonitorSmartphone, Users, Percent } from "lucide-react";
+import {
+  Chrome,
+  Globe,
+  Smartphone,
+  Monitor,
+  Tablet,
+  Apple,
+  MonitorSmartphone,
+  Users,
+  Percent,
+} from "lucide-react";
 
 interface DeviceData {
   browser: string | null;
@@ -32,8 +42,6 @@ export function DeviceCard({ siteId }: { siteId: string }) {
     const fetchDeviceData = async () => {
       const supabase = createClient();
 
-      console.log("siteId -->", siteId);
-
       const { data, error } = await supabase
         .from("sessions")
         .select("browser, browser_version, os, os_version, screen_size")
@@ -44,8 +52,6 @@ export function DeviceCard({ siteId }: { siteId: string }) {
         setLoading(false);
         return;
       }
-
-      console.log("data -->", data);
 
       const stats: DeviceStats = {
         browsers: {},
@@ -84,33 +90,43 @@ export function DeviceCard({ siteId }: { siteId: string }) {
 
   const getBrowserIcon = (browserName: string) => {
     const name = browserName.toLowerCase();
-    if (name.includes('chrome')) return <Chrome className="h-4 w-4" />;
-    if (name.includes('firefox')) return <Globe className="h-4 w-4 text-orange-500" />;
-    if (name.includes('safari')) return <Globe className="h-4 w-4 text-blue-500" />;
-    if (name.includes('edge')) return <Globe className="h-4 w-4 text-blue-600" />;
-    if (name.includes('opera')) return <Globe className="h-4 w-4 text-red-500" />;
+    if (name.includes("chrome")) return <Chrome className="h-4 w-4" />;
+    if (name.includes("firefox"))
+      return <Globe className="h-4 w-4 text-orange-500" />;
+    if (name.includes("safari"))
+      return <Globe className="h-4 w-4 text-blue-500" />;
+    if (name.includes("edge"))
+      return <Globe className="h-4 w-4 text-blue-600" />;
+    if (name.includes("opera"))
+      return <Globe className="h-4 w-4 text-red-500" />;
     return <Globe className="h-4 w-4 text-muted-foreground" />;
   };
 
   const getOSIcon = (osName: string) => {
     const name = osName.toLowerCase();
-    if (name.includes('windows')) return <Monitor className="h-4 w-4" />;
-    if (name.includes('mac')) return <Apple className="h-4 w-4" />;
-    if (name.includes('ios') || name.includes('iphone')) return <Smartphone className="h-4 w-4" />;
-    if (name.includes('android')) return <Smartphone className="h-4 w-4 text-green-500" />;
-    if (name.includes('linux')) return <Monitor className="h-4 w-4 text-yellow-600" />;
+    if (name.includes("windows")) return <Monitor className="h-4 w-4" />;
+    if (name.includes("mac")) return <Apple className="h-4 w-4" />;
+    if (name.includes("ios") || name.includes("iphone"))
+      return <Smartphone className="h-4 w-4" />;
+    if (name.includes("android"))
+      return <Smartphone className="h-4 w-4 text-green-500" />;
+    if (name.includes("linux"))
+      return <Monitor className="h-4 w-4 text-yellow-600" />;
     return <MonitorSmartphone className="h-4 w-4 text-muted-foreground" />;
   };
 
   const getScreenIcon = (screenSize: string) => {
     const size = screenSize.toLowerCase();
-    if (size.includes('mobile')) return <Smartphone className="h-4 w-4" />;
-    if (size.includes('tablet')) return <Tablet className="h-4 w-4" />;
-    if (size.includes('desktop')) return <Monitor className="h-4 w-4" />;
+    if (size.includes("mobile")) return <Smartphone className="h-4 w-4" />;
+    if (size.includes("tablet")) return <Tablet className="h-4 w-4" />;
+    if (size.includes("desktop")) return <Monitor className="h-4 w-4" />;
     return <MonitorSmartphone className="h-4 w-4 text-muted-foreground" />;
   };
 
-  const renderStats = (data: Record<string, number>, type: 'browser' | 'os' | 'screen' = 'browser') => {
+  const renderStats = (
+    data: Record<string, number>,
+    type: "browser" | "os" | "screen" = "browser"
+  ) => {
     const sortedData = Object.entries(data).sort(([, a], [, b]) => b - a);
 
     const total = Object.values(data).reduce((sum, count) => sum + count, 0);
@@ -123,7 +139,7 @@ export function DeviceCard({ siteId }: { siteId: string }) {
       <div className="space-y-3">
         <div className="flex items-center justify-between mb-2">
           <div className="text-xs text-muted-foreground">
-            Showing {sortedData.length} item{sortedData.length !== 1 ? 's' : ''}
+            Showing {sortedData.length} item{sortedData.length !== 1 ? "s" : ""}
           </div>
           <button
             onClick={() => setShowPercentage(!showPercentage)}
@@ -145,7 +161,12 @@ export function DeviceCard({ siteId }: { siteId: string }) {
         </div>
         {sortedData.map(([name, count]) => {
           const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
-          const icon = type === 'browser' ? getBrowserIcon(name) : type === 'os' ? getOSIcon(name) : getScreenIcon(name);
+          const icon =
+            type === "browser"
+              ? getBrowserIcon(name)
+              : type === "os"
+              ? getOSIcon(name)
+              : getScreenIcon(name);
           return (
             <div key={name} className="space-y-1">
               <div className="flex justify-between text-sm">
@@ -182,13 +203,13 @@ export function DeviceCard({ siteId }: { siteId: string }) {
         <TabsTrigger value="screen">Screen Size</TabsTrigger>
       </TabsList>
       <TabsContent value="browser" className="mt-4">
-        {renderStats(deviceStats.browsers, 'browser')}
+        {renderStats(deviceStats.browsers, "browser")}
       </TabsContent>
       <TabsContent value="os" className="mt-4">
-        {renderStats(deviceStats.os, 'os')}
+        {renderStats(deviceStats.os, "os")}
       </TabsContent>
       <TabsContent value="screen" className="mt-4">
-        {renderStats(deviceStats.screenSizes, 'screen')}
+        {renderStats(deviceStats.screenSizes, "screen")}
       </TabsContent>
     </Tabs>
   );
