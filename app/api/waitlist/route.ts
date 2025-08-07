@@ -13,7 +13,6 @@ export async function POST(req: NextRequest) {
 
     // Check if API key exists
     if (!process.env.RESEND_API_KEY) {
-      console.error("RESEND_API_KEY is not set");
       return NextResponse.json(
         { error: "Email configuration error" },
         { status: 500 }
@@ -64,7 +63,7 @@ export async function POST(req: NextRequest) {
       console.error("Email sending failed:", {
         status: emailResponse.status,
         error: errorData,
-        to: email
+        to: email,
       });
       // Continue anyway, user is already in waitlist
     } else {
@@ -89,10 +88,10 @@ export async function POST(req: NextRequest) {
               <h2 style="color: #3d9dbd;">Quelqu'un vient de s'inscrire à la waitlist !</h2>
               
               <p><strong>Email :</strong> ${email}</p>
-              <p><strong>Date :</strong> ${new Date().toLocaleString('fr-FR', { 
-                timeZone: 'Europe/Paris',
-                dateStyle: 'full',
-                timeStyle: 'short'
+              <p><strong>Date :</strong> ${new Date().toLocaleString("fr-FR", {
+                timeZone: "Europe/Paris",
+                dateStyle: "full",
+                timeStyle: "short",
               })}</p>
               
               <p style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-left: 4px solid #3d9dbd;">
@@ -107,7 +106,7 @@ export async function POST(req: NextRequest) {
         const adminErrorData = await adminEmailResponse.json();
         console.error("Admin notification email failed:", {
           status: adminEmailResponse.status,
-          error: adminErrorData
+          error: adminErrorData,
         });
       } else {
         const adminResult = await adminEmailResponse.json();
