@@ -11,6 +11,15 @@ export async function POST(req: NextRequest) {
     const supabase = await createAdminClient();
     await supabase.from("waitlist").insert({ email });
 
+    // Check if API key exists
+    if (!process.env.RESEND_API_KEY) {
+      console.error("RESEND_API_KEY is not set");
+      return NextResponse.json(
+        { error: "Email configuration error" },
+        { status: 500 }
+      );
+    }
+
     // Try sending the email and capture any errors
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -50,38 +59,64 @@ export async function POST(req: NextRequest) {
     });
 
     // Log email sending response for debugging
-    const emailResult = await emailResponse.json();
-    console.log("Email sending result:", emailResult);
+    if (!emailResponse.ok) {
+      const errorData = await emailResponse.json();
+      console.error("Email sending failed:", {
+        status: emailResponse.status,
+        error: errorData,
+        to: email
+      });
+      // Continue anyway, user is already in waitlist
+    } else {
+      const emailResult = await emailResponse.json();
+      console.log("Email sent successfully:", emailResult);
+    }
 
     // Send notification email to admin
-    await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: "Hector Analytics <support@hectoranalytics.com>",
-        to: "bassalair.quentin@gmail.com",
-        subject: "🎉 Nouvelle inscription à la waitlist !",
-        html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333;">
-            <h2 style="color: #3d9dbd;">Quelqu'un vient de s'inscrire à la waitlist !</h2>
-            
-            <p><strong>Email :</strong> ${email}</p>
-            <p><strong>Date :</strong> ${new Date().toLocaleString('fr-FR', { 
-              timeZone: 'Europe/Paris',
-              dateStyle: 'full',
-              timeStyle: 'short'
-            })}</p>
-            
-            <p style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-left: 4px solid #3d9dbd;">
-              N'oublie pas de le/la contacter personnellement si c'est un prospect intéressant !
-            </p>
-          </div>
-        `,
-      }),
-    });
+    try {
+      const adminEmailResponse = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: "Hector Analytics <support@hectoranalytics.com>",
+          to: "bassalair.quentin@gmail.com",
+          subject: "🎉 Nouvelle inscription à la waitlist !",
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333;">
+              <h2 style="color: #3d9dbd;">Quelqu'un vient de s'inscrire à la waitlist !</h2>
+              
+              <p><strong>Email :</strong> ${email}</p>
+              <p><strong>Date :</strong> ${new Date().toLocaleString('fr-FR', { 
+                timeZone: 'Europe/Paris',
+                dateStyle: 'full',
+                timeStyle: 'short'
+              })}</p>
+              
+              <p style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-left: 4px solid #3d9dbd;">
+                N'oublie pas de le/la contacter personnellement si c'est un prospect intéressant !
+              </p>
+            </div>
+          `,
+        }),
+      });
+
+      if (!adminEmailResponse.ok) {
+        const adminErrorData = await adminEmailResponse.json();
+        console.error("Admin notification email failed:", {
+          status: adminEmailResponse.status,
+          error: adminErrorData
+        });
+      } else {
+        const adminResult = await adminEmailResponse.json();
+        console.log("Admin notification sent:", adminResult);
+      }
+    } catch (adminEmailError) {
+      console.error("Failed to send admin notification:", adminEmailError);
+      // Don't fail the whole request if admin notification fails
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
