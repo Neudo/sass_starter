@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px;">
             <p>Hi there,</p>
             
-            <p>Thank you for your interest in Hector Analytics. I wanted to personally confirm that you're now on our early access list.</p>
+            <p>Thank you for your interest in Hector Analytics. I wanted to confirm that you're now on our early access list.</p>
             
             <p>We're building something special - a analytics platform that actually makes sense for modern teams. As an early supporter, you'll get:</p>
             
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
               <li>Direct line to our team for feedback</li>
             </ul>
             
-            <p>I'll keep you updated on our progress. In the meantime, feel free to reply if you have any questions about what we're building.</p>
+            <p>No spam, next mail is for the launch. In the meantime, feel free to reply if you have any questions about what we're building.</p>
             
             <p>Best regards,<br>
             Quentin<br>
