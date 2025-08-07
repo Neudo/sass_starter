@@ -22,10 +22,10 @@ export default function Page() {
               <Logo size="xl" showText={false} />
             </div>
             <h1 className="text-2xl font-bold mb-2 text-primary">
-              Welcome back to Dana!
+              Welcome back to Hector Analytics!
             </h1>
             <p className="text-muted-foreground">
-              Sign in to your Hector Analytics dashboard
+              Sign in to your Hector Analytics account
             </p>
           </div>
           <LoginForm />

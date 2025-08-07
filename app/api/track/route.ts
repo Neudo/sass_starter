@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
     const domain = req.headers.get("host");
     // Get client IP from headers
     const forwarded = req.headers.get("x-forwarded-for");
+
     let ip = forwarded ? forwarded.split(",")[0].trim() : null;
     if (ip === "::1" || ip === null) {
       ip = "83.114.15.244";

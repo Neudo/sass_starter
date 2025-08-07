@@ -59,6 +59,9 @@ importers:
       '@visx/responsive':
         specifier: ^3.12.0
         version: 3.12.0(react@19.1.1)
+      '@visx/scale':
+        specifier: ^3.12.0
+        version: 3.12.0
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -95,6 +98,9 @@ importers:
       react-simple-maps:
         specifier: ^3.0.0
         version: 3.0.0(prop-types@15.8.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      react-tooltip:
+        specifier: ^5.29.1
+        version: 5.29.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       recharts:
         specifier: 2.15.4
         version: 2.15.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -1270,6 +1276,9 @@ packages:
     resolution: {integrity: sha512-GV1BTYwAGlk/K5c9vH8lS2syPnTuIqEacI7L6LRPbsuaLscXMNi+i9fZyzo0BWvAdtRV8v6Urzglo++lvAXT1Q==}
     peerDependencies:
       react: ^16.0.0-0 || ^17.0.0-0 || ^18.0.0-0
+
+  '@visx/scale@3.12.0':
+    resolution: {integrity: sha512-+ubijrZ2AwWCsNey0HGLJ0YKNeC/XImEFsr9rM+Uef1CM3PNM43NDdNTrdBejSlzRq0lcfQPWYMYQFSlkLcPOg==}
 
   '@visx/vendor@3.12.0':
     resolution: {integrity: sha512-SVO+G0xtnL9dsNpGDcjCgoiCnlB3iLSM9KLz1sLbSrV7RaVXwY3/BTm2X9OWN1jH2a9M+eHt6DJ6sE6CXm4cUg==}
@@ -2539,6 +2548,12 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  react-tooltip@5.29.1:
+    resolution: {integrity: sha512-rmJmEb/p99xWhwmVT7F7riLG08wwKykjHiMGbDPloNJk3tdI73oHsVOwzZ4SRjqMdd5/xwb/4nmz0RcoMfY7Bw==}
+    peerDependencies:
+      react: '>=16.14.0'
+      react-dom: '>=16.14.0'
 
   react-transition-group@4.4.5:
     resolution: {integrity: sha512-pZcd1MCJoiKiBR2NRxeCRg13uCXbydPnmB4EOeRrY7480qNWO8IIgQG6zlDkm6uRMsURXPuKq0GWtiM59a5Q6g==}
@@ -3984,6 +3999,10 @@ snapshots:
       prop-types: 15.8.1
       react: 19.1.1
 
+  '@visx/scale@3.12.0':
+    dependencies:
+      '@visx/vendor': 3.12.0
+
   '@visx/vendor@3.12.0':
     dependencies:
       '@types/d3-array': 3.0.3
@@ -5411,6 +5430,13 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.1.9
+
+  react-tooltip@5.29.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
+    dependencies:
+      '@floating-ui/dom': 1.7.3
+      classnames: 2.5.1
+      react: 19.1.1
+      react-dom: 19.1.1(react@19.1.1)
 
   react-transition-group@4.4.5(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:

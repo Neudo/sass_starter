@@ -1,6 +1,5 @@
 "use client";
 import Hero from "./hero";
-import { WaitlistForm } from "@/components/waitlist-form";
 import { faqs } from "@/data/faq";
 import {
   Accordion,
@@ -12,11 +11,13 @@ import { Badge } from "@/components/ui/badge";
 import { HelpCircle, ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
+import { WaitlistForm } from "./waitlist-form";
 
 export function HomePage() {
+  const isProd = process.env.NEXT_PUBLIC_NODE_ENV === "production";
   return (
     <div className="min-h-screen theme-transition">
-      <Hero cta={<WaitlistForm />} />
+      <Hero cta={isProd ? <WaitlistForm /> : null} />
       {/* FAQ Preview */}
       <section className="py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -1,5 +1,4 @@
 "use client";
-import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Logo } from "@/components/logo";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,8 +27,8 @@ export default function ProtectedLayout({
   return (
     <QueryClientProvider client={queryClient}>
       <main className="min-h-screen flex flex-col items-center">
-        <div className="flex-1 w-full flex flex-col gap-20 items-center">
-          <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
+        <div className="flex-1 w-full flex flex-col gap-20 items-center py-8">
+          <nav className="w-full flex justify-center border-b border-b-foreground/10 h-20">
             <header className="bg-background border-b border-border max-w-7xl mx-auto w-full">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
@@ -120,7 +119,6 @@ export default function ProtectedLayout({
                 Supabase
               </a>
             </p>
-            <ThemeSwitcher />
           </footer>
         </div>
       </main>

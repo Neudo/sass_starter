@@ -2,8 +2,21 @@
 import { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Button } from "./ui/button";
-import { ArrowRight, Calendar, Play, TrendingUp } from "lucide-react";
-import { ChartDemo } from "./chart-demo";
+import {
+  ArrowRight,
+  Play,
+  Users,
+  Activity,
+  Globe,
+  Shield,
+  Zap,
+  Gauge,
+  TrendingUp,
+  Clock,
+  Monitor,
+  Sparkles,
+} from "lucide-react";
+import Link from "next/link";
 
 export default function Hero({ cta }: { cta?: ReactNode }) {
   return (
@@ -16,11 +29,11 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight mb-6"
           >
-            The lightweight,{" "}
+            Ditch Google Analytics.{" "}
             <span className="bg-gradient-to-r from-primary via-ring to-secondary bg-clip-text text-transparent">
-              privacy-first{" "}
+              Embrace Privacy.{" "}
             </span>
-            alternative to Google Analytics
+            Keep Your Data.
           </motion.h1>
 
           {/* Subtitle */}
@@ -28,10 +41,12 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto mb-10"
+            className="text-xl sm:text-2xl text-muted-foreground max-w-4xl mx-auto mb-10"
           >
-            Drop the complexity. Hector Analytics, simple to use and GRPD
-            compliant. No cookies needed.
+            The cookieless web analytics platform that respects visitor privacy
+            while delivering powerful insights. No technical skills required -
+            GDPR compliant by design, 2-minute setup, and under 1KB tracking
+            script. Perfect for beginners and pros alike.
           </motion.p>
 
           {/* CTA area */}
@@ -48,40 +63,46 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
                 size="lg"
                 className="text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
               >
-                Get started
+                Start Free - No Credit Card
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="text-lg px-8 py-6 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors duration-200"
-              >
-                <Play className="mr-2 w-5 h-5" />
-                View live demo
-              </Button>
+              <Link href="/demo">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="text-lg px-8 py-6 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors duration-200"
+                >
+                  <Play className="mr-2 w-5 h-5" />
+                  View live demo
+                </Button>
+              </Link>
             </motion.div>
           )}
 
-          {/* Trust indicators avec les nouvelles couleurs */}
-          {/* <motion.div
+          {/* Trust indicators */}
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-8 text-sm text-muted-foreground"
+            className="flex flex-col sm:flex-row items-center justify-center gap-8 text-sm text-muted-foreground mb-8"
           >
             <div className="flex items-center gap-2">
-              <Settings className="w-4 h-4 text-secondary" />
-              <span>Quick setup</span>
+              <Zap className="w-4 h-4 text-secondary" />
+              <span>2-minute setup</span>
             </div>
             <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-ring" />
-              <span>30 days free</span>
+              <Shield className="w-4 h-4 text-ring" />
+              <span>100% GDPR compliant</span>
             </div>
             <div className="flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-secondary" />
-              <span>No credit card needed</span>
+              <Gauge className="w-4 h-4 text-secondary" />
+              <span>50x lighter than GA4</span>
             </div>
-          </motion.div> */}
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              <span>Real-time insights</span>
+            </div>
+          </motion.div>
         </div>
 
         {/* Hero Image/Dashboard Preview avec les nouvelles couleurs */}
@@ -93,64 +114,162 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
         >
           <div className="relative max-w-5xl mx-auto">
             <div className="relative bg-card rounded-xl border border-border shadow-2xl overflow-hidden">
-              <div className="aspect-[16/10] bg-gradient-to-br from-muted/50 to-muted/20">
-                <div className="p-2 md:p-6">
+              <div className="bg-gradient-to-br from-muted/50 to-muted/20">
+                <div className="p-2 md:p-6 h-full">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="w-3 h-3 bg-destructive rounded-full"></div>
                     <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
                     <div className="w-3 h-3 bg-secondary rounded-full"></div>
                     <div className="ml-4 text-sm text-muted-foreground">
-                      Hector Analytics Dashboard
+                      dashboard.yourdomain.com
                     </div>
                   </div>
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                      <div className="bg-card p-4 rounded-lg border border-primary/10 shadow-sm">
-                        <div className="text-2xl font-bold text-primary">
-                          7,892
+                    {/* Features Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {/* Real-time Visitors */}
+                      <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 p-4 md:px-6 md:py-8 rounded-lg shadow-sm">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="relative">
+                            <Users className="h-5 w-5 text-primary" />
+                            <div className="absolute -top-1 -right-1">
+                              <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                              </span>
+                            </div>
+                          </div>
+                          <span className="text-sm font-semibold">
+                            Real-time Visitors
+                          </span>
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          Visitors
-                        </div>
-                        <div className="text-xs text-secondary flex items-center mt-1">
-                          <TrendingUp className="w-3 h-3 mr-1" />
-                          +23%
-                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          See who&apos;s browsing right now - no cookies
+                          required
+                        </p>
                       </div>
-                      <div className="bg-card p-4 rounded-lg border border-primary/10 shadow-sm">
-                        <div className="text-2xl font-bold text-primary">
-                          8443
+
+                      {/* Privacy First */}
+                      <div className="bg-card p-4 md:px-4 md:py-8 rounded-lg border shadow-sm">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Shield className="h-5 w-5 text-primary" />
+                          <span className="text-sm font-semibold">
+                            Privacy First
+                          </span>
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          Page views
-                        </div>
-                        <div className="text-xs text-ring flex items-center mt-1">
-                          <Calendar className="w-3 h-3 mr-1" />
-                          This week
-                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Zero cookies, zero personal data collection, 100% GDPR
+                          ready
+                        </p>
                       </div>
-                      <div className="bg-card p-4 rounded-lg border border-ring/10 shadow-sm">
-                        <div className="text-2xl font-bold text-ring">
-                          54.7%
+
+                      {/* Beginner Friendly */}
+                      <div className="bg-card p-4 md:px-4 md:py-8 rounded-lg border shadow-sm">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Sparkles className="h-5 w-5 text-primary" />
+                          <span className="text-sm font-semibold">
+                            Beginner Friendly
+                          </span>
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          Bounce rate
-                        </div>
-                        <div className="text-xs text-secondary flex items-center mt-1">
-                          <TrendingUp className="w-3 h-3 mr-1" />
-                          +3%
-                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          No technical knowledge needed - understand your data
+                          instantly
+                        </p>
                       </div>
-                      <div className="bg-card p-4 rounded-lg border border-primary/10 shadow-sm col-span-2 sm:col-span-3">
-                        <ChartDemo />
+
+                      {/* World Map */}
+                      <div className="bg-card p-4 md:px-4 md:py-8 rounded-lg border shadow-sm">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Globe className="h-5 w-5 text-primary" />
+                          <span className="text-sm font-semibold">
+                            World Map
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          See where your visitors come from worldwide - privacy
+                          intact
+                        </p>
+                      </div>
+
+                      {/* Lightning Fast */}
+                      <div className="bg-card p-4 md:px-4 md:py-8 rounded-lg border shadow-sm">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Zap className="h-5 w-5 text-primary" />
+                          <span className="text-sm font-semibold">
+                            Lightning Fast
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          &lt;1KB script (vs 45KB+ for GA)
+                        </p>
+                      </div>
+
+                      {/* Easy Setup */}
+                      <div className="bg-card p-4 md:px-4 md:py-8 rounded-lg border shadow-sm">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Gauge className="h-5 w-5 text-primary" />
+                          <span className="text-sm font-semibold">
+                            Easy Setup
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Copy one script tag. Get insights in 2 minutes. Done.
+                        </p>
+                      </div>
+
+                      {/* Behavior Analytics */}
+                      <div className="bg-card p-4 md:px-4 md:py-8 rounded-lg border shadow-sm">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Activity className="h-5 w-5 text-primary" />
+                          <span className="text-sm font-semibold">
+                            Behavior Analytics
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Understand user journeys without invading privacy
+                        </p>
+                      </div>
+
+                      {/* Engagement Metrics */}
+                      <div className="bg-card p-4 md:px-4 md:py-8 rounded-lg border shadow-sm">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Clock className="h-5 w-5 text-primary" />
+                          <span className="text-sm font-semibold">
+                            Engagement Metrics
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Time on page, bounce rate, and content performance
+                        </p>
+                      </div>
+
+                      {/* Export & API */}
+                      <div className="bg-card p-4 md:px-4 md:py-8 rounded-lg border shadow-sm">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Monitor className="h-5 w-5 text-primary" />
+                          <span className="text-sm font-semibold">
+                            Export & API
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Own your data - export anytime, integrate anywhere
+                        </p>
                       </div>
                     </div>
-                    <div className="bg-card p-4 rounded-lg border border-primary/10 shadow-sm w-full ">
-                      <div className="text-2xl font-bold text-primary">
-                        And more...
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Stay tuned for additional insights
+
+                    {/* More Features Card */}
+                    <div className="bg-gradient-to-r from-primary/5 to-secondary/5 p-4 md:px-6 md:pt-6 md:pb-10 rounded-lg border border-primary/10 shadow-sm">
+                      <div className="flex flex-col items-center gap-2 mb-2 p-4 justify-center">
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="h-5 w-5 md:h-8 md:w-8 text-primary" />
+                          <span className="text-xl md:text-3xl text-center font-bold text-primary">
+                            Everything You Need
+                          </span>
+                        </div>
+                        <p className="text-sm md:text-base text-muted-foreground text-center mt-2">
+                          Referral tracking • UTM campaigns • Device insights •
+                          Page views • Custom events and more...
+                        </p>
                       </div>
                     </div>
                   </div>

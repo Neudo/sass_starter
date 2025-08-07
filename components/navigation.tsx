@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 import { ThemeToggle } from "./theme-toggle";
 import { Logo } from "./logo";
 import { Menu, X, LogOut, User } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { WaitlistModal } from "./waitlist-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -21,25 +21,17 @@ export function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isLoggedIn = false;
 
-  // Manage body scroll when mobile menu is open
-  useEffect(() => {
-    if (isMenuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-
-    // Cleanup function to restore scroll on unmount
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [isMenuOpen]);
-
   // Navigation items definition
   const navItems = [
-    // { name: "Pricing", path: "/pricing", id: "pricing" },
     { name: "FAQ", path: "/faq", id: "faq" },
-    // { name: "Blog", path: "/blog", id: "blog" },
+    { name: "Contact", path: "/contact", id: "contact" },
+  ];
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const navItemsDev = [
+    { name: "Pricing", path: "/pricing", id: "pricing" },
+    { name: "FAQ", path: "/faq", id: "faq" },
+    { name: "Blog", path: "/blog", id: "blog" },
     { name: "Contact", path: "/contact", id: "contact" },
   ];
 
@@ -174,7 +166,7 @@ export function Navigation() {
           {/* Mobile menu */}
           {isMenuOpen && (
             <div className="md:hidden">
-              <div className="px-2 pt-2 pb-3 space-y-1 mt-4 sm:px-3 border-t border-border">
+              <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-border">
                 {navItems.map((item) => {
                   // External links (like docs, support)
                   if (item) {
@@ -248,7 +240,7 @@ export function Navigation() {
                         Sign In
                       </Button>
                       <Button
-                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                        className="w-full bg-secondary hover:bg-ring text-secondary-foreground"
                         onClick={() => {
                           router.push("/auth/sign-up");
                           setIsMenuOpen(false);
