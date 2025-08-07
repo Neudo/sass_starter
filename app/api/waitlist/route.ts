@@ -53,6 +53,36 @@ export async function POST(req: NextRequest) {
     const emailResult = await emailResponse.json();
     console.log("Email sending result:", emailResult);
 
+    // Send notification email to admin
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: "Hector Analytics <support@hectoranalytics.com>",
+        to: "bassalair.quentin@gmail.com",
+        subject: "🎉 Nouvelle inscription à la waitlist !",
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333;">
+            <h2 style="color: #3d9dbd;">Quelqu'un vient de s'inscrire à la waitlist !</h2>
+            
+            <p><strong>Email :</strong> ${email}</p>
+            <p><strong>Date :</strong> ${new Date().toLocaleString('fr-FR', { 
+              timeZone: 'Europe/Paris',
+              dateStyle: 'full',
+              timeStyle: 'short'
+            })}</p>
+            
+            <p style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-left: 4px solid #3d9dbd;">
+              N'oublie pas de le/la contacter personnellement si c'est un prospect intéressant !
+            </p>
+          </div>
+        `,
+      }),
+    });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("waitlist error", error);
