@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Tracking Hector Analytics</title>
+</head>
+<body>
+    <h1>Test du tracking Hector Analytics</h1>
+    <p>Cette page simule le site bassalair-quentin.netlify.app</p>
+    <p>Ouvrez la console pour voir les requêtes de tracking.</p>
+    
+    <script>
+    // Override hostname pour simuler le domaine
+    Object.defineProperty(window.location, 'hostname', {
+        value: 'bassalair-quentin.netlify.app',
+        writable: false
+    });
+    </script>
+    
+    <!-- Script de tracking mis à jour -->
+    <script defer src="public/script.js"></script>
+    
+    <script>
+    // Log les requêtes pour debug
+    const originalFetch = window.fetch;
+    window.fetch = function(...args) {
+        console.log('Tracking request:', args[0], args[1]);
+        return originalFetch.apply(this, args)
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response;
+            })
+            .catch(error => {
+                console.error('Tracking error:', error);
+                throw error;
+            });
+    };
+    </script>
+</body>
+</html>

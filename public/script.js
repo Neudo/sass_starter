@@ -6,12 +6,13 @@
       localStorage.setItem("user_session_id", sessionId);
     }
 
-    fetch("/api/track", {
+    fetch("https://www.hectoranalytics.com/api/track", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         sessionId,
         page: location.pathname,
+        domain: window.location.hostname,
       }),
       keepalive: true,
     }).catch(() => {

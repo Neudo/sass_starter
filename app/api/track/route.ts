@@ -7,11 +7,11 @@ import path from "path";
 
 export async function POST(req: NextRequest) {
   try {
-    const { sessionId, page } = await req.json();
+    const { sessionId, page, domain } = await req.json();
 
-    if (!sessionId) {
+    if (!sessionId || !domain) {
       return NextResponse.json(
-        { error: "Missing sessionId or siteId" },
+        { error: "Missing sessionId or domain" },
         { status: 400 }
       );
     }
@@ -34,7 +34,6 @@ export async function POST(req: NextRequest) {
 
     // Upsert : crée ou met à jour last_seen
     const supabase = await createAdminClient();
-    const domain = req.headers.get("host");
     // Get client IP from headers
     const forwarded = req.headers.get("x-forwarded-for");
 
@@ -80,9 +79,37 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return new NextResponse(null, { status: 204 });
+    return new NextResponse(null, { 
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
   } catch (e) {
     console.error("Track handler failed", e);
-    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid payload" }, 
+      { 
+        status: 400,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      }
+    );
   }
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
 }
