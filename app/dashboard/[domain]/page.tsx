@@ -5,8 +5,8 @@ import { DeviceCard } from "@/components/SiteData/DeviceCard";
 import { LocationCard } from "@/components/SiteData/LocationCard";
 import { ActiveVisitors } from "@/components/SiteData/ActiveVisitors";
 import { AnalyticsMetrics } from "@/components/SiteData/AnalyticsMetrics";
-import WorldMap from "@/components/SiteData/WorldMap";
 import Link from "next/link";
+import WorldMapWrapper from "@/components/SiteData/wordMapWrapper";
 
 export default async function Page({
   params,
@@ -36,7 +36,7 @@ export default async function Page({
       </div>
       <AnalyticsMetrics siteId={siteId} />
       <div className="mt-6">
-        <WorldMap width={860} height={450} siteId={siteId} events={true} />
+        <WorldMapWrapper siteId={siteId} />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card>

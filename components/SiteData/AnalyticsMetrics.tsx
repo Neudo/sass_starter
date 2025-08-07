@@ -3,15 +3,15 @@
 import React, { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Users, 
-  Eye, 
-  MousePointerClick, 
-  Clock, 
+import {
+  Users,
+  Eye,
+  MousePointerClick,
+  Clock,
   BarChart3,
   Activity,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
 } from "lucide-react";
 
 interface AnalyticsMetricsProps {
@@ -47,12 +47,9 @@ export function AnalyticsMetrics({ siteId, dateRange }: AnalyticsMetricsProps) {
   useEffect(() => {
     const fetchMetrics = async () => {
       const supabase = createClient();
-      
+
       // Build query with optional date range
-      let query = supabase
-        .from("sessions")
-        .select("*")
-        .eq("site_id", siteId);
+      let query = supabase.from("sessions").select("*").eq("site_id", siteId);
 
       if (dateRange) {
         query = query
@@ -77,12 +74,12 @@ export function AnalyticsMetrics({ siteId, dateRange }: AnalyticsMetricsProps) {
       sessions?.forEach((session) => {
         // Count unique visitors (unique session IDs)
         uniqueVisitorsSet.add(session.id);
-        
+
         // Calculate pageviews (for now, 1 per session, but can be enhanced)
         // In a real implementation, this would come from analytics_events
         const sessionPageviews = session.pageviews || 1;
         totalPageviews += sessionPageviews;
-        
+
         // Calculate duration (difference between created_at and last_seen)
         if (session.created_at && session.last_seen) {
           const created = new Date(session.created_at).getTime();
@@ -90,7 +87,7 @@ export function AnalyticsMetrics({ siteId, dateRange }: AnalyticsMetricsProps) {
           const duration = Math.round((lastSeen - created) / 1000); // in seconds
           totalDuration += duration;
         }
-        
+
         // Count bounces (sessions with only 1 pageview)
         if (sessionPageviews === 1) {
           bounces++;
@@ -104,9 +101,16 @@ export function AnalyticsMetrics({ siteId, dateRange }: AnalyticsMetricsProps) {
         uniqueVisitors,
         totalVisits,
         totalPageviews,
-        viewsPerVisit: totalVisits > 0 ? parseFloat((totalPageviews / totalVisits).toFixed(2)) : 0,
-        bounceRate: totalVisits > 0 ? parseFloat(((bounces / totalVisits) * 100).toFixed(1)) : 0,
-        avgDuration: totalVisits > 0 ? Math.round(totalDuration / totalVisits) : 0,
+        viewsPerVisit:
+          totalVisits > 0
+            ? parseFloat((totalPageviews / totalVisits).toFixed(2))
+            : 0,
+        bounceRate:
+          totalVisits > 0
+            ? parseFloat(((bounces / totalVisits) * 100).toFixed(1))
+            : 0,
+        avgDuration:
+          totalVisits > 0 ? Math.round(totalDuration / totalVisits) : 0,
       });
 
       setLoading(false);
@@ -125,38 +129,40 @@ export function AnalyticsMetrics({ siteId, dateRange }: AnalyticsMetricsProps) {
     return `${hours}h ${remainingMinutes}m`;
   };
 
-  const MetricCard = ({ 
-    title, 
-    value, 
-    icon: Icon, 
+  const MetricCard = ({
+    title,
+    value,
+    icon: Icon,
     format = "number",
     change,
-    suffix = ""
-  }: { 
-    title: string; 
-    value: number | string; 
+    suffix = "",
+  }: {
+    title: string;
+    value: number | string;
     icon: React.ElementType;
     format?: "number" | "percentage" | "duration";
     change?: number;
     suffix?: string;
   }) => {
-    const formattedValue = format === "number" 
-      ? typeof value === 'number' ? value.toLocaleString() : value
-      : format === "percentage" 
-      ? `${value}%`
-      : value;
+    const formattedValue =
+      format === "number"
+        ? typeof value === "number"
+          ? value.toLocaleString()
+          : value
+        : format === "percentage"
+        ? `${value}%`
+        : value;
 
     return (
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
-            {title}
-          </CardTitle>
+          <CardTitle className="text-sm font-medium">{title}</CardTitle>
           <Icon className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {formattedValue}{suffix}
+            {formattedValue}
+            {suffix}
           </div>
           {change !== undefined && (
             <div className="flex items-center text-xs text-muted-foreground mt-1">
@@ -198,7 +204,7 @@ export function AnalyticsMetrics({ siteId, dateRange }: AnalyticsMetricsProps) {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <div className="grid gap-4 grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       <MetricCard
         title="Unique Visitors"
         value={metrics.uniqueVisitors}

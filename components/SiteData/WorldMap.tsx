@@ -4,7 +4,7 @@ import { Mercator, Graticule } from "@visx/geo";
 import * as topojson from "topojson-client";
 import { createClient } from "@/lib/supabase/client";
 
-export const background = "#0f172a"; // Fond bleu nuit comme WorldMap
+export const background = "#0f172a";
 
 interface CountryData {
   [key: string]: number;
@@ -24,12 +24,7 @@ interface FeatureShape {
   properties: { name: string };
 }
 
-export default function WorldMap({
-  width,
-  height,
-  events = false,
-  siteId,
-}: GeoMercatorProps) {
+export default function WorldMap({ width, height, siteId }: GeoMercatorProps) {
   const [world, setWorld] = useState<{
     type: "FeatureCollection";
     features: FeatureShape[];
@@ -105,7 +100,7 @@ export default function WorldMap({
 
   const centerX = width / 2;
   const centerY = height / 2;
-  const scale = (width / 860) * 100;
+  const scale = (width / 630) * 100;
 
   // Calculer le maximum de visiteurs pour le gradient
   const maxVisitors = Math.max(...Object.values(countryData), 1);
@@ -151,11 +146,11 @@ export default function WorldMap({
 
   return width < 10 ? null : (
     <div className="relative">
-      <svg width="100%" height={height}>
+      <svg width={width} height={height}>
         <rect
           x={0}
           y={0}
-          width="100%"
+          width={width}
           height={height}
           fill="rgb(12 20 37)"
           rx={14}
@@ -190,10 +185,6 @@ export default function WorldMap({
                       handleMouseEnter(event, countryName)
                     }
                     onMouseLeave={handleMouseLeave}
-                    onClick={() => {
-                      if (events)
-                        alert(`Clicked: ${countryName} (${feature.id})`);
-                    }}
                   />
                 );
               })}

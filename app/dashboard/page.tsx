@@ -11,9 +11,5 @@ export default async function ProtectedPage() {
     redirect("/auth/login");
   }
 
-  return (
-    <div className="flex-1 w-full flex flex-col gap-12">
-      <DashboardStart user={{ id: data?.claims.sub }} />
-    </div>
-  );
+  return <DashboardStart user={{ id: data?.claims.sub }} />;
 }
