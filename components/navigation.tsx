@@ -124,7 +124,7 @@ export function Navigation() {
                 </DropdownMenu>
               ) : (
                 <>
-                  {isProd ? (
+                  {!isProd ? (
                     <Button
                       size="xl"
                       variant="ghost"
@@ -248,7 +248,7 @@ export function Navigation() {
 
                       {!isProd ? (
                         <Button
-                          className="w-full bg-secondary hover:bg-ring text-secondary-foreground"
+                          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                           onClick={() => {
                             router.push("/auth/sign-up");
                             setIsMenuOpen(false);
@@ -259,7 +259,7 @@ export function Navigation() {
                       ) : (
                         <WaitlistModal
                           triggerComponent={
-                            <Button className="w-full bg-secondary hover:bg-ring text-secondary-foreground">
+                            <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                               Start free trial
                             </Button>
                           }
