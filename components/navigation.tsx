@@ -20,9 +20,16 @@ export function Navigation() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isLoggedIn = false;
+  const isProd = process.env.NEXT_PUBLIC_NODE_ENV === "production";
+  console.log(isProd);
 
   // Navigation items definition
   const navItems = [
+    { name: "FAQ", path: "/faq", id: "faq" },
+    { name: "Contact", path: "/contact", id: "contact" },
+  ];
+
+  const navItemsDev = [
     { name: "Pricing", path: "/pricing", id: "pricing" },
     { name: "FAQ", path: "/faq", id: "faq" },
     { name: "Blog", path: "/blog", id: "blog" },
@@ -43,20 +50,35 @@ export function Navigation() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8 text-xl">
-            {navItems.map((item) => {
-              // External links (like docs, support)
-              if (item) {
-                return (
-                  <a
-                    key={item.id}
-                    href={item.path}
-                    className="text-muted-foreground hover:text-primary transition-colors duration-200"
-                  >
-                    {item.name}
-                  </a>
-                );
-              }
-            })}
+            {isProd
+              ? navItems.map((item) => {
+                  // External links (like docs, support)
+                  if (item) {
+                    return (
+                      <a
+                        key={item.id}
+                        href={item.path}
+                        className="text-muted-foreground hover:text-primary transition-colors duration-200"
+                      >
+                        {item.name}
+                      </a>
+                    );
+                  }
+                })
+              : navItemsDev.map((item) => {
+                  // External links (like docs, support)
+                  if (item) {
+                    return (
+                      <a
+                        key={item.id}
+                        href={item.path}
+                        className="text-muted-foreground hover:text-primary transition-colors duration-200"
+                      >
+                        {item.name}
+                      </a>
+                    );
+                  }
+                })}
           </div>
 
           {/* CTA Buttons + Theme Toggle */}
@@ -107,14 +129,16 @@ export function Navigation() {
               </DropdownMenu>
             ) : (
               <>
-                <Button
-                  size="xl"
-                  variant="ghost"
-                  onClick={() => router.push("/auth/login")}
-                  className={`hover:bg-primary/10 hover:text-primary transition-colors duration-200 `}
-                >
-                  Sign In
-                </Button>
+                {!isProd ? (
+                  <Button
+                    size="xl"
+                    variant="ghost"
+                    onClick={() => router.push("/auth/login")}
+                    className={`hover:bg-primary/10 hover:text-primary transition-colors duration-200 `}
+                  >
+                    Sign In
+                  </Button>
+                ) : null}
                 <WaitlistModal
                   triggerComponent={
                     <Button
@@ -152,20 +176,35 @@ export function Navigation() {
         {isMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-border">
-              {navItems.map((item) => {
-                // External links (like docs, support)
-                if (item) {
-                  return (
-                    <a
-                      key={item.id}
-                      href={item.path}
-                      className="block px-3 py-2 rounded-md text-base text-muted-foreground hover:text-primary hover:bg-primary/5"
-                    >
-                      {item.name}
-                    </a>
-                  );
-                }
-              })}
+              {isProd
+                ? navItems.map((item) => {
+                    // External links (like docs, support)
+                    if (item) {
+                      return (
+                        <a
+                          key={item.id}
+                          href={item.path}
+                          className="block px-3 py-2 rounded-md text-base text-muted-foreground hover:text-primary hover:bg-primary/5"
+                        >
+                          {item.name}
+                        </a>
+                      );
+                    }
+                  })
+                : navItemsDev.map((item) => {
+                    // External links (like docs, support)
+                    if (item) {
+                      return (
+                        <a
+                          key={item.id}
+                          href={item.path}
+                          className="block px-3 py-2 rounded-md text-base text-muted-foreground hover:text-primary hover:bg-primary/5"
+                        >
+                          {item.name}
+                        </a>
+                      );
+                    }
+                  })}
 
               <div className="pt-4 pb-3 border-t border-border">
                 {isLoggedIn ? (
@@ -214,16 +253,18 @@ export function Navigation() {
                   </div>
                 ) : (
                   <div className="flex items-center px-3 space-y-2 flex-col">
-                    <Button
-                      variant="ghost"
-                      className="w-full hover:bg-primary/10 hover:text-primary"
-                      onClick={() => {
-                        router.push("/auth/login");
-                        setIsMenuOpen(false);
-                      }}
-                    >
-                      Sign In
-                    </Button>
+                    {!isProd ? (
+                      <Button
+                        variant="ghost"
+                        className="w-full hover:bg-primary/10 hover:text-primary"
+                        onClick={() => {
+                          router.push("/auth/login");
+                          setIsMenuOpen(false);
+                        }}
+                      >
+                        Sign In
+                      </Button>
+                    ) : null}
                     <Button
                       className="w-full bg-secondary hover:bg-ring text-secondary-foreground"
                       onClick={() => {
