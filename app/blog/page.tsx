@@ -43,7 +43,7 @@ export default async function BlogPage() {
               Blog Hector Analytics
             </h1>
             <p className="text-xl text-gray-600 mb-8">
-              Guides, conseils et actualités sur l'analytics web privacy-first, 
+              Guides, conseils et actualités sur l&apos;analytics web privacy-first, 
               le RGPD et les alternatives à Google Analytics.
             </p>
             <div className="flex justify-center gap-4 flex-wrap">
@@ -131,7 +131,7 @@ export default async function BlogPage() {
                     href={`/blog/${post.slug}`}
                     className="text-blue-600 hover:text-blue-800 font-medium text-sm inline-flex items-center"
                   >
-                    Lire l'article →
+                    Lire l&apos;article →
                   </Link>
                 </CardContent>
               </Card>

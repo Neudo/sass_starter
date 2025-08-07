@@ -7,8 +7,22 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { AlertCircle, Eye, Edit, Bot, Clock, CheckCircle } from "lucide-react";
+
+interface GenerateArticleOptions {
+  topic: string;
+  keyword: string;
+  tone?: "professional" | "friendly" | "technical";
+  length?: "short" | "medium" | "long";
+  includeCode?: boolean;
+}
 
 interface BlogPost {
   id: string;
@@ -29,8 +43,8 @@ interface BlogPost {
 
 export default function BlogAdminDashboard() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [topics, setTopics] = useState<any[]>([]);
-  const [selectedTopic, setSelectedTopic] = useState<any | null>(null);
+  const [topics, setTopics] = useState<GenerateArticleOptions[]>([]);
+  const [selectedTopic, setSelectedTopic] = useState<GenerateArticleOptions | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,8 +52,12 @@ export default function BlogAdminDashboard() {
   // Custom article form
   const [customTopic, setCustomTopic] = useState("");
   const [customKeyword, setCustomKeyword] = useState("");
-  const [customTone, setCustomTone] = useState<"professional" | "friendly" | "technical">("professional");
-  const [customLength, setCustomLength] = useState<"short" | "medium" | "long">("medium");
+  const [customTone, setCustomTone] = useState<
+    "professional" | "friendly" | "technical"
+  >("professional");
+  const [customLength, setCustomLength] = useState<"short" | "medium" | "long">(
+    "medium"
+  );
   const [includeCode, setIncludeCode] = useState(false);
 
   useEffect(() => {
@@ -74,7 +92,7 @@ export default function BlogAdminDashboard() {
     }
   };
 
-  const generateArticle = async (topic: any) => {
+  const generateArticle = async (topic: GenerateArticleOptions) => {
     setIsGenerating(true);
     setError(null);
 
@@ -83,7 +101,9 @@ export default function BlogAdminDashboard() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_CONTENT_API_KEY || "dev-key"}`,
+          Authorization: `Bearer ${
+            process.env.NEXT_PUBLIC_CONTENT_API_KEY || "dev-key"
+          }`,
         },
         body: JSON.stringify(topic),
       });
@@ -95,17 +115,16 @@ export default function BlogAdminDashboard() {
 
       const data = await response.json();
       console.log("Article généré:", data.article);
-      
+
       // Reload posts to show the new one
       await loadPosts();
-      
+
       // Clear form
       if (!selectedTopic) {
         setCustomTopic("");
         setCustomKeyword("");
       }
       setSelectedTopic(null);
-
     } catch (error) {
       console.error("Generation failed:", error);
       setError(error instanceof Error ? error.message : "Erreur de génération");
@@ -114,7 +133,7 @@ export default function BlogAdminDashboard() {
     }
   };
 
-  const handleQuickGenerate = (topic: any) => {
+  const handleQuickGenerate = (topic: GenerateArticleOptions) => {
     generateArticle(topic);
   };
 
@@ -135,7 +154,10 @@ export default function BlogAdminDashboard() {
     generateArticle(customTopicData);
   };
 
-  const updatePostStatus = async (postId: string, status: "draft" | "published" | "scheduled") => {
+  const updatePostStatus = async (
+    postId: string,
+    status: "draft" | "published" | "scheduled"
+  ) => {
     try {
       // Implementation would require a separate API endpoint
       console.log("Update post status:", postId, status);
@@ -146,9 +168,11 @@ export default function BlogAdminDashboard() {
     }
   };
 
-  const getStatusIcon = (status: string, generated_by_ai: boolean) => {
-    if (status === "published") return <CheckCircle className="h-4 w-4 text-green-500" />;
-    if (status === "scheduled") return <Clock className="h-4 w-4 text-blue-500" />;
+  const getStatusIcon = (status: string) => {
+    if (status === "published")
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
+    if (status === "scheduled")
+      return <Clock className="h-4 w-4 text-blue-500" />;
     return <Edit className="h-4 w-4 text-yellow-500" />;
   };
 
@@ -166,7 +190,9 @@ export default function BlogAdminDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard Blog - Hector Analytics</h1>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Dashboard Blog - Hector Analytics
+        </h1>
         <div className="flex gap-2">
           <Badge variant="outline" className="text-sm">
             <Bot className="h-3 w-3 mr-1" />
@@ -188,7 +214,9 @@ export default function BlogAdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Total Articles</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500">
+              Total Articles
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{posts.length}</div>
@@ -196,31 +224,37 @@ export default function BlogAdminDashboard() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Publiés</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500">
+              Publiés
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {posts.filter(p => p.status === "published").length}
+              {posts.filter((p) => p.status === "published").length}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Brouillons</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500">
+              Brouillons
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              {posts.filter(p => p.status === "draft").length}
+              {posts.filter((p) => p.status === "draft").length}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Générés par IA</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500">
+              Générés par IA
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {posts.filter(p => p.generated_by_ai).length}
+              {posts.filter((p) => p.generated_by_ai).length}
             </div>
           </CardContent>
         </Card>
@@ -231,13 +265,16 @@ export default function BlogAdminDashboard() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bot className="h-5 w-5" />
-            Génération Rapide d'Articles
+            Génération Rapide d&apos;Articles
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             {topics.map((topic, index) => (
-              <Card key={index} className="p-4 hover:shadow-md transition-shadow">
+              <Card
+                key={index}
+                className="p-4 hover:shadow-md transition-shadow"
+              >
                 <h3 className="font-semibold text-sm mb-2">{topic.topic}</h3>
                 <div className="text-xs text-gray-600 mb-3">
                   <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
@@ -264,7 +301,7 @@ export default function BlogAdminDashboard() {
             <h3 className="font-semibold mb-4">Article Personnalisé</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="custom-topic">Sujet de l'article</Label>
+                <Label htmlFor="custom-topic">Sujet de l&apos;article</Label>
                 <Textarea
                   id="custom-topic"
                   placeholder="Ex: Guide complet du tracking sans cookies"
@@ -284,7 +321,10 @@ export default function BlogAdminDashboard() {
               </div>
               <div className="space-y-2">
                 <Label>Ton</Label>
-                <Select value={customTone} onValueChange={(value: any) => setCustomTone(value)}>
+                <Select
+                  value={customTone}
+                  onValueChange={(value: "professional" | "friendly" | "technical") => setCustomTone(value)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -297,13 +337,20 @@ export default function BlogAdminDashboard() {
               </div>
               <div className="space-y-2">
                 <Label>Longueur</Label>
-                <Select value={customLength} onValueChange={(value: any) => setCustomLength(value)}>
+                <Select
+                  value={customLength}
+                  onValueChange={(value: "short" | "medium" | "long") => setCustomLength(value)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="short">Court (1000-1500 mots)</SelectItem>
-                    <SelectItem value="medium">Moyen (2000-2500 mots)</SelectItem>
+                    <SelectItem value="short">
+                      Court (1000-1500 mots)
+                    </SelectItem>
+                    <SelectItem value="medium">
+                      Moyen (2000-2500 mots)
+                    </SelectItem>
                     <SelectItem value="long">Long (3000-4000 mots)</SelectItem>
                   </SelectContent>
                 </Select>
@@ -319,8 +366,8 @@ export default function BlogAdminDashboard() {
               />
               <Label htmlFor="include-code">Inclure des exemples de code</Label>
             </div>
-            <Button 
-              onClick={handleCustomGenerate} 
+            <Button
+              onClick={handleCustomGenerate}
               disabled={isGenerating || !customTopic || !customKeyword}
               className="mt-4"
             >
@@ -340,14 +387,20 @@ export default function BlogAdminDashboard() {
             {posts.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <Bot className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>Aucun article généré. Commencez par créer votre premier article !</p>
+                <p>
+                  Aucun article généré. Commencez par créer votre premier
+                  article !
+                </p>
               </div>
             ) : (
               posts.map((post) => (
-                <div key={post.id} className="flex items-start justify-between p-4 border rounded-lg hover:bg-gray-50">
+                <div
+                  key={post.id}
+                  className="flex items-start justify-between p-4 border rounded-lg hover:bg-gray-50"
+                >
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      {getStatusIcon(post.status, post.generated_by_ai)}
+                      {getStatusIcon(post.status)}
                       <h3 className="font-semibold text-lg">{post.title}</h3>
                       {post.generated_by_ai && (
                         <Badge variant="secondary" className="text-xs">
@@ -361,11 +414,18 @@ export default function BlogAdminDashboard() {
                       <span>📖 {post.reading_time} min de lecture</span>
                       <span>🎯 SEO: {post.seo_score}/100</span>
                       <span>👁️ {post.view_count} vues</span>
-                      <span>📅 {new Date(post.created_at).toLocaleDateString("fr-FR")}</span>
+                      <span>
+                        📅{" "}
+                        {new Date(post.created_at).toLocaleDateString("fr-FR")}
+                      </span>
                     </div>
                     <div className="flex flex-wrap gap-1 mt-2">
                       {post.keywords.slice(0, 3).map((keyword, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
+                        <Badge
+                          key={index}
+                          variant="outline"
+                          className="text-xs"
+                        >
                           {keyword}
                         </Badge>
                       ))}
@@ -379,7 +439,7 @@ export default function BlogAdminDashboard() {
                       <Edit className="h-4 w-4" />
                     </Button>
                     {post.status === "draft" && (
-                      <Button 
+                      <Button
                         onClick={() => updatePostStatus(post.id, "published")}
                         size="sm"
                         className="bg-green-600 hover:bg-green-700"

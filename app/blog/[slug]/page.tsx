@@ -11,7 +11,7 @@ interface BlogPostProps {
 
 async function getBlogPost(slug: string) {
   const supabase = createAdminClient();
-  
+
   const { data: post, error } = await supabase
     .from("blog_posts")
     .select("*")
@@ -32,9 +32,13 @@ async function getBlogPost(slug: string) {
   return post;
 }
 
-async function getRelatedPosts(currentSlug: string, keywords: string[], limit = 3) {
+async function getRelatedPosts(
+  currentSlug: string,
+  keywords: string[],
+  limit = 3
+) {
   const supabase = createAdminClient();
-  
+
   const { data: posts } = await supabase
     .from("blog_posts")
     .select("id, title, slug, excerpt, reading_time, published_at")
@@ -60,14 +64,14 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
       {/* Header */}
       <div className="bg-white border-b">
         <div className="container mx-auto px-4 py-8">
-          <Link 
-            href="/blog" 
+          <Link
+            href="/blog"
             className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Retour au blog
           </Link>
-          
+
           <div className="max-w-4xl">
             <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
               <span className="flex items-center gap-1">
@@ -75,7 +79,7 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
                 {new Date(post.published_at).toLocaleDateString("fr-FR", {
                   day: "numeric",
                   month: "long",
-                  year: "numeric"
+                  year: "numeric",
                 })}
               </span>
               <span className="flex items-center gap-1">
@@ -92,19 +96,19 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
               {post.title}
             </h1>
 
-            <p className="text-xl text-gray-600 mb-6">
-              {post.excerpt}
-            </p>
+            <p className="text-xl text-gray-600 mb-6">{post.excerpt}</p>
 
             <div className="flex items-center justify-between">
               <div className="flex flex-wrap gap-2">
-                {post.keywords.slice(0, 4).map((keyword, index) => (
-                  <Badge key={index} variant="outline">
-                    {keyword}
-                  </Badge>
-                ))}
+                {post.keywords
+                  .slice(0, 4)
+                  .map((keyword: string, index: number) => (
+                    <Badge key={index} variant="outline">
+                      {keyword}
+                    </Badge>
+                  ))}
               </div>
-              
+
               <button className="flex items-center gap-2 text-gray-500 hover:text-gray-700">
                 <Share2 className="h-4 w-4" />
                 Partager
@@ -118,7 +122,7 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
       <article className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-lg shadow-sm p-8 lg:p-12">
-            <div 
+            <div
               className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-relaxed prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-ul:text-gray-700 prose-ol:text-gray-700 prose-code:text-blue-600 prose-code:bg-blue-50 prose-code:px-1 prose-code:rounded prose-pre:bg-gray-900 prose-pre:text-gray-100"
               dangerouslySetInnerHTML={{ __html: post.content }}
             />
@@ -130,16 +134,17 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
                   Découvrez Hector Analytics
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  L'analytics web privacy-first qui respecte vos utilisateurs et simplifie votre conformité RGPD.
+                  L&apos;analytics web privacy-first qui respecte vos
+                  utilisateurs et simplifie votre conformité RGPD.
                 </p>
                 <div className="flex gap-4">
-                  <Link 
+                  <Link
                     href="/#waitlist"
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
                   >
                     Rejoindre la waitlist
                   </Link>
-                  <Link 
+                  <Link
                     href="/#demo"
                     className="bg-white hover:bg-gray-50 text-gray-900 px-4 py-2 rounded-lg font-medium border transition-colors text-sm"
                   >
@@ -156,13 +161,18 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
       {relatedPosts.length > 0 && (
         <section className="container mx-auto px-4 pb-16">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl font-bold text-gray-900 mb-8">Articles similaires</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-8">
+              Articles similaires
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {relatedPosts.map((relatedPost) => (
-                <Card key={relatedPost.id} className="hover:shadow-lg transition-shadow">
+                <Card
+                  key={relatedPost.id}
+                  className="hover:shadow-lg transition-shadow"
+                >
                   <CardContent className="p-6">
                     <h3 className="font-semibold text-lg mb-2 line-clamp-2">
-                      <Link 
+                      <Link
                         href={`/blog/${relatedPost.slug}`}
                         className="hover:text-blue-600 transition-colors"
                       >
@@ -175,7 +185,9 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
                     <div className="flex items-center justify-between text-xs text-gray-500">
                       <span>{relatedPost.reading_time} min</span>
                       <span>
-                        {new Date(relatedPost.published_at).toLocaleDateString("fr-FR")}
+                        {new Date(relatedPost.published_at).toLocaleDateString(
+                          "fr-FR"
+                        )}
                       </span>
                     </div>
                   </CardContent>
