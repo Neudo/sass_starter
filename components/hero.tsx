@@ -84,7 +84,7 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-8 text-sm text-muted-foreground mb-8"
+            className="flex flex-row flex-wrap md:flex-col sm:flex-row items-center justify-center gap-8 text-sm text-muted-foreground mb-8"
           >
             <div className="flex items-center gap-2">
               <Zap className="w-4 h-4 text-secondary" />

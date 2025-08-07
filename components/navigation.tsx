@@ -20,6 +20,8 @@ export function Navigation() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isLoggedIn = false;
+  const isProd = process.env.NEXT_PUBLIC_NODE_ENV === "production";
+  console.log(isProd);
 
   // Navigation items definition
   const navItems = [
@@ -122,14 +124,16 @@ export function Navigation() {
                 </DropdownMenu>
               ) : (
                 <>
-                  {/* <Button
-                  size="xl"
-                  variant="ghost"
-                  onClick={() => router.push("/auth/login")}
-                  className={`hover:bg-primary/10 hover:text-primary transition-colors duration-200 `}
-                >
-                  Sign In
-                </Button> */}
+                  {isProd ? (
+                    <Button
+                      size="xl"
+                      variant="ghost"
+                      onClick={() => router.push("/auth/login")}
+                      className={`hover:bg-primary/10 hover:text-primary transition-colors duration-200 `}
+                    >
+                      Sign In
+                    </Button>
+                  ) : null}
                   <WaitlistModal
                     triggerComponent={
                       <Button
@@ -166,7 +170,7 @@ export function Navigation() {
           {/* Mobile menu */}
           {isMenuOpen && (
             <div className="md:hidden">
-              <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-border">
+              <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-border mt-4">
                 {navItems.map((item) => {
                   // External links (like docs, support)
                   if (item) {
@@ -182,7 +186,7 @@ export function Navigation() {
                   }
                 })}
 
-                <div className="pt-4 pb-3 border-t border-border">
+                <div className="pt-4 pb-3 md:border-t md:border-border">
                   {isLoggedIn ? (
                     <div className="flex flex-col space-y-2 px-3">
                       <div className="flex items-center gap-3 mb-3">
@@ -229,25 +233,38 @@ export function Navigation() {
                     </div>
                   ) : (
                     <div className="flex items-center px-3 space-y-2 flex-col">
-                      <Button
-                        variant="ghost"
-                        className="w-full hover:bg-primary/10 hover:text-primary"
-                        onClick={() => {
-                          router.push("/auth/login");
-                          setIsMenuOpen(false);
-                        }}
-                      >
-                        Sign In
-                      </Button>
-                      <Button
-                        className="w-full bg-secondary hover:bg-ring text-secondary-foreground"
-                        onClick={() => {
-                          router.push("/auth/sign-up");
-                          setIsMenuOpen(false);
-                        }}
-                      >
-                        Start free trial
-                      </Button>
+                      {!isProd ? (
+                        <Button
+                          variant="ghost"
+                          className="w-full hover:bg-primary/10 hover:text-primary"
+                          onClick={() => {
+                            router.push("/auth/login");
+                            setIsMenuOpen(false);
+                          }}
+                        >
+                          Sign In
+                        </Button>
+                      ) : null}
+
+                      {!isProd ? (
+                        <Button
+                          className="w-full bg-secondary hover:bg-ring text-secondary-foreground"
+                          onClick={() => {
+                            router.push("/auth/sign-up");
+                            setIsMenuOpen(false);
+                          }}
+                        >
+                          Start free trial
+                        </Button>
+                      ) : (
+                        <WaitlistModal
+                          triggerComponent={
+                            <Button className="w-full bg-secondary hover:bg-ring text-secondary-foreground">
+                              Start free trial
+                            </Button>
+                          }
+                        />
+                      )}
                     </div>
                   )}
                 </div>

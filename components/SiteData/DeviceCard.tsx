@@ -4,16 +4,14 @@ import React, { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Chrome,
-  Globe,
   Smartphone,
   Monitor,
   Tablet,
-  Apple,
   MonitorSmartphone,
   Users,
   Percent,
 } from "lucide-react";
+import Image from "next/image";
 
 interface DeviceData {
   browser: string | null;
@@ -90,29 +88,101 @@ export function DeviceCard({ siteId }: { siteId: string }) {
 
   const getBrowserIcon = (browserName: string) => {
     const name = browserName.toLowerCase();
-    if (name.includes("chrome")) return <Chrome className="h-4 w-4" />;
-    if (name.includes("firefox"))
-      return <Globe className="h-4 w-4 text-orange-500" />;
-    if (name.includes("safari"))
-      return <Globe className="h-4 w-4 text-blue-500" />;
-    if (name.includes("edge"))
-      return <Globe className="h-4 w-4 text-blue-600" />;
-    if (name.includes("opera"))
-      return <Globe className="h-4 w-4 text-red-500" />;
-    return <Globe className="h-4 w-4 text-muted-foreground" />;
+    
+    // Check for Chrome Headless first (specific case)
+    if (name.includes('chrome') && name.includes('headless')) {
+      return (
+        <Image 
+          src="/images/browser/chromium-webview.png" 
+          alt={browserName}
+          width={16}
+          height={16}
+          className="w-4 h-4"
+        />
+      );
+    }
+    
+    // Map browser names to image filenames
+    const browserImageMap: Record<string, string> = {
+      'chrome': 'chrome.png',
+      'firefox': 'firefox.png',
+      'safari': 'safari.png',
+      'edge': 'edge.png',
+      'opera': 'opera.png',
+      'brave': 'brave.png',
+      'samsung': 'samsung.png',
+      'internet explorer': 'ie.png',
+      'ie': 'ie.png'
+    };
+    
+    // Find matching browser
+    for (const [browser, filename] of Object.entries(browserImageMap)) {
+      if (name.includes(browser)) {
+        return (
+          <Image 
+            src={`/images/browser/${filename}`} 
+            alt={browserName}
+            width={16}
+            height={16}
+            className="w-4 h-4"
+          />
+        );
+      }
+    }
+    
+    // Default fallback
+    return (
+      <Image 
+        src="/images/browser/unknown.png" 
+        alt={browserName}
+        width={16}
+        height={16}
+        className="w-4 h-4"
+      />
+    );
   };
 
   const getOSIcon = (osName: string) => {
     const name = osName.toLowerCase();
-    if (name.includes("windows")) return <Monitor className="h-4 w-4" />;
-    if (name.includes("mac")) return <Apple className="h-4 w-4" />;
-    if (name.includes("ios") || name.includes("iphone"))
-      return <Smartphone className="h-4 w-4" />;
-    if (name.includes("android"))
-      return <Smartphone className="h-4 w-4 text-green-500" />;
-    if (name.includes("linux"))
-      return <Monitor className="h-4 w-4 text-yellow-600" />;
-    return <MonitorSmartphone className="h-4 w-4 text-muted-foreground" />;
+    
+    // Map OS names to image filenames
+    const osImageMap: Record<string, string> = {
+      'windows': 'windows-11.png',
+      'mac': 'mac-os.png',
+      'macos': 'mac-os.png',
+      'ios': 'ios.png',
+      'iphone': 'ios.png',
+      'android': 'android-os.png',
+      'linux': 'linux.png',
+      'chrome os': 'chrome-os.png',
+      'chromeos': 'chrome-os.png'
+    };
+    
+    // Find matching OS
+    for (const [os, filename] of Object.entries(osImageMap)) {
+      if (name.includes(os)) {
+        return (
+          <Image 
+            src={`/images/os/${filename}`} 
+            alt={osName}
+            width={16}
+            height={16}
+            className="w-4 h-4"
+          />
+        );
+      }
+    }
+    
+    // Default fallback
+    return (
+      <Image 
+        src="/images/os/unknown.png" 
+        alt={osName}
+        width={16}
+        height={16}
+        className="w-4 h-4"
+      />
+    );
   };
 
   const getScreenIcon = (screenSize: string) => {
