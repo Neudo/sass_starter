@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { normalizeReferrer, getChannel } from "@/lib/referrer-helper";
+import { Globe } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -19,7 +21,12 @@ interface SourceData {
   percentage: number;
 }
 
-type UTMType = "utm_campaign" | "utm_source" | "utm_medium" | "utm_term" | "utm_content";
+type UTMType =
+  | "utm_campaign"
+  | "utm_source"
+  | "utm_medium"
+  | "utm_term"
+  | "utm_content";
 
 // Row shape containing any of the UTM fields; selecting all avoids a union type
 type UTMRow = Partial<Record<UTMType, string | null>>;
@@ -31,6 +38,52 @@ const UTM_OPTIONS = [
   { value: "utm_campaign", label: "UTM Campaigns" },
   { value: "utm_content", label: "UTM Contents" },
 ];
+
+// Map source names to their icon files
+const SOURCE_ICONS: Record<string, string> = {
+  chrome: "/images/brands/chrome.png",
+  "google chrome": "/images/brands/chrome.png",
+  "hacker news": "/images/brands/hacker-news.png",
+  hackernews: "/images/brands/hacker-news.png",
+  hn: "/images/brands/hacker-news.png",
+  "product hunt": "/images/brands/product-hunt.avif",
+  producthunt: "/images/brands/product-hunt.avif",
+  twitter: "/images/brands/twitter.png",
+  "twitter.com": "/images/brands/twitter.png",
+  x: "/images/brands/twitter.png",
+  "x.com": "/images/brands/twitter.png",
+  "x (twitter)": "/images/brands/twitter.png", // Ce que retourne normalizeReferrer
+  "twitter / x": "/images/brands/twitter.png",
+  "x (formerly twitter)": "/images/brands/twitter.png",
+};
+
+const getSourceIcon = (sourceName: string) => {
+  const lowerName = sourceName.toLowerCase();
+
+  // Direct match first
+  if (SOURCE_ICONS[lowerName]) {
+    return SOURCE_ICONS[lowerName];
+  }
+
+  // Fuzzy matching for common variations
+  if (lowerName.includes("twitter") || lowerName.includes("x (")) {
+    return "/images/brands/twitter.png";
+  }
+
+  if (lowerName.includes("hacker") && lowerName.includes("news")) {
+    return "/images/brands/hacker-news.png";
+  }
+
+  if (lowerName.includes("product") && lowerName.includes("hunt")) {
+    return "/images/brands/product-hunt.avif";
+  }
+
+  if (lowerName.includes("chrome")) {
+    return "/images/brands/chrome.png";
+  }
+
+  return null;
+};
 
 export function SourcesCard({ siteId }: { siteId: string }) {
   const [channels, setChannels] = useState<SourceData[]>([]);
@@ -61,7 +114,6 @@ export function SourcesCard({ siteId }: { siteId: string }) {
         .select("utm_campaign, utm_source, utm_medium, utm_term, utm_content")
         .eq("site_id", siteId)
         .not(selectedUTM, "is", null);
-
 
       // Calculate channels dynamically from existing data
       if (sessionsData) {
@@ -97,6 +149,12 @@ export function SourcesCard({ siteId }: { siteId: string }) {
         const sourceCounts = sourcesData.reduce(
           (acc: Record<string, number>, item) => {
             const rawSource = item.utm_source || item.referrer || "direct";
+            
+            // Skip self-referrals (from own domain)
+            if (rawSource && rawSource.toLowerCase().includes("hectoranalytics")) {
+              return acc;
+            }
+            
             // Get the display name for the source
             const sourceInfo = normalizeReferrer(rawSource, !!item.utm_source);
             const displayName = sourceInfo.displayName;
@@ -151,7 +209,7 @@ export function SourcesCard({ siteId }: { siteId: string }) {
     fetchSourceData();
   }, [siteId, selectedUTM]);
 
-  const renderList = (data: SourceData[]) => {
+  const renderList = (data: SourceData[], showIcons = false) => {
     if (loading) {
       return <div className="text-muted-foreground">Loading...</div>;
     }
@@ -162,19 +220,37 @@ export function SourcesCard({ siteId }: { siteId: string }) {
 
     return (
       <div className="space-y-3">
-        {data.map((item, index) => (
-          <div key={index} className="space-y-1">
-            <div className="flex justify-between items-center text-sm">
-              <span className="truncate max-w-[200px]" title={item.name}>
-                {item.name}
-              </span>
-              <span className="text-muted-foreground ml-2">
-                {item.count} ({item.percentage.toFixed(1)}%)
-              </span>
+        {data.map((item, index) => {
+          const icon = showIcons ? getSourceIcon(item.name) : null;
+
+          return (
+            <div key={index} className="space-y-1">
+              <div className="flex justify-between items-center text-sm">
+                <div className="flex items-center gap-2 truncate max-w-[200px]">
+                  {showIcons &&
+                    (icon ? (
+                      <Image
+                        src={icon}
+                        alt={item.name}
+                        width={16}
+                        height={16}
+                        className="flex-shrink-0"
+                      />
+                    ) : (
+                      <Globe className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+                    ))}
+                  <span className="truncate" title={item.name}>
+                    {item.name}
+                  </span>
+                </div>
+                <span className="text-muted-foreground ml-2">
+                  {item.count} ({item.percentage.toFixed(1)}%)
+                </span>
+              </div>
+              <Progress value={item.percentage} className="h-2" />
             </div>
-            <Progress value={item.percentage} className="h-2" />
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
@@ -190,11 +266,11 @@ export function SourcesCard({ siteId }: { siteId: string }) {
         {renderList(channels)}
       </TabsContent>
       <TabsContent value="sources" className="mt-4">
-        {renderList(sources)}
+        {renderList(sources, true)}
       </TabsContent>
       <TabsContent value="campaigns" className="mt-4 space-y-4">
-        <Select 
-          value={selectedUTM} 
+        <Select
+          value={selectedUTM}
           onValueChange={(value: UTMType) => setSelectedUTM(value)}
         >
           <SelectTrigger className="w-full">
