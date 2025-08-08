@@ -16,13 +16,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Parse UTM parameters from the URL
+    // Parse UTM parameters and ref from the URL
     const url = new URL(req.url);
-    const utm_source = url.searchParams.get("utm_source");
+    const ref = url.searchParams.get("ref");
+    let utm_source = url.searchParams.get("utm_source");
     const utm_medium = url.searchParams.get("utm_medium");
     const utm_campaign = url.searchParams.get("utm_campaign");
     const utm_term = url.searchParams.get("utm_term");
     const utm_content = url.searchParams.get("utm_content");
+
+    // If ref parameter exists and no utm_source, use ref as utm_source
+    if (ref && !utm_source) {
+      utm_source = ref;
+    }
 
     // Parse referrer domain
     let referrer_domain = null;
@@ -35,8 +41,6 @@ export async function POST(req: NextRequest) {
         console.log(e);
       }
     }
-
-    console.log(req.headers);
 
     const ua = req.headers.get("user-agent");
     const parser = new UAParser(ua as string);
@@ -55,7 +59,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Upsert : crée ou met à jour last_seen
-    const supabase = await createAdminClient();
+    const supabase = createAdminClient();
     // Get client IP from headers
     const forwarded = req.headers.get("x-forwarded-for");
 

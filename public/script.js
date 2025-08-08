@@ -10,8 +10,8 @@
     const currentUrl = new URL(window.location.href);
     const trackingUrl = new URL("https://www.hectoranalytics.com/api/track");
     
-    // Copy UTM parameters if present
-    ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"].forEach(param => {
+    // Copy UTM parameters and ref parameter if present
+    ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "ref"].forEach(param => {
       const value = currentUrl.searchParams.get(param);
       if (value) {
         trackingUrl.searchParams.set(param, value);
