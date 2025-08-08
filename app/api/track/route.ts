@@ -7,7 +7,7 @@ import path from "path";
 
 export async function POST(req: NextRequest) {
   try {
-    const { sessionId, page, domain } = await req.json();
+    const { sessionId, page, domain, referrer } = await req.json();
 
     if (!sessionId || !domain) {
       return NextResponse.json(
@@ -15,6 +15,28 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Parse UTM parameters from the URL
+    const url = new URL(req.url);
+    const utm_source = url.searchParams.get("utm_source");
+    const utm_medium = url.searchParams.get("utm_medium");
+    const utm_campaign = url.searchParams.get("utm_campaign");
+    const utm_term = url.searchParams.get("utm_term");
+    const utm_content = url.searchParams.get("utm_content");
+
+    // Parse referrer domain
+    let referrer_domain = null;
+    if (referrer && referrer !== "" && referrer !== "null") {
+      try {
+        const referrerUrl = new URL(referrer);
+        referrer_domain = referrerUrl.hostname;
+      } catch (e) {
+        // Invalid referrer URL, ignore
+        console.log(e);
+      }
+    }
+
+    console.log(req.headers);
 
     const ua = req.headers.get("user-agent");
     const parser = new UAParser(ua as string);
@@ -59,6 +81,17 @@ export async function POST(req: NextRequest) {
     if (!site) {
       return NextResponse.json({ error: "Site not found" }, { status: 404 });
     }
+
+    // Check if this is a new session to set entry_page
+    const { data: existingSession } = await supabase
+      .from("sessions")
+      .select("id, entry_page, page_views")
+      .eq("id", sessionId)
+      .single();
+
+    const isNewSession = !existingSession;
+    const currentPageViews = existingSession?.page_views || 0;
+
     const { error } = await supabase.from("sessions").upsert({
       id: sessionId,
       site_id: site[0].id,
@@ -72,6 +105,19 @@ export async function POST(req: NextRequest) {
       os,
       os_version: osVersion,
       screen_size: deviceCategory,
+      // UTM parameters
+      utm_source: utm_source || undefined,
+      utm_medium: utm_medium || undefined,
+      utm_campaign: utm_campaign || undefined,
+      utm_term: utm_term || undefined,
+      utm_content: utm_content || undefined,
+      // Referrer
+      referrer: referrer || undefined,
+      referrer_domain: referrer_domain || undefined,
+      // Page tracking
+      entry_page: isNewSession ? page || "/" : existingSession.entry_page,
+      exit_page: page || "/",
+      page_views: currentPageViews + 1,
     });
 
     if (error) {
@@ -79,7 +125,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return new NextResponse(null, { 
+    return new NextResponse(null, {
       status: 204,
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -90,8 +136,8 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     console.error("Track handler failed", e);
     return NextResponse.json(
-      { error: "Invalid payload" }, 
-      { 
+      { error: "Invalid payload" },
+      {
         status: 400,
         headers: {
           "Access-Control-Allow-Origin": "*",

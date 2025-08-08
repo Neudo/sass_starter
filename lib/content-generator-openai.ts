@@ -1,6 +1,6 @@
 /**
- * Content Generator for Hector Analytics Blog
- * Automated SEO-optimized article generation using Claude API
+ * Content Generator for Hector Analytics Blog using OpenAI
+ * Alternative implementation with GPT-4
  */
 
 import { createAdminClient } from "./supabase/admin";
@@ -24,58 +24,57 @@ interface GenerateArticleOptions {
   includeCode?: boolean;
 }
 
-export class ContentGenerator {
-  private anthropicApiKey: string;
+export class ContentGeneratorOpenAI {
+  private openaiApiKey: string;
 
   constructor() {
-    this.anthropicApiKey = process.env.ANTHROPIC_API_KEY || "";
-    if (!this.anthropicApiKey) {
-      throw new Error("ANTHROPIC_API_KEY environment variable is required");
+    this.openaiApiKey = process.env.OPENAI_API_KEY || "";
+    if (!this.openaiApiKey) {
+      throw new Error("OPENAI_API_KEY environment variable is required");
     }
   }
 
   async generateArticle(options: GenerateArticleOptions): Promise<BlogPost> {
     const prompt = this.createPrompt(options);
     
-    console.log("Generating article with Claude API...");
-    console.log("API Key present:", !!this.anthropicApiKey);
-    console.log("API Key length:", this.anthropicApiKey?.length);
+    console.log("Generating article with OpenAI API...");
     
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": this.anthropicApiKey,
-          "anthropic-version": "2023-06-01",
+          "Authorization": `Bearer ${this.openaiApiKey}`,
         },
         body: JSON.stringify({
-          model: "claude-3-5-sonnet-20241022",
-          max_tokens: 4096,
+          model: "gpt-4-turbo-preview",
           messages: [
+            {
+              role: "system",
+              content: "Tu es un expert en rédaction SEO spécialisé dans les analytics web et la privacy. Tu génères des articles de blog optimisés pour le SEO en format JSON structuré."
+            },
             {
               role: "user",
               content: prompt,
             },
           ],
+          temperature: 0.7,
+          max_tokens: 4000,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.text();
-        console.error("Claude API error:", {
+        console.error("OpenAI API error:", {
           status: response.status,
           statusText: response.statusText,
           error: errorData
         });
-        throw new Error(`API request failed: ${response.statusText} - ${errorData}`);
+        throw new Error(`API request failed: ${response.statusText}`);
       }
 
       const data = await response.json();
-      console.log("Claude response structure:", JSON.stringify(data, null, 2));
-      
-      const content = data.content[0].text;
-      console.log("Claude response content:", content.substring(0, 500));
+      const content = data.choices[0].message.content;
 
       // Parse the structured response
       return this.parseResponse(content);
@@ -126,94 +125,47 @@ OPTIMISATION SEO:
 - Meta description accrocheuse (155 caractères max)
 - URL slug SEO-friendly
 
-FORMAT DE RÉPONSE:
-Tu dois retourner UNIQUEMENT un objet JSON valide (pas de texte avant ou après).
-Utilise des guillemets doubles pour TOUTES les chaînes, y compris le contenu HTML.
-N'utilise JAMAIS de backticks ou de template literals.
-
-Structure JSON attendue:
+RÉPONSE ATTENDUE (FORMAT JSON):
+\`\`\`json
 {
   "title": "Titre exact de l'article",
   "slug": "url-slug-seo-friendly", 
-  "content": "Contenu HTML complet avec balises HTML comme une chaîne de caractères",
+  "content": "Contenu HTML complet avec balises <h1>, <h2>, <h3>, <p>, <ul>, <li>, etc.",
   "excerpt": "Résumé engageant de 150-160 caractères",
   "metaDescription": "Meta description SEO de 150-155 caractères",
-  "keywords": ["mot-clé principal", "mot-clé secondaire 1", "mot-clé secondaire 2"],
+  "keywords": ["mot-clé principal", "mot-clé secondaire 1", "mot-clé secondaire 2", "etc"],
   "readingTime": 8,
   "seoScore": 85
 }
+\`\`\`
 
-IMPORTANT: 
-- Le champ "content" doit être une chaîne de caractères avec le HTML échappé correctement
-- Retourne UNIQUEMENT le JSON, sans aucun texte explicatif
-- Assure-toi que le JSON est valide et peut être parsé par JSON.parse()
-
-L'article doit être informatif, engageant et naturellement mentionner Hector Analytics comme solution aux problèmes évoqués.`;
+L'article doit être informatif, engageant et naturellement mentionner Hector Analytics comme solution aux problèmes évoqués. Évite le sur-marketing, privilégie la valeur éducative.`;
   }
 
   private parseResponse(content: string): BlogPost {
     try {
-      console.log("Parsing response, looking for JSON...");
-      
-      // Clean up the content first
-      const cleanContent = content.trim();
-      
-      // First, try to parse the entire content as JSON
-      try {
-        const parsed = JSON.parse(cleanContent);
-        console.log("Direct JSON parse successful");
-        return this.formatBlogPost(parsed);
-      } catch {
-        console.log("Not direct JSON, trying other patterns...");
+      // Extract JSON from the response
+      const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
+      if (!jsonMatch) {
+        throw new Error("No JSON found in response");
       }
+
+      const parsed = JSON.parse(jsonMatch[1]);
       
-      // Try to extract JSON from code blocks
-      const codeBlockMatch = cleanContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (codeBlockMatch) {
-        try {
-          const parsed = JSON.parse(codeBlockMatch[1].trim());
-          console.log("Found JSON in code block");
-          return this.formatBlogPost(parsed);
-        } catch {
-          console.log("Failed to parse code block content");
-        }
-      }
-      
-      // Try to find a JSON object in the content
-      const jsonStart = cleanContent.indexOf('{');
-      const jsonEnd = cleanContent.lastIndexOf('}');
-      
-      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-        const possibleJson = cleanContent.substring(jsonStart, jsonEnd + 1);
-        try {
-          const parsed = JSON.parse(possibleJson);
-          console.log("Found JSON object in content");
-          return this.formatBlogPost(parsed);
-        } catch (e) {
-          console.error("Failed to parse extracted JSON:", e);
-        }
-      }
-      
-      console.error("No valid JSON found in response");
-      console.error("Response was:", cleanContent.substring(0, 500));
-      throw new Error("No valid JSON found in response");
+      return {
+        title: parsed.title,
+        content: parsed.content,
+        excerpt: parsed.excerpt,
+        keywords: parsed.keywords || [],
+        metaDescription: parsed.metaDescription,
+        slug: parsed.slug,
+        readingTime: parsed.readingTime || this.calculateReadingTime(parsed.content),
+        seoScore: parsed.seoScore || 75,
+      };
     } catch (error) {
       console.error("Error parsing response:", error);
       throw new Error("Failed to parse AI response");
     }
-  }
-
-  private formatBlogPost(parsed: Record<string, unknown>): BlogPost {
-    return {
-      title: parsed.title as string,
-      content: parsed.content as string,
-      excerpt: parsed.excerpt as string,
-      keywords: (parsed.keywords as string[]) || [],
-      metaDescription: (parsed.metaDescription as string) || (parsed.meta_description as string),
-      slug: parsed.slug as string,
-      readingTime: (parsed.readingTime as number) || (parsed.reading_time as number) || this.calculateReadingTime(parsed.content as string),
-      seoScore: (parsed.seoScore as number) || (parsed.seo_score as number) || 75,
-    };
   }
 
   private calculateReadingTime(content: string): number {

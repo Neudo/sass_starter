@@ -6,13 +6,26 @@
       localStorage.setItem("user_session_id", sessionId);
     }
 
-    fetch("https://www.hectoranalytics.com/api/track", {
+    // Build tracking URL with UTM parameters
+    const currentUrl = new URL(window.location.href);
+    const trackingUrl = new URL("https://www.hectoranalytics.com/api/track");
+    
+    // Copy UTM parameters if present
+    ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"].forEach(param => {
+      const value = currentUrl.searchParams.get(param);
+      if (value) {
+        trackingUrl.searchParams.set(param, value);
+      }
+    });
+
+    fetch(trackingUrl.toString(), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         sessionId,
         page: location.pathname,
         domain: window.location.hostname,
+        referrer: document.referrer || null,
       }),
       keepalive: true,
     }).catch(() => {

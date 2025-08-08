@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeviceCard } from "@/components/SiteData/DeviceCard";
 import { LocationCard } from "@/components/SiteData/LocationCard";
+import { SourcesCard } from "@/components/SiteData/SourcesCard";
+import { TopPagesCard } from "@/components/SiteData/TopPagesCard";
 import { ActiveVisitors } from "@/components/SiteData/ActiveVisitors";
 import { AnalyticsMetrics } from "@/components/SiteData/AnalyticsMetrics";
 import Link from "next/link";
@@ -53,6 +55,22 @@ export default async function Page({
           </CardHeader>
           <CardContent>
             <DeviceCard siteId={siteId} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Sources</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SourcesCard siteId={siteId} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Top Pages</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TopPagesCard siteId={siteId} />
           </CardContent>
         </Card>
       </div>

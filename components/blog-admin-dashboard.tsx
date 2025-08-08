@@ -14,7 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlertCircle, Eye, Edit, Bot, Clock, CheckCircle } from "lucide-react";
+import { AlertCircle, Eye, Edit, Bot, Clock, CheckCircle, Trash2, ExternalLink } from "lucide-react";
+import BlogPreviewModal from "./blog-preview-modal";
+import BlogEditModal from "./blog-edit-modal";
 
 interface GenerateArticleOptions {
   topic: string;
@@ -48,6 +50,12 @@ export default function BlogAdminDashboard() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Modal states
+  const [previewPost, setPreviewPost] = useState<BlogPost | null>(null);
+  const [editPost, setEditPost] = useState<BlogPost | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   // Custom article form
   const [customTopic, setCustomTopic] = useState("");
@@ -101,9 +109,6 @@ export default function BlogAdminDashboard() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${
-            process.env.NEXT_PUBLIC_CONTENT_API_KEY || "dev-key"
-          }`,
         },
         body: JSON.stringify(topic),
       });
@@ -159,12 +164,88 @@ export default function BlogAdminDashboard() {
     status: "draft" | "published" | "scheduled"
   ) => {
     try {
-      // Implementation would require a separate API endpoint
-      console.log("Update post status:", postId, status);
-      // For now, just reload posts
+      const response = await fetch(`/api/blog/${postId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          status,
+          ...(status === "published" && { published_at: new Date().toISOString() })
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update status");
+      }
+
+      // Reload posts to show updated status
       await loadPosts();
+      setError(null);
     } catch (error) {
       console.error("Failed to update post status:", error);
+      setError(error instanceof Error ? error.message : "Erreur lors de la mise à jour");
+    }
+  };
+
+  const handlePreview = (post: BlogPost) => {
+    setPreviewPost(post);
+    setIsPreviewOpen(true);
+  };
+
+  const handleEdit = (post: BlogPost) => {
+    setEditPost(post);
+    setIsEditOpen(true);
+  };
+
+  const handleSave = async (updatedData: Partial<BlogPost>) => {
+    if (!editPost) return;
+
+    try {
+      const response = await fetch(`/api/blog/${editPost.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to save changes");
+      }
+
+      // Reload posts to show changes
+      await loadPosts();
+      setError(null);
+    } catch (error) {
+      console.error("Failed to save post:", error);
+      throw new Error(error instanceof Error ? error.message : "Erreur lors de la sauvegarde");
+    }
+  };
+
+  const handleDelete = async (postId: string) => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cet article ?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/blog/${postId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete post");
+      }
+
+      // Reload posts to remove deleted one
+      await loadPosts();
+      setError(null);
+    } catch (error) {
+      console.error("Failed to delete post:", error);
+      setError(error instanceof Error ? error.message : "Erreur lors de la suppression");
     }
   };
 
@@ -432,21 +513,52 @@ export default function BlogAdminDashboard() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 ml-4">
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePreview(post)}
+                      title="Prévisualiser"
+                    >
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(post)}
+                      title="Éditer"
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
-                    {post.status === "draft" && (
+                    {post.status === "published" ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          window.open(`/blog/${post.slug}`, "_blank")
+                        }
+                        title="Voir en ligne"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    ) : (
                       <Button
                         onClick={() => updatePostStatus(post.id, "published")}
                         size="sm"
                         className="bg-green-600 hover:bg-green-700"
+                        title="Publier"
                       >
                         Publier
                       </Button>
                     )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(post.id)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      title="Supprimer"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               ))
@@ -454,6 +566,26 @@ export default function BlogAdminDashboard() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Modals */}
+      <BlogPreviewModal
+        post={previewPost}
+        isOpen={isPreviewOpen}
+        onClose={() => {
+          setIsPreviewOpen(false);
+          setPreviewPost(null);
+        }}
+      />
+
+      <BlogEditModal
+        post={editPost}
+        isOpen={isEditOpen}
+        onClose={() => {
+          setIsEditOpen(false);
+          setEditPost(null);
+        }}
+        onSave={handleSave}
+      />
     </div>
   );
 }

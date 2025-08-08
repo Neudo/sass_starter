@@ -23,6 +23,7 @@ npm run lint         # Run ESLint checks
 ## Architecture Overview
 
 ### Tech Stack
+
 - **Framework**: Next.js with App Router
 - **Database**: Supabase (PostgreSQL)
 - **UI**: shadcn/ui components with Radix UI
@@ -56,28 +57,34 @@ lib/
 ### Key Patterns
 
 #### Supabase Client Usage
+
 - Use `createClient()` from `lib/supabase/server.ts` in Server Components
-- Use `createBrowserClient()` from `lib/supabase/client.ts` in Client Components
+- Use `createClient()` from `lib/supabase/client.ts` in Client Components
 - Use `createServiceRoleClient()` from `lib/supabase/admin.ts` for admin operations
 
 #### Authentication Flow
+
 - All dashboard routes require authentication via middleware
 - Session handled through cookies (no JWT in localStorage)
 - Auth forms use Server Actions for form submission
 
 #### Analytics Tracking
+
 - Privacy-first: No cookies used
 - Tracking script: `/public/script.js`
 - API endpoint: `/api/track` handles session upserts
 - Geolocation via MaxMind GeoIP2 database
 
 ### Database Schema (Key Tables)
+
 - `sites` - Website configurations
 - `sessions` - Analytics data with geolocation
 - `waitlist` - Email signups
 
 ### Environment Variables
+
 Required in `.env.local`:
+
 ```
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY=
@@ -86,12 +93,14 @@ RESEND_API_KEY=
 ```
 
 ### Component Guidelines
+
 - UI components use shadcn/ui patterns (found in `components/ui/`)
 - Forms use React Hook Form with Zod schemas
 - All components are TypeScript with proper typing
 - Use `cn()` utility for className merging
 
 ### Styling
+
 - Tailwind CSS v4 with CSS-first configuration
 - Theme variables defined in `app/globals.css`
 - Dark/light mode via next-themes

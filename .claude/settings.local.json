@@ -3,7 +3,8 @@
     "allow": [
       "Bash(rm:*)",
       "Bash(git add:*)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Bash(node:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

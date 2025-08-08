@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ContentGenerator } from "@/lib/content-generator";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,8 +9,23 @@ export async function POST(req: NextRequest) {
     const authHeader = req.headers.get("authorization");
     const apiKey = authHeader?.replace("Bearer ", "");
 
-    if (!apiKey || apiKey !== process.env.CONTENT_GENERATION_API_KEY) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Allow both API key and authenticated users
+    if (apiKey && apiKey === process.env.CONTENT_GENERATION_API_KEY) {
+      // API key is valid, proceed
+    } else {
+      // Check if user is authenticated via Supabase cookies
+      const supabase = await createClient();
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+
+      if (error || !user) {
+        return NextResponse.json(
+          { error: "Unauthorized - Please login" },
+          { status: 401 }
+        );
+      }
     }
 
     const body = await req.json();
