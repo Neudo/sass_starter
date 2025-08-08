@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { normalizeReferrer } from "@/lib/referrer-helper";
 
 interface SourceData {
   name: string;
@@ -69,8 +70,11 @@ export function SourcesCard({ siteId }: { siteId: string }) {
       if (sourcesData) {
         const sourceCounts = sourcesData.reduce(
           (acc: Record<string, number>, item) => {
-            const source = item.utm_source || item.referrer || "Direct";
-            acc[source] = (acc[source] || 0) + 1;
+            const rawSource = item.utm_source || item.referrer || "direct";
+            // Get the display name for the source
+            const sourceInfo = normalizeReferrer(rawSource, !!item.utm_source);
+            const displayName = sourceInfo.displayName;
+            acc[displayName] = (acc[displayName] || 0) + 1;
             return acc;
           },
           {}

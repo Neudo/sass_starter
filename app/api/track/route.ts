@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { Reader } from "@maxmind/geoip2-node";
 import { UAParser } from "ua-parser-js";
 import path from "path";
+import { getNormalizedSource } from "@/lib/referrer-helper";
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,16 +20,11 @@ export async function POST(req: NextRequest) {
     // Parse UTM parameters and ref from the URL
     const url = new URL(req.url);
     const ref = url.searchParams.get("ref");
-    let utm_source = url.searchParams.get("utm_source");
+    const utm_source = url.searchParams.get("utm_source");
     const utm_medium = url.searchParams.get("utm_medium");
     const utm_campaign = url.searchParams.get("utm_campaign");
     const utm_term = url.searchParams.get("utm_term");
     const utm_content = url.searchParams.get("utm_content");
-
-    // If ref parameter exists and no utm_source, use ref as utm_source
-    if (ref && !utm_source) {
-      utm_source = ref;
-    }
 
     // Parse referrer domain
     let referrer_domain = null;
@@ -41,6 +37,12 @@ export async function POST(req: NextRequest) {
         console.log(e);
       }
     }
+
+    // Normalize the source using our helper
+    // Priority: utm_source > referrer_domain
+    const normalizedSource = getNormalizedSource(
+      utm_source || referrer_domain || null
+    );
 
     const ua = req.headers.get("user-agent");
     const parser = new UAParser(ua as string);
@@ -109,8 +111,8 @@ export async function POST(req: NextRequest) {
       os,
       os_version: osVersion,
       screen_size: deviceCategory,
-      // UTM parameters
-      utm_source: utm_source || undefined,
+      // UTM parameters - store normalized source
+      utm_source: normalizedSource !== "direct" ? normalizedSource : undefined,
       utm_medium: utm_medium || undefined,
       utm_campaign: utm_campaign || undefined,
       utm_term: utm_term || undefined,
