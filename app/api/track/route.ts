@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { Reader } from "@maxmind/geoip2-node";
 import { UAParser } from "ua-parser-js";
 import path from "path";
-import { getNormalizedSource } from "@/lib/referrer-helper";
+import { getNormalizedSource, getChannel } from "@/lib/referrer-helper";
 
 export async function POST(req: NextRequest) {
   try {
@@ -43,6 +43,13 @@ export async function POST(req: NextRequest) {
     const normalizedSource = getNormalizedSource(
       utm_source || ref || null,
       referrer_domain || null
+    );
+
+    // Determine the marketing channel
+    const channel = getChannel(
+      utm_medium,
+      utm_source || ref || null,
+      referrer_domain
     );
 
     const ua = req.headers.get("user-agent");
@@ -125,6 +132,8 @@ export async function POST(req: NextRequest) {
       entry_page: isNewSession ? page || "/" : existingSession.entry_page,
       exit_page: page || "/",
       page_views: currentPageViews + 1,
+      // Channel classification
+      channel: channel,
     });
 
     if (error) {

@@ -27,5 +27,12 @@ CREATE INDEX IF NOT EXISTS idx_sessions_referrer_domain ON sessions(referrer_dom
 CREATE INDEX IF NOT EXISTS idx_sessions_entry_page ON sessions(entry_page);
 CREATE INDEX IF NOT EXISTS idx_sessions_exit_page ON sessions(exit_page);
 
+-- Ajouter la colonne channel pour la classification des canaux d'acquisition
+ALTER TABLE sessions 
+ADD COLUMN IF NOT EXISTS channel TEXT;
+
+-- Créer un index sur la colonne channel
+CREATE INDEX IF NOT EXISTS idx_sessions_channel ON sessions(channel) WHERE channel IS NOT NULL;
+
 -- Mettre à jour les politiques RLS si nécessaire
 -- Les politiques existantes devraient continuer à fonctionner car nous ajoutons seulement des colonnes

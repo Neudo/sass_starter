@@ -228,8 +228,7 @@ export function normalizeReferrer(
   }
 
   // Try to match partial domains (e.g., "google.co.uk" -> "google")
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  for (const [domain, info] of Object.entries(referrerMappings)) {
+  for (const [, info] of Object.entries(referrerMappings)) {
     if (cleaned.includes(info.name)) {
       return info;
     }
@@ -272,17 +271,132 @@ export function getNormalizedSource(
   // If we have a utm_source or ref parameter, use it
   if (source) {
     const normalized = normalizeReferrer(source, true);
-    console.log("normalized 1", normalized);
-
     return normalized.name;
   }
 
   // Otherwise use the referrer domain
   if (referrerDomain) {
     const normalized = normalizeReferrer(referrerDomain, false);
-    console.log("normalized 2", normalized);
     return normalized.name;
   }
 
   return "direct";
+}
+
+/**
+ * Determines the marketing channel based on utm_medium, utm_source, and referrer
+ * Following Google Analytics 4 default channel grouping rules
+ */
+export function getChannel(
+  utmMedium: string | null,
+  utmSource: string | null,
+  referrerDomain: string | null
+): string {
+  // Priority 1: Check utm_medium first (most reliable)
+  if (utmMedium) {
+    const medium = utmMedium.toLowerCase().trim();
+
+    // Paid channels
+    if (["cpc", "ppc", "paidsearch"].includes(medium)) {
+      return "Paid Search";
+    }
+    if (["cpv", "cpa", "cpp", "content-text"].includes(medium)) {
+      return "Other Advertising";
+    }
+    if (["display", "cpm", "banner"].includes(medium)) {
+      return "Display";
+    }
+    if (
+      [
+        "social",
+        "social-network",
+        "social-media",
+        "sm",
+        "social network",
+        "social media",
+      ].includes(medium)
+    ) {
+      return "Paid Social";
+    }
+    if (["video"].includes(medium)) {
+      return "Video";
+    }
+
+    // Organic channels
+    if (["organic", "referral", "none"].includes(medium)) {
+      // If medium is organic but source is social, classify as organic social
+      if (utmSource) {
+        const sourceInfo = normalizeReferrer(utmSource, true);
+        if (sourceInfo.category === "social") {
+          return "Organic Social";
+        }
+        if (sourceInfo.category === "search") {
+          return "Organic Search";
+        }
+      }
+      return "Referral";
+    }
+
+    if (["email", "e-mail", "e_mail", "e mail", "mail"].includes(medium)) {
+      return "Email";
+    }
+
+    if (["affiliate"].includes(medium)) {
+      return "Affiliates";
+    }
+  }
+
+  // Priority 2: Check utm_source if no utm_medium
+  if (utmSource) {
+    const sourceInfo = normalizeReferrer(utmSource, true);
+
+    switch (sourceInfo.category) {
+      case "search":
+        return "Organic Search";
+      case "social":
+        return "Organic Social";
+      case "news":
+        return "Referral";
+      default:
+        return "Referral";
+    }
+  }
+
+  // Priority 3: Check referrer domain
+  if (referrerDomain) {
+    const referrerInfo = normalizeReferrer(referrerDomain, false);
+
+    switch (referrerInfo.category) {
+      case "search":
+        return "Organic Search";
+      case "social":
+        return "Organic Social";
+      case "news":
+        return "Referral";
+      default:
+        return "Referral";
+    }
+  }
+
+  // Default: Direct traffic
+  return "Direct";
+}
+
+/**
+ * Get all possible channel values for UI
+ */
+export function getAllChannels(): string[] {
+  return [
+    "Direct",
+    "Organic Search",
+    "Referral",
+    "Organic Social",
+    "Email",
+    "Paid Search",
+    "Paid Social",
+    "Display",
+    "Video",
+    "Other Advertising",
+    "Affiliates",
+  ];
 }

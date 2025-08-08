@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { normalizeReferrer } from "@/lib/referrer-helper";
+import { normalizeReferrer, getChannel } from "@/lib/referrer-helper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,29 +27,58 @@ export default function TestReferrerPage() {
     { input: null, isRef: false, expected: "Direct" },
   ];
 
+  // Test cases pour les channels
+  const channelTests = [
+    { utm_medium: "cpc", utm_source: "google", referrer: null, expected: "Paid Search" },
+    { utm_medium: "social", utm_source: "facebook", referrer: null, expected: "Paid Social" },
+    { utm_medium: "email", utm_source: "newsletter", referrer: null, expected: "Email" },
+    { utm_medium: "organic", utm_source: "google", referrer: null, expected: "Organic Search" },
+    { utm_medium: null, utm_source: "twitter", referrer: null, expected: "Organic Social" },
+    { utm_medium: null, utm_source: null, referrer: "https://google.com/search", expected: "Organic Search" },
+    { utm_medium: null, utm_source: null, referrer: "https://t.co/123", expected: "Organic Social" },
+    { utm_medium: null, utm_source: null, referrer: "https://news.ycombinator.com/", expected: "Referral" },
+    { utm_medium: null, utm_source: null, referrer: null, expected: "Direct" },
+  ];
+
   // Simuler différentes URLs avec paramètres
   const simulateUrls = [
     {
       title: "ProductHunt Launch",
       url: "https://localhost:3000/?ref=producthunt",
       expectedSource: "producthunt",
+      expectedChannel: "Referral",
     },
     {
-      title: "Twitter Campaign", 
-      url: "https://localhost:3000/?utm_source=twitter&utm_medium=social&utm_campaign=launch",
-      expectedSource: "twitter",
+      title: "Paid Search Campaign", 
+      url: "https://localhost:3000/?utm_source=google&utm_medium=cpc&utm_campaign=launch",
+      expectedSource: "google",
+      expectedChannel: "Paid Search",
+    },
+    {
+      title: "Social Media Campaign", 
+      url: "https://localhost:3000/?utm_source=facebook&utm_medium=social&utm_campaign=awareness",
+      expectedSource: "facebook",
+      expectedChannel: "Paid Social",
     },
     {
       title: "Direct + Referrer from HN",
       url: "https://localhost:3000/",
       referrer: "https://news.ycombinator.com/item?id=12345",
       expectedSource: "hackernews",
+      expectedChannel: "Referral",
     },
     {
-      title: "Google Search",
+      title: "Google Organic Search",
       url: "https://localhost:3000/",
       referrer: "https://www.google.com/search?q=analytics",
       expectedSource: "google",
+      expectedChannel: "Organic Search",
+    },
+    {
+      title: "Email Newsletter",
+      url: "https://localhost:3000/?utm_source=newsletter&utm_medium=email&utm_campaign=weekly",
+      expectedSource: "newsletter",
+      expectedChannel: "Email",
     },
   ];
 
@@ -63,6 +92,7 @@ export default function TestReferrerPage() {
     const urlObj = new URL(url);
     const ref = urlObj.searchParams.get("ref");
     const utm_source = urlObj.searchParams.get("utm_source");
+    const utm_medium = urlObj.searchParams.get("utm_medium");
     
     // Parse referrer domain
     let referrer_domain = null;
@@ -78,8 +108,25 @@ export default function TestReferrerPage() {
     // Apply the same logic as the API
     const source = utm_source || ref || referrer_domain || "direct";
     const isRefParameter = !!(utm_source || ref);
+    const sourceResult = normalizeReferrer(source, isRefParameter);
     
-    return normalizeReferrer(source, isRefParameter);
+    // Get channel
+    const channel = getChannel(utm_medium, utm_source || ref || null, referrer_domain);
+    
+    return { source: sourceResult, channel };
+  };
+
+  const testChannel = (utm_medium: string | null, utm_source: string | null, referrer: string | null) => {
+    let referrer_domain = null;
+    if (referrer) {
+      try {
+        const referrerUrl = new URL(referrer);
+        referrer_domain = referrerUrl.hostname;
+      } catch (e) {
+        console.error("Invalid referrer URL:", e);
+      }
+    }
+    return getChannel(utm_medium, utm_source, referrer_domain);
   };
 
   return (
@@ -178,6 +225,53 @@ export default function TestReferrerPage() {
         </CardContent>
       </Card>
 
+      {/* Tests des Channels */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Tests des Channels</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {channelTests.map((test, index) => {
+              const result = testChannel(test.utm_medium, test.utm_source, test.referrer);
+              const isCorrect = result === test.expected;
+              
+              return (
+                <div
+                  key={index}
+                  className={`p-3 rounded-lg border ${
+                    isCorrect ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span>
+                        medium: <code>{test.utm_medium || "null"}</code>
+                      </span>
+                      <span>
+                        source: <code>{test.utm_source || "null"}</code>
+                      </span>
+                      {test.referrer && <span>referrer: <code className="text-xs">{test.referrer}</code></span>}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={isCorrect ? "text-green-600" : "text-red-600"}>
+                        {result}
+                      </span>
+                      {!isCorrect && (
+                        <span className="text-sm text-muted-foreground">
+                          (expected: {test.expected})
+                        </span>
+                      )}
+                      <span className="text-xl">{isCorrect ? "✅" : "❌"}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Simulation d'URLs complètes */}
       <Card>
         <CardHeader>
@@ -187,13 +281,14 @@ export default function TestReferrerPage() {
           <div className="space-y-4">
             {simulateUrls.map((sim, index) => {
               const result = simulateTracking(sim.url, sim.referrer);
-              const isCorrect = result.name === sim.expectedSource;
+              const sourceCorrect = result.source.name === sim.expectedSource;
+              const channelCorrect = result.channel === sim.expectedChannel;
               
               return (
                 <div
                   key={index}
                   className={`p-4 rounded-lg border ${
-                    isCorrect ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+                    sourceCorrect && channelCorrect ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
                   }`}
                 >
                   <h3 className="font-semibold mb-2">{sim.title}</h3>
@@ -206,14 +301,22 @@ export default function TestReferrerPage() {
                         Referrer: {sim.referrer}
                       </div>
                     )}
-                    <div className="mt-2 flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <span>
-                          <strong>Result:</strong> {result.displayName}
-                        </span>
-                        <Badge variant="outline">{result.category}</Badge>
+                    <div className="mt-2 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <span>
+                            <strong>Source:</strong> {result.source.displayName}
+                          </span>
+                          <Badge variant="outline">{result.source.category}</Badge>
+                        </div>
+                        <span className="text-xl">{sourceCorrect ? "✅" : "❌"}</span>
                       </div>
-                      <span className="text-xl">{isCorrect ? "✅" : "❌"}</span>
+                      <div className="flex items-center justify-between">
+                        <span>
+                          <strong>Channel:</strong> {result.channel}
+                        </span>
+                        <span className="text-xl">{channelCorrect ? "✅" : "❌"}</span>
+                      </div>
                     </div>
                   </div>
                 </div>

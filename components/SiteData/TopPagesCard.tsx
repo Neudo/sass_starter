@@ -21,34 +21,34 @@ export function TopPagesCard({ siteId }: { siteId: string }) {
     const fetchPageData = async () => {
       const supabase = createClient();
 
-      // Fetch all pages
-      const { data: allPagesData } = await supabase
+      // Fetch all sessions with entry_page, exit_page and page_views
+      const { data: sessionsData } = await supabase
         .from("sessions")
-        .select("page")
+        .select("entry_page, exit_page, page_views")
         .eq("site_id", siteId);
 
-      // Fetch entry pages (first page of each session)
-      const { data: entryPagesData } = await supabase
-        .from("sessions")
-        .select("entry_page")
-        .eq("site_id", siteId);
-
-      // Fetch exit pages
-      const { data: exitPagesData } = await supabase
-        .from("sessions")
-        .select("exit_page")
-        .eq("site_id", siteId);
-
-      // Process top pages
-      if (allPagesData) {
-        const pageCounts = allPagesData.reduce(
-          (acc: Record<string, number>, item) => {
-            const page = item.page || "/";
-            acc[page] = (acc[page] || 0) + 1;
-            return acc;
-          },
-          {}
-        );
+      // Process top pages by counting all pages
+      if (sessionsData) {
+        const pageCounts: Record<string, number> = {};
+        
+        // Count each page - both entry and exit pages represent visited pages
+        sessionsData.forEach(session => {
+          // Count entry page
+          if (session.entry_page) {
+            pageCounts[session.entry_page] = (pageCounts[session.entry_page] || 0) + 1;
+          }
+          
+          // Count exit page (it's a separate page view if different from entry)
+          if (session.exit_page) {
+            // If it's the same as entry_page and page_views > 1, or if it's different, count it
+            if (session.exit_page !== session.entry_page) {
+              pageCounts[session.exit_page] = (pageCounts[session.exit_page] || 0) + 1;
+            } else if (session.page_views && session.page_views > 1) {
+              // Same page but multiple views
+              pageCounts[session.exit_page] = (pageCounts[session.exit_page] || 0) + (session.page_views - 1);
+            }
+          }
+        });
 
         const total = Object.values(pageCounts).reduce((a, b) => a + b, 0);
         const processedPages = Object.entries(pageCounts)
@@ -61,11 +61,9 @@ export function TopPagesCard({ siteId }: { siteId: string }) {
           .slice(0, 10);
 
         setTopPages(processedPages);
-      }
-
-      // Process entry pages
-      if (entryPagesData) {
-        const entryCounts = entryPagesData.reduce(
+        
+        // Process entry pages
+        const entryCounts = sessionsData.reduce(
           (acc: Record<string, number>, item) => {
             const page = item.entry_page || "/";
             acc[page] = (acc[page] || 0) + 1;
@@ -74,22 +72,20 @@ export function TopPagesCard({ siteId }: { siteId: string }) {
           {}
         );
 
-        const total = Object.values(entryCounts).reduce((a, b) => a + b, 0);
+        const entryTotal = Object.values(entryCounts).reduce((a, b) => a + b, 0);
         const processedEntryPages = Object.entries(entryCounts)
           .map(([page, count]) => ({
             page,
             count,
-            percentage: (count / total) * 100,
+            percentage: (count / entryTotal) * 100,
           }))
           .sort((a, b) => b.count - a.count)
           .slice(0, 10);
 
         setEntryPages(processedEntryPages);
-      }
-
-      // Process exit pages
-      if (exitPagesData) {
-        const exitCounts = exitPagesData.reduce(
+        
+        // Process exit pages
+        const exitCounts = sessionsData.reduce(
           (acc: Record<string, number>, item) => {
             const page = item.exit_page || "/";
             acc[page] = (acc[page] || 0) + 1;
@@ -98,12 +94,12 @@ export function TopPagesCard({ siteId }: { siteId: string }) {
           {}
         );
 
-        const total = Object.values(exitCounts).reduce((a, b) => a + b, 0);
+        const exitTotal = Object.values(exitCounts).reduce((a, b) => a + b, 0);
         const processedExitPages = Object.entries(exitCounts)
           .map(([page, count]) => ({
             page,
             count,
-            percentage: (count / total) * 100,
+            percentage: (count / exitTotal) * 100,
           }))
           .sort((a, b) => b.count - a.count)
           .slice(0, 10);

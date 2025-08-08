@@ -4,7 +4,14 @@ import React, { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { normalizeReferrer } from "@/lib/referrer-helper";
+import { normalizeReferrer, getChannel } from "@/lib/referrer-helper";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface SourceData {
   name: string;
@@ -12,22 +19,35 @@ interface SourceData {
   percentage: number;
 }
 
+type UTMType = "utm_campaign" | "utm_source" | "utm_medium" | "utm_term" | "utm_content";
+
+// Row shape containing any of the UTM fields; selecting all avoids a union type
+type UTMRow = Partial<Record<UTMType, string | null>>;
+
+const UTM_OPTIONS = [
+  { value: "utm_medium", label: "UTM Mediums" },
+  { value: "utm_source", label: "UTM Sources" },
+  { value: "utm_term", label: "UTM Terms" },
+  { value: "utm_campaign", label: "UTM Campaigns" },
+  { value: "utm_content", label: "UTM Contents" },
+];
+
 export function SourcesCard({ siteId }: { siteId: string }) {
   const [channels, setChannels] = useState<SourceData[]>([]);
   const [sources, setSources] = useState<SourceData[]>([]);
   const [campaigns, setCampaigns] = useState<SourceData[]>([]);
+  const [selectedUTM, setSelectedUTM] = useState<UTMType>("utm_medium");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchSourceData = async () => {
       const supabase = createClient();
 
-      // Fetch channels data
-      const { data: channelsData } = await supabase
+      // Fetch all session data to calculate channels dynamically
+      const { data: sessionsData } = await supabase
         .from("sessions")
-        .select("utm_medium")
-        .eq("site_id", siteId)
-        .not("utm_medium", "is", null);
+        .select("utm_medium, utm_source, referrer_domain")
+        .eq("site_id", siteId);
 
       // Fetch sources data
       const { data: sourcesData } = await supabase
@@ -35,18 +55,24 @@ export function SourcesCard({ siteId }: { siteId: string }) {
         .select("utm_source, referrer")
         .eq("site_id", siteId);
 
-      // Fetch campaigns data
-      const { data: campaignsData } = await supabase
+      // Fetch UTM data based on selected type
+      const { data: utmData } = await supabase
         .from("sessions")
-        .select("utm_campaign")
+        .select("utm_campaign, utm_source, utm_medium, utm_term, utm_content")
         .eq("site_id", siteId)
-        .not("utm_campaign", "is", null);
+        .not(selectedUTM, "is", null);
 
-      // Process channels
-      if (channelsData) {
-        const channelCounts = channelsData.reduce(
+
+      // Calculate channels dynamically from existing data
+      if (sessionsData) {
+        const channelCounts = sessionsData.reduce(
           (acc: Record<string, number>, item) => {
-            const channel = item.utm_medium || "Direct";
+            // Use the same logic as the helper function
+            const channel = getChannel(
+              item.utm_medium,
+              item.utm_source,
+              item.referrer_domain
+            );
             acc[channel] = (acc[channel] || 0) + 1;
             return acc;
           },
@@ -93,19 +119,21 @@ export function SourcesCard({ siteId }: { siteId: string }) {
         setSources(processedSources);
       }
 
-      // Process campaigns
-      if (campaignsData) {
-        const campaignCounts = campaignsData.reduce(
-          (acc: Record<string, number>, item) => {
-            const campaign = item.utm_campaign;
-            acc[campaign] = (acc[campaign] || 0) + 1;
+      // Process UTM data for campaigns tab
+      if (utmData) {
+        const utmCounts = utmData.reduce(
+          (acc: Record<string, number>, item: UTMRow) => {
+            const value = item[selectedUTM];
+            if (value) {
+              acc[value] = (acc[value] || 0) + 1;
+            }
             return acc;
           },
           {}
         );
 
-        const total = Object.values(campaignCounts).reduce((a, b) => a + b, 0);
-        const processedCampaigns = Object.entries(campaignCounts)
+        const total = Object.values(utmCounts).reduce((a, b) => a + b, 0);
+        const processedUTM = Object.entries(utmCounts)
           .map(([name, count]) => ({
             name,
             count,
@@ -114,14 +142,14 @@ export function SourcesCard({ siteId }: { siteId: string }) {
           .sort((a, b) => b.count - a.count)
           .slice(0, 10);
 
-        setCampaigns(processedCampaigns);
+        setCampaigns(processedUTM);
       }
 
       setLoading(false);
     };
 
     fetchSourceData();
-  }, [siteId]);
+  }, [siteId, selectedUTM]);
 
   const renderList = (data: SourceData[]) => {
     if (loading) {
@@ -152,10 +180,10 @@ export function SourcesCard({ siteId }: { siteId: string }) {
   };
 
   return (
-    <Tabs defaultValue="sources" className="w-full">
+    <Tabs defaultValue="channels" className="w-full">
       <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="sources">Sources</TabsTrigger>
         <TabsTrigger value="channels">Channels</TabsTrigger>
+        <TabsTrigger value="sources">Sources</TabsTrigger>
         <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
       </TabsList>
       <TabsContent value="channels" className="mt-4">
@@ -164,7 +192,22 @@ export function SourcesCard({ siteId }: { siteId: string }) {
       <TabsContent value="sources" className="mt-4">
         {renderList(sources)}
       </TabsContent>
-      <TabsContent value="campaigns" className="mt-4">
+      <TabsContent value="campaigns" className="mt-4 space-y-4">
+        <Select 
+          value={selectedUTM} 
+          onValueChange={(value: UTMType) => setSelectedUTM(value)}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {UTM_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {renderList(campaigns)}
       </TabsContent>
     </Tabs>
