@@ -39,9 +39,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Normalize the source using our helper
-    // Priority: utm_source > referrer_domain
+    // Priority: utm_source > ref > referrer_domain
     const normalizedSource = getNormalizedSource(
-      utm_source || referrer_domain || null
+      utm_source || ref || null,
+      referrer_domain || null
     );
 
     const ua = req.headers.get("user-agent");

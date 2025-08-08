@@ -228,7 +228,8 @@ export function normalizeReferrer(
   }
 
   // Try to match partial domains (e.g., "google.co.uk" -> "google")
-  for (const [, info] of Object.entries(referrerMappings)) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  for (const [domain, info] of Object.entries(referrerMappings)) {
     if (cleaned.includes(info.name)) {
       return info;
     }
@@ -261,12 +262,25 @@ function formatDomainName(domain: string): string {
 /**
  * Helper for use in the tracking API
  * @param source - The utm_source or ref parameter
+ * @param referrerDomain - The referrer domain
  * @returns Normalized source name for storage
  */
-export function getNormalizedSource(source: string | null): string {
-  // If we have a utm_source or ref_domain parameter, use it
+export function getNormalizedSource(
+  source: string | null,
+  referrerDomain: string | null
+): string {
+  // If we have a utm_source or ref parameter, use it
   if (source) {
     const normalized = normalizeReferrer(source, true);
+    console.log("normalized 1", normalized);
+
+    return normalized.name;
+  }
+
+  // Otherwise use the referrer domain
+  if (referrerDomain) {
+    const normalized = normalizeReferrer(referrerDomain, false);
+    console.log("normalized 2", normalized);
     return normalized.name;
   }
 
