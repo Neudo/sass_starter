@@ -4,7 +4,8 @@
       "Bash(rm:*)",
       "Bash(git add:*)",
       "Bash(npm run lint)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(touch:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -7,9 +7,7 @@ import path from "path";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    console.log("Received tracking data:", body);
-    const { sessionId, page, domain } = body;
+    const { sessionId, page, domain } = await req.json();
 
     if (!sessionId || !domain) {
       return NextResponse.json(
@@ -68,9 +66,7 @@ export async function POST(req: NextRequest) {
       region = response?.subdivisions?.[0].names.en || null;
       city = response?.city?.names.en || null;
     } catch (geoError) {
-      // Log error but continue without geolocation data
-      console.error("Geolocation lookup failed:", geoError);
-      // Continue with null values for location
+      // Continue with null values for location if geolocation fails
     }
 
     // In development mode, create a fake site ID for testing
@@ -83,8 +79,7 @@ export async function POST(req: NextRequest) {
                   domain.includes('ngrok');
     
     if (isDev) {
-      console.log(`Dev mode: Using test site ID for domain: ${domain}`);
-      siteId = 1; // Use a test site ID
+      siteId = 1; // Use a test site ID in dev mode
     } else {
       const { data: site } = await supabase
         .from("sites")
@@ -92,9 +87,8 @@ export async function POST(req: NextRequest) {
         .eq("domain", domain);
       
       if (!site || site.length === 0) {
-        console.log(`Site not found for domain: ${domain}`);
         return NextResponse.json(
-          { error: "Site not found", domain }, 
+          { error: "Site not found" }, 
           { 
             status: 404,
             headers: {
@@ -137,7 +131,6 @@ export async function POST(req: NextRequest) {
     });
 
     if (error) {
-      console.error("Upsert session error", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
@@ -149,11 +142,9 @@ export async function POST(req: NextRequest) {
         "Access-Control-Allow-Headers": "Content-Type",
       },
     });
-  } catch (e) {
-    console.error("Track handler failed:", e);
-    console.error("Error details:", e instanceof Error ? e.message : String(e));
+  } catch {
     return NextResponse.json(
-      { error: "Invalid payload", details: e instanceof Error ? e.message : String(e) },
+      { error: "Invalid payload" },
       {
         status: 400,
         headers: {
