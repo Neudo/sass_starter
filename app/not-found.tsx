@@ -45,8 +45,8 @@ export default function NotFound() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-lg mx-auto"
           >
-            Looks like this page went off the analytics grid. Don't worry, we're
-            still tracking everything else perfectly!
+            Looks like this page went off the analytics grid. Don&apos;t worry,
+            we&apos;re still tracking everything else perfectly!
           </motion.p>
 
           <motion.div
