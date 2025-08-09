@@ -86,16 +86,28 @@ export async function POST(req: NextRequest) {
     if (ip === "::1" || ip === null) {
       ip = "83.114.15.244";
     }
-    // Use absolute path with process.cwd() for Vercel compatibility
-    const dbPath = path.join(process.cwd(), "data", "GeoLite2-City.mmdb");
-
-    const reader = await Reader.open(dbPath);
-    const response = reader.city(ip);
-
-    // Extract location data in English
-    const country = response?.country?.names.en || null;
-    const region = response?.subdivisions?.[0].names.en || null;
-    const city = response?.city?.names.en || null;
+    
+    // Initialize location variables
+    let country = null;
+    let region = null;
+    let city = null;
+    
+    // Try to get geolocation data, but don't fail if it's not available
+    try {
+      // Use absolute path with process.cwd() for Vercel compatibility
+      const dbPath = path.join(process.cwd(), "data", "GeoLite2-City.mmdb");
+      const reader = await Reader.open(dbPath);
+      const response = reader.city(ip);
+      
+      // Extract location data in English
+      country = response?.country?.names.en || null;
+      region = response?.subdivisions?.[0].names.en || null;
+      city = response?.city?.names.en || null;
+    } catch (geoError) {
+      // Log error but continue without geolocation data
+      console.error("Geolocation lookup failed:", geoError);
+      // Continue with null values for location
+    }
 
     const { data: site } = await supabase
       .from("sites")

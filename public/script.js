@@ -6,27 +6,28 @@
       localStorage.setItem("user_session_id", sessionId);
     }
 
-    // Build tracking URL with UTM parameters
+    // Get UTM parameters and ref from current URL
     const currentUrl = new URL(window.location.href);
-    const trackingUrl = new URL("https://www.hectoranalytics.com/api/track");
     
-    // Copy UTM parameters and ref parameter if present
-    ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "ref"].forEach(param => {
-      const value = currentUrl.searchParams.get(param);
-      if (value) {
-        trackingUrl.searchParams.set(param, value);
-      }
-    });
+    // Build the tracking payload with all parameters
+    const payload = {
+      sessionId,
+      page: location.pathname,
+      domain: window.location.hostname,
+      referrer: document.referrer || null,
+      // Add UTM parameters and ref if present
+      ref: currentUrl.searchParams.get("ref") || undefined,
+      utm_source: currentUrl.searchParams.get("utm_source") || undefined,
+      utm_medium: currentUrl.searchParams.get("utm_medium") || undefined,
+      utm_campaign: currentUrl.searchParams.get("utm_campaign") || undefined,
+      utm_term: currentUrl.searchParams.get("utm_term") || undefined,
+      utm_content: currentUrl.searchParams.get("utm_content") || undefined,
+    };
 
-    fetch(trackingUrl.toString(), {
+    fetch("https://www.hectoranalytics.com/api/track", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sessionId,
-        page: location.pathname,
-        domain: window.location.hostname,
-        referrer: document.referrer || null,
-      }),
+      body: JSON.stringify(payload),
       keepalive: true,
     }).catch(() => {
       // silent fail en dev
