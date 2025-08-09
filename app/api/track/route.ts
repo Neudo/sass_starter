@@ -4,23 +4,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { Reader } from "@maxmind/geoip2-node";
 import { UAParser } from "ua-parser-js";
 import path from "path";
-import { getNormalizedSource, getChannel } from "@/lib/referrer-helper";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { 
-      sessionId, 
-      page, 
-      domain, 
-      referrer,
-      ref = null,
-      utm_source = null,
-      utm_medium = null,
-      utm_campaign = null,
-      utm_term = null,
-      utm_content = null
-    } = body;
+    console.log("Received tracking data:", body);
+    const { sessionId, page, domain } = body;
 
     if (!sessionId || !domain) {
       return NextResponse.json(
@@ -35,32 +24,6 @@ export async function POST(req: NextRequest) {
         }
       );
     }
-
-    // Parse referrer domain
-    let referrer_domain = null;
-    if (referrer && referrer !== "" && referrer !== "null") {
-      try {
-        const referrerUrl = new URL(referrer);
-        referrer_domain = referrerUrl.hostname;
-      } catch (e) {
-        // Invalid referrer URL, ignore
-        console.log(e);
-      }
-    }
-
-    // Normalize the source using our helper
-    // Priority: utm_source > ref > referrer_domain
-    const normalizedSource = getNormalizedSource(
-      utm_source || ref || null,
-      referrer_domain || null
-    );
-
-    // Determine the marketing channel
-    const channel = getChannel(
-      utm_medium,
-      utm_source || ref || null,
-      referrer_domain
-    );
 
     const ua = req.headers.get("user-agent");
     const parser = new UAParser(ua as string);
@@ -110,22 +73,39 @@ export async function POST(req: NextRequest) {
       // Continue with null values for location
     }
 
-    const { data: site } = await supabase
-      .from("sites")
-      .select("id")
-      .eq("domain", domain);
-    if (!site) {
-      return NextResponse.json(
-        { error: "Site not found" }, 
-        { 
-          status: 404,
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
+    // In development mode, create a fake site ID for testing
+    let siteId: number;
+    
+    // Check if we're in dev mode and dealing with a dev domain
+    const isDev = process.env.NODE_ENV === 'development' || 
+                  domain.includes('localhost') || 
+                  domain.includes('127.0.0.1') || 
+                  domain.includes('ngrok');
+    
+    if (isDev) {
+      console.log(`Dev mode: Using test site ID for domain: ${domain}`);
+      siteId = 1; // Use a test site ID
+    } else {
+      const { data: site } = await supabase
+        .from("sites")
+        .select("id")
+        .eq("domain", domain);
+      
+      if (!site || site.length === 0) {
+        console.log(`Site not found for domain: ${domain}`);
+        return NextResponse.json(
+          { error: "Site not found", domain }, 
+          { 
+            status: 404,
+            headers: {
+              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Methods": "POST, OPTIONS",
+              "Access-Control-Allow-Headers": "Content-Type",
+            }
           }
-        }
-      );
+        );
+      }
+      siteId = site[0].id;
     }
 
     // Check if this is a new session to set entry_page
@@ -140,8 +120,7 @@ export async function POST(req: NextRequest) {
 
     const { error } = await supabase.from("sessions").upsert({
       id: sessionId,
-      site_id: site[0].id,
-      page: page || null,
+      site_id: siteId,
       last_seen: new Date().toISOString(),
       country,
       region,
@@ -151,21 +130,10 @@ export async function POST(req: NextRequest) {
       os,
       os_version: osVersion,
       screen_size: deviceCategory,
-      // UTM parameters - store normalized source
-      utm_source: normalizedSource !== "direct" ? normalizedSource : undefined,
-      utm_medium: utm_medium || undefined,
-      utm_campaign: utm_campaign || undefined,
-      utm_term: utm_term || undefined,
-      utm_content: utm_content || undefined,
-      // Referrer
-      referrer: referrer || undefined,
-      referrer_domain: referrer_domain || undefined,
       // Page tracking
       entry_page: isNewSession ? page || "/" : existingSession.entry_page,
       exit_page: page || "/",
       page_views: currentPageViews + 1,
-      // Channel classification
-      channel: channel,
     });
 
     if (error) {
@@ -182,9 +150,10 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (e) {
-    console.error("Track handler failed", e);
+    console.error("Track handler failed:", e);
+    console.error("Error details:", e instanceof Error ? e.message : String(e));
     return NextResponse.json(
-      { error: "Invalid payload" },
+      { error: "Invalid payload", details: e instanceof Error ? e.message : String(e) },
       {
         status: 400,
         headers: {
