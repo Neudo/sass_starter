@@ -8,23 +8,32 @@ import { getNormalizedSource, getChannel } from "@/lib/referrer-helper";
 
 export async function POST(req: NextRequest) {
   try {
-    const { sessionId, page, domain, referrer } = await req.json();
+    const { 
+      sessionId, 
+      page, 
+      domain, 
+      referrer,
+      ref,
+      utm_source,
+      utm_medium,
+      utm_campaign,
+      utm_term,
+      utm_content
+    } = await req.json();
 
     if (!sessionId || !domain) {
       return NextResponse.json(
         { error: "Missing sessionId or domain" },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          }
+        }
       );
     }
-
-    // Parse UTM parameters and ref from the URL
-    const url = new URL(req.url);
-    const ref = url.searchParams.get("ref");
-    const utm_source = url.searchParams.get("utm_source");
-    const utm_medium = url.searchParams.get("utm_medium");
-    const utm_campaign = url.searchParams.get("utm_campaign");
-    const utm_term = url.searchParams.get("utm_term");
-    const utm_content = url.searchParams.get("utm_content");
 
     // Parse referrer domain
     let referrer_domain = null;
@@ -93,7 +102,17 @@ export async function POST(req: NextRequest) {
       .select("id")
       .eq("domain", domain);
     if (!site) {
-      return NextResponse.json({ error: "Site not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Site not found" }, 
+        { 
+          status: 404,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          }
+        }
+      );
     }
 
     // Check if this is a new session to set entry_page
