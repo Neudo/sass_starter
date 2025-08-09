@@ -12,13 +12,13 @@ export async function POST(req: NextRequest) {
     if (!sessionId || !domain) {
       return NextResponse.json(
         { error: "Missing sessionId or domain" },
-        { 
+        {
           status: 400,
           headers: {
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "POST, OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type",
-          }
+          },
         }
       );
     }
@@ -48,36 +48,38 @@ export async function POST(req: NextRequest) {
     if (ip === "::1" || ip === null) {
       ip = "83.114.15.244";
     }
-    
+
     // Initialize location variables
     let country = null;
     let region = null;
     let city = null;
-    
+
     // Try to get geolocation data, but don't fail if it's not available
     try {
       // Use absolute path with process.cwd() for Vercel compatibility
       const dbPath = path.join(process.cwd(), "data", "GeoLite2-City.mmdb");
       const reader = await Reader.open(dbPath);
       const response = reader.city(ip);
-      
+
       // Extract location data in English
       country = response?.country?.names.en || null;
       region = response?.subdivisions?.[0].names.en || null;
       city = response?.city?.names.en || null;
     } catch (geoError) {
       // Continue with null values for location if geolocation fails
+      console.error("Geolocation lookup failed:", geoError);
     }
 
     // In development mode, create a fake site ID for testing
     let siteId: number;
-    
+
     // Check if we're in dev mode and dealing with a dev domain
-    const isDev = process.env.NODE_ENV === 'development' || 
-                  domain.includes('localhost') || 
-                  domain.includes('127.0.0.1') || 
-                  domain.includes('ngrok');
-    
+    const isDev =
+      process.env.NODE_ENV === "development" ||
+      domain.includes("localhost") ||
+      domain.includes("127.0.0.1") ||
+      domain.includes("ngrok");
+
     if (isDev) {
       siteId = 1; // Use a test site ID in dev mode
     } else {
@@ -85,17 +87,17 @@ export async function POST(req: NextRequest) {
         .from("sites")
         .select("id")
         .eq("domain", domain);
-      
+
       if (!site || site.length === 0) {
         return NextResponse.json(
-          { error: "Site not found" }, 
-          { 
+          { error: "Site not found" },
+          {
             status: 404,
             headers: {
               "Access-Control-Allow-Origin": "*",
               "Access-Control-Allow-Methods": "POST, OPTIONS",
               "Access-Control-Allow-Headers": "Content-Type",
-            }
+            },
           }
         );
       }
