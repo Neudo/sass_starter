@@ -8,18 +8,19 @@ import { getNormalizedSource, getChannel } from "@/lib/referrer-helper";
 
 export async function POST(req: NextRequest) {
   try {
+    const body = await req.json();
     const { 
       sessionId, 
       page, 
       domain, 
       referrer,
-      ref,
-      utm_source,
-      utm_medium,
-      utm_campaign,
-      utm_term,
-      utm_content
-    } = await req.json();
+      ref = null,
+      utm_source = null,
+      utm_medium = null,
+      utm_campaign = null,
+      utm_term = null,
+      utm_content = null
+    } = body;
 
     if (!sessionId || !domain) {
       return NextResponse.json(
