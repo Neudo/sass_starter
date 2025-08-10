@@ -23,12 +23,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Extract UTM parameters from URL query string
+    // Extract UTM parameters and ref parameter from URL query string
     let utm_source = null;
     let utm_medium = null;
     let utm_campaign = null;
     let utm_term = null;
     let utm_content = null;
+    let ref_param = null;
 
     if (urlParams) {
       const params = new URLSearchParams(urlParams);
@@ -37,6 +38,7 @@ export async function POST(req: NextRequest) {
       utm_campaign = params.get("utm_campaign");
       utm_term = params.get("utm_term");
       utm_content = params.get("utm_content");
+      ref_param = params.get("ref");
     }
 
     const ua = req.headers.get("user-agent");
@@ -88,17 +90,7 @@ export async function POST(req: NextRequest) {
 
     // In development mode, create a fake site ID for testing
     let siteId: number;
-
-    // Check if we're in dev mode and dealing with a dev domain
-    const isDev =
-      process.env.NODE_ENV === "development" ||
-      domain.includes("localhost") ||
-      domain.includes("127.0.0.1") ||
-      domain.includes("ngrok");
-
-    if (isDev) {
-      siteId = 1; // Use a test site ID in dev mode
-    } else {
+    {
       const { data: site } = await supabase
         .from("sites")
         .select("id")
@@ -132,7 +124,13 @@ export async function POST(req: NextRequest) {
 
     // Extract referrer domain
     let referrerDomain = null;
-    if (referrer) {
+    let effectiveReferrer = referrer;
+    
+    // If we have a ref parameter and no utm_source, use ref as the referrer
+    if (ref_param && !utm_source) {
+      effectiveReferrer = ref_param;
+      referrerDomain = ref_param;
+    } else if (referrer) {
       try {
         const referrerUrl = new URL(referrer);
         referrerDomain = referrerUrl.hostname;
@@ -159,9 +157,9 @@ export async function POST(req: NextRequest) {
       page_views: currentPageViews + 1,
       // Source tracking - only set on new sessions
       ...(isNewSession && {
-        referrer,
+        referrer: effectiveReferrer,
         referrer_domain: referrerDomain,
-        utm_source,
+        utm_source: utm_source || (ref_param ? ref_param : null),
         utm_medium,
         utm_campaign,
         utm_term,
