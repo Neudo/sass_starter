@@ -14,6 +14,7 @@
         page: location.pathname,
         domain: window.location.hostname,
         referrer: document.referrer || null,
+        urlParams: window.location.search,
       }),
       keepalive: true,
     }).catch(() => {

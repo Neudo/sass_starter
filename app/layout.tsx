@@ -39,7 +39,7 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
-        <Script src="/script.js" type="text/javascript" />
+        <Script src="/script.js" defer type="text/javascript" />
       </body>
     </html>
   );

@@ -7,7 +7,7 @@ import path from "path";
 
 export async function POST(req: NextRequest) {
   try {
-    const { sessionId, page, domain } = await req.json();
+    const { sessionId, page, domain, referrer, urlParams } = await req.json();
 
     if (!sessionId || !domain) {
       return NextResponse.json(
@@ -21,6 +21,22 @@ export async function POST(req: NextRequest) {
           },
         }
       );
+    }
+
+    // Extract UTM parameters from URL query string
+    let utm_source = null;
+    let utm_medium = null;
+    let utm_campaign = null;
+    let utm_term = null;
+    let utm_content = null;
+
+    if (urlParams) {
+      const params = new URLSearchParams(urlParams);
+      utm_source = params.get("utm_source");
+      utm_medium = params.get("utm_medium");
+      utm_campaign = params.get("utm_campaign");
+      utm_term = params.get("utm_term");
+      utm_content = params.get("utm_content");
     }
 
     const ua = req.headers.get("user-agent");
@@ -114,6 +130,17 @@ export async function POST(req: NextRequest) {
     const isNewSession = !existingSession;
     const currentPageViews = existingSession?.page_views || 0;
 
+    // Extract referrer domain
+    let referrerDomain = null;
+    if (referrer) {
+      try {
+        const referrerUrl = new URL(referrer);
+        referrerDomain = referrerUrl.hostname;
+      } catch {
+        // If referrer is not a valid URL, leave as null
+      }
+    }
+
     const { error } = await supabase.from("sessions").upsert({
       id: sessionId,
       site_id: siteId,
@@ -130,6 +157,16 @@ export async function POST(req: NextRequest) {
       entry_page: isNewSession ? page || "/" : existingSession.entry_page,
       exit_page: page || "/",
       page_views: currentPageViews + 1,
+      // Source tracking - only set on new sessions
+      ...(isNewSession && {
+        referrer,
+        referrer_domain: referrerDomain,
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        utm_term,
+        utm_content,
+      }),
     });
 
     if (error) {
