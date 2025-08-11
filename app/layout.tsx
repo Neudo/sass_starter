@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
-import Script from "next/script";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -39,7 +38,6 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
-        <Script src="/script.js" defer type="text/javascript" />
       </body>
     </html>
   );
