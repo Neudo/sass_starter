@@ -29,7 +29,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 function WelcomePageContent() {
@@ -46,69 +46,11 @@ function WelcomePageContent() {
   const [isDomainAvailable, setIsDomainAvailable] = useState<boolean | null>(
     null
   );
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  // Check access permissions
-  useEffect(() => {
-    const checkAccess = async () => {
-      const supabase = createClient();
-
-      // Handle email confirmation code if present
-      const code = searchParams.get("code");
-      if (code) {
-        try {
-          await supabase.auth.exchangeCodeForSession(code);
-        } catch (exchangeError) {
-          console.error("Error exchanging code:", exchangeError);
-        }
-      }
-
-      // Check if user is authenticated
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        // Not authenticated -> redirect to home
-        router.push("/");
-        return;
-      }
-
-      // User is authenticated, check if they have any sites
-      const { data: sites } = await supabase
-        .from("sites")
-        .select("id")
-        .eq("user_id", user.id)
-        .limit(1);
-
-      if (sites && sites.length > 0) {
-        // User already has sites -> redirect to home (or their dashboard)
-        router.push("/");
-        return;
-      }
-
-      // User is authenticated but has no sites -> allow access to welcome
-      setIsAuthenticated(true);
-      setIsLoading(false);
-
-      // Clean URL if there was a code
-      if (code) {
-        const url = new URL(window.location.href);
-        url.searchParams.delete("code");
-        window.history.replaceState({}, "", url.pathname);
-      }
-    };
-
-    checkAccess();
-  }, [router, searchParams]);
 
   // Detect user's timezone on mount
   useEffect(() => {
-    if (!isAuthenticated) return;
-
     try {
       const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       // Check if the detected timezone exists in our list
@@ -119,11 +61,11 @@ function WelcomePageContent() {
       console.error("Could not detect timezone:", error);
       // Keep default UTC if detection fails
     }
-  }, [isAuthenticated]);
+  }, []);
 
   // Check domain availability with debounce
   useEffect(() => {
-    if (!isAuthenticated || !domain.trim()) {
+    if (!domain.trim()) {
       setDomainError(null);
       setIsDomainAvailable(null);
       setIsCheckingDomain(false);
@@ -171,7 +113,7 @@ function WelcomePageContent() {
     // Debounce the check
     const timeoutId = setTimeout(checkDomain, 1000);
     return () => clearTimeout(timeoutId);
-  }, [domain, isAuthenticated]);
+  }, [domain]);
 
   const scriptCode = `<script defer src="https://www.hectoranalytics.com/script.js"></script>`;
 
@@ -251,9 +193,11 @@ function WelcomePageContent() {
         const cleanDomain = domain
           .replace(/^https?:\/\//, "")
           .replace(/\/$/, "");
-        
-        const { data: { user } } = await supabase.auth.getUser();
-        
+
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
         if (user) {
           const { error } = await supabase.from("sites").insert({
             domain: cleanDomain,
@@ -268,7 +212,7 @@ function WelcomePageContent() {
             return;
           }
         }
-        
+
         setVerificationStatus("success");
 
         // Redirect to dashboard after 2 seconds
@@ -292,25 +236,8 @@ function WelcomePageContent() {
     startVerification();
   };
 
-  // Show loading state while checking authentication
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin" />
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render the form if not authenticated (will redirect)
-  if (!isAuthenticated) {
-    return null;
-  }
-
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-start justify-center p-4">
       <Card className="w-full max-w-2xl">
         <CardHeader>
           <div className="flex items-center justify-between mb-6">
