@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Globe, Building, Flag, Users, Percent } from "lucide-react";
 import { getCountryFlag } from "@/data/country-flags";
+import { DetailsModal } from "@/components/ui/details-modal";
 
 interface LocationData {
   country: string | null;
@@ -26,6 +27,11 @@ export function LocationCard({
   dateRange?: { from: Date; to: Date } | null;
 }) {
   const [locationStats, setLocationStats] = useState<LocationStats>({
+    countries: {},
+    regions: {},
+    cities: {},
+  });
+  const [allLocationStats, setAllLocationStats] = useState<LocationStats>({
     countries: {},
     regions: {},
     cities: {},
@@ -96,7 +102,29 @@ export function LocationCard({
         }
       });
 
-      setLocationStats(stats);
+      // Store all data
+      setAllLocationStats(stats);
+
+      // Limit display data to top 10
+      const limitedStats: LocationStats = {
+        countries: Object.fromEntries(
+          Object.entries(stats.countries)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 7)
+        ),
+        regions: Object.fromEntries(
+          Object.entries(stats.regions)
+            .sort(([, a], [, b]) => b.count - a.count)
+            .slice(0, 7)
+        ),
+        cities: Object.fromEntries(
+          Object.entries(stats.cities)
+            .sort(([, a], [, b]) => b.count - a.count)
+            .slice(0, 7)
+        ),
+      };
+
+      setLocationStats(limitedStats);
       setLoading(false);
     };
 
@@ -107,7 +135,11 @@ export function LocationCard({
     data:
       | Record<string, number>
       | Record<string, { count: number; country?: string }>,
-    type: "country" | "region" | "city" = "country"
+    type: "country" | "region" | "city" = "country",
+    allData?:
+      | Record<string, number>
+      | Record<string, { count: number; country?: string }>,
+    title?: string
   ) => {
     // Convert data to consistent format for sorting
     const sortedData = Object.entries(data).sort(([, a], [, b]) => {
@@ -126,7 +158,7 @@ export function LocationCard({
     }
 
     return (
-      <div className="space-y-3">
+      <div className="space-y-1">
         <div className="flex items-center justify-between mb-2">
           <div className="text-xs text-muted-foreground">
             Showing {sortedData.length}{" "}
@@ -171,8 +203,12 @@ export function LocationCard({
 
           return (
             <div key={name} className="space-y-1">
-              <div className="flex justify-between text-sm">
-                <div className="flex items-center gap-2 truncate mr-2">
+              <div className="flex justify-between text-sm relative">
+                <div
+                  className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-slate-500 opacity-15 transition-all"
+                  style={{ width: `${percentage}%` }}
+                />
+                <div className="flex items-center gap-2 truncate mr-2 p-2">
                   {flag ? (
                     <span className="text-base">{flag}</span>
                   ) : type === "country" ? (
@@ -182,21 +218,85 @@ export function LocationCard({
                   ) : (
                     <Building className="h-4 w-4 text-muted-foreground" />
                   )}
-                  <span className="truncate">{name}</span>
+                  <span className="truncate text-sm">{name}</span>
                 </div>
                 <span className="text-muted-foreground font-medium">
                   {showPercentage ? `${percentage}%` : count.toLocaleString()}
                 </span>
               </div>
-              <div className="w-full bg-muted rounded-full h-2">
-                <div
-                  className="bg-primary h-2 rounded-full transition-all"
-                  style={{ width: `${percentage}%` }}
-                />
-              </div>
             </div>
           );
         })}
+        {allData && Object.keys(allData).length > 0 && (
+          <DetailsModal
+            title={title || `All ${type}s`}
+            description={`Showing ${
+              Object.keys(allData).length
+            } elements total`}
+            itemCount={Object.keys(allData).length}
+          >
+            <div className="space-y-1">
+              {Object.entries(allData)
+                .sort(([, a], [, b]) => {
+                  const aCount = typeof a === "number" ? a : a.count;
+                  const bCount = typeof b === "number" ? b : b.count;
+                  return bCount - aCount;
+                })
+                .map(([name, item]) => {
+                  const count = typeof item === "number" ? item : item.count;
+                  const allTotal = Object.values(allData).reduce(
+                    (sum, dataItem) => {
+                      const itemCount =
+                        typeof dataItem === "number"
+                          ? dataItem
+                          : dataItem.count;
+                      return sum + itemCount;
+                    },
+                    0
+                  );
+                  const percentage =
+                    allTotal > 0 ? ((count / allTotal) * 100).toFixed(1) : 0;
+
+                  let flag = null;
+                  if (type === "country") {
+                    flag = getCountryFlag(name);
+                  } else if (type === "region" || type === "city") {
+                    if (typeof item !== "number" && item.country) {
+                      flag = getCountryFlag(item.country);
+                    }
+                  }
+
+                  return (
+                    <div key={name} className="space-y-1">
+                      <div className="flex justify-between text-sm relative">
+                        <div
+                          className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-slate-500 opacity-15 transition-all"
+                          style={{ width: `${percentage}%` }}
+                        />
+                        <div className="flex items-center gap-2 truncate mr-2 p-2">
+                          {flag ? (
+                            <span className="text-base">{flag}</span>
+                          ) : type === "country" ? (
+                            <Flag className="h-4 w-4 text-muted-foreground" />
+                          ) : type === "region" ? (
+                            <Globe className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <Building className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          <span className="truncate text-sm">{name}</span>
+                        </div>
+                        <span className="text-muted-foreground font-medium">
+                          {showPercentage
+                            ? `${percentage}%`
+                            : count.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </DetailsModal>
+        )}
       </div>
     );
   };
@@ -215,13 +315,28 @@ export function LocationCard({
         <TabsTrigger value="cities">Cities</TabsTrigger>
       </TabsList>
       <TabsContent value="countries" className="mt-4">
-        {renderStats(locationStats.countries, "country")}
+        {renderStats(
+          locationStats.countries,
+          "country",
+          allLocationStats.countries,
+          "All countries"
+        )}
       </TabsContent>
       <TabsContent value="regions" className="mt-4">
-        {renderStats(locationStats.regions, "region")}
+        {renderStats(
+          locationStats.regions,
+          "region",
+          allLocationStats.regions,
+          "All regions"
+        )}
       </TabsContent>
       <TabsContent value="cities" className="mt-4">
-        {renderStats(locationStats.cities, "city")}
+        {renderStats(
+          locationStats.cities,
+          "city",
+          allLocationStats.cities,
+          "All cities"
+        )}
       </TabsContent>
     </Tabs>
   );

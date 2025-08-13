@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { DetailsModal } from "@/components/ui/details-modal";
 
 interface PageData {
   page: string;
@@ -21,6 +22,9 @@ export function TopPagesCard({
   const [topPages, setTopPages] = useState<PageData[]>([]);
   const [entryPages, setEntryPages] = useState<PageData[]>([]);
   const [exitPages, setExitPages] = useState<PageData[]>([]);
+  const [allTopPages, setAllTopPages] = useState<PageData[]>([]);
+  const [allEntryPages, setAllEntryPages] = useState<PageData[]>([]);
+  const [allExitPages, setAllExitPages] = useState<PageData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -74,10 +78,10 @@ export function TopPagesCard({
             count,
             percentage: (count / total) * 100,
           }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 10);
+          .sort((a, b) => b.count - a.count);
 
-        setTopPages(processedPages);
+        setAllTopPages(processedPages);
+        setTopPages(processedPages.slice(0, 7));
 
         // Process entry pages
         const entryCounts = sessionsData.reduce(
@@ -99,10 +103,10 @@ export function TopPagesCard({
             count,
             percentage: (count / entryTotal) * 100,
           }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 10);
+          .sort((a, b) => b.count - a.count);
 
-        setEntryPages(processedEntryPages);
+        setAllEntryPages(processedEntryPages);
+        setEntryPages(processedEntryPages.slice(0, 7));
 
         // Process exit pages
         const exitCounts = sessionsData.reduce(
@@ -121,10 +125,10 @@ export function TopPagesCard({
             count,
             percentage: (count / exitTotal) * 100,
           }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 10);
+          .sort((a, b) => b.count - a.count);
 
-        setExitPages(processedExitPages);
+        setAllExitPages(processedExitPages);
+        setExitPages(processedExitPages.slice(0, 7));
       }
 
       setLoading(false);
@@ -133,7 +137,11 @@ export function TopPagesCard({
     fetchPageData();
   }, [siteId, dateRange]);
 
-  const renderList = (data: PageData[]) => {
+  const renderList = (
+    data: PageData[],
+    allData?: PageData[],
+    title?: string
+  ) => {
     if (loading) {
       return <div className="text-muted-foreground">Loading...</div>;
     }
@@ -142,22 +150,43 @@ export function TopPagesCard({
       return <div className="text-muted-foreground">No data available</div>;
     }
 
-    return (
-      <div className="space-y-3">
-        {data.map((item, index) => (
+    const renderItems = (items: PageData[]) => (
+      <div className="space-y-1">
+        {items.map((item, index) => (
           <div key={index} className="space-y-1">
-            <div className="flex justify-between items-center text-sm">
-              <span className="truncate max-w-[200px]" title={item.page}>
+            <div className="flex justify-between items-center text-sm relative">
+              <div
+                className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-slate-500 opacity-15 transition-all"
+                style={{ width: `${item.percentage}%` }}
+              />
+              <span
+                className="truncate max-w-[200px] p-2 text-sm"
+                title={item.page}
+              >
                 {item.page}
               </span>
               <span className="text-muted-foreground ml-2">
                 {item.count} ({item.percentage.toFixed(1)}%)
               </span>
             </div>
-            <Progress value={item.percentage} className="h-2" />
           </div>
         ))}
       </div>
+    );
+
+    return (
+      <>
+        {renderItems(data)}
+        {allData && allData.length > 7 && (
+          <DetailsModal
+            title={title || "All pages"}
+            description={`Showing ${allData.length} pages total`}
+            itemCount={allData.length}
+          >
+            {renderItems(allData)}
+          </DetailsModal>
+        )}
+      </>
     );
   };
 
@@ -169,13 +198,13 @@ export function TopPagesCard({
         <TabsTrigger value="exit-pages">Exit Pages</TabsTrigger>
       </TabsList>
       <TabsContent value="top-pages" className="mt-4">
-        {renderList(topPages)}
+        {renderList(topPages, allTopPages, "All visited pages")}
       </TabsContent>
       <TabsContent value="entry-pages" className="mt-4">
-        {renderList(entryPages)}
+        {renderList(entryPages, allEntryPages, "All entry pages")}
       </TabsContent>
       <TabsContent value="exit-pages" className="mt-4">
-        {renderList(exitPages)}
+        {renderList(exitPages, allExitPages, "All exit pages")}
       </TabsContent>
     </Tabs>
   );

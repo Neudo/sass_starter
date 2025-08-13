@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DetailsModal } from "@/components/ui/details-modal";
 
 interface SourceData {
   name: string;
@@ -85,10 +86,19 @@ const getSourceIcon = (sourceName: string) => {
   return null;
 };
 
-export function SourcesCard({ siteId, dateRange }: { siteId: string; dateRange?: { from: Date; to: Date } | null }) {
+export function SourcesCard({
+  siteId,
+  dateRange,
+}: {
+  siteId: string;
+  dateRange?: { from: Date; to: Date } | null;
+}) {
   const [channels, setChannels] = useState<SourceData[]>([]);
   const [sources, setSources] = useState<SourceData[]>([]);
   const [campaigns, setCampaigns] = useState<SourceData[]>([]);
+  const [allChannels, setAllChannels] = useState<SourceData[]>([]);
+  const [allSources, setAllSources] = useState<SourceData[]>([]);
+  const [allCampaigns, setAllCampaigns] = useState<SourceData[]>([]);
   const [selectedUTM, setSelectedUTM] = useState<UTMType>("utm_medium");
   const [loading, setLoading] = useState(true);
 
@@ -112,7 +122,7 @@ export function SourcesCard({ siteId, dateRange }: { siteId: string; dateRange?:
         sessionsQuery = sessionsQuery
           .gte("created_at", dateRange.from.toISOString())
           .lte("created_at", dateRange.to.toISOString());
-        
+
         sourcesQuery = sourcesQuery
           .gte("created_at", dateRange.from.toISOString())
           .lte("created_at", dateRange.to.toISOString());
@@ -162,10 +172,10 @@ export function SourcesCard({ siteId, dateRange }: { siteId: string; dateRange?:
             count,
             percentage: (count / total) * 100,
           }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 10);
+          .sort((a, b) => b.count - a.count);
 
-        setChannels(processedChannels);
+        setAllChannels(processedChannels);
+        setChannels(processedChannels.slice(0, 7));
       }
 
       // Process sources
@@ -173,12 +183,15 @@ export function SourcesCard({ siteId, dateRange }: { siteId: string; dateRange?:
         const sourceCounts = sourcesData.reduce(
           (acc: Record<string, number>, item) => {
             const rawSource = item.utm_source || item.referrer || "direct";
-            
+
             // Skip self-referrals (from own domain)
-            if (rawSource && rawSource.toLowerCase().includes("hectoranalytics")) {
+            if (
+              rawSource &&
+              rawSource.toLowerCase().includes("hectoranalytics")
+            ) {
               return acc;
             }
-            
+
             // Get the display name for the source
             const sourceInfo = normalizeReferrer(rawSource, !!item.utm_source);
             const displayName = sourceInfo.displayName;
@@ -195,10 +208,10 @@ export function SourcesCard({ siteId, dateRange }: { siteId: string; dateRange?:
             count,
             percentage: (count / total) * 100,
           }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 10);
+          .sort((a, b) => b.count - a.count);
 
-        setSources(processedSources);
+        setAllSources(processedSources);
+        setSources(processedSources.slice(0, 7));
       }
 
       // Process UTM data for campaigns tab
@@ -221,10 +234,10 @@ export function SourcesCard({ siteId, dateRange }: { siteId: string; dateRange?:
             count,
             percentage: (count / total) * 100,
           }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 10);
+          .sort((a, b) => b.count - a.count);
 
-        setCampaigns(processedUTM);
+        setAllCampaigns(processedUTM);
+        setCampaigns(processedUTM.slice(0, 7));
       }
 
       setLoading(false);
@@ -233,7 +246,12 @@ export function SourcesCard({ siteId, dateRange }: { siteId: string; dateRange?:
     fetchSourceData();
   }, [siteId, selectedUTM, dateRange]);
 
-  const renderList = (data: SourceData[], showIcons = false) => {
+  const renderList = (
+    data: SourceData[],
+    showIcons = false,
+    allData?: SourceData[],
+    title?: string
+  ) => {
     if (loading) {
       return <div className="text-muted-foreground">Loading...</div>;
     }
@@ -242,15 +260,19 @@ export function SourcesCard({ siteId, dateRange }: { siteId: string; dateRange?:
       return <div className="text-muted-foreground">No data available</div>;
     }
 
-    return (
-      <div className="space-y-3">
-        {data.map((item, index) => {
+    const renderItems = (items: SourceData[]) => (
+      <div className="space-y-1">
+        {items.map((item, index) => {
           const icon = showIcons ? getSourceIcon(item.name) : null;
 
           return (
             <div key={index} className="space-y-1">
-              <div className="flex justify-between items-center text-sm">
-                <div className="flex items-center gap-2 truncate max-w-[200px]">
+              <div className="flex justify-between items-center text-sm relative">
+                <div
+                  className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-slate-500 opacity-15 transition-all"
+                  style={{ width: `${item.percentage}%` }}
+                />
+                <div className="flex items-center gap-2 truncate max-w-[200px] p-2">
                   {showIcons &&
                     (icon ? (
                       <Image
@@ -263,7 +285,7 @@ export function SourcesCard({ siteId, dateRange }: { siteId: string; dateRange?:
                     ) : (
                       <Globe className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
                     ))}
-                  <span className="truncate" title={item.name}>
+                  <span className="truncate text-sm" title={item.name}>
                     {item.name}
                   </span>
                 </div>
@@ -271,11 +293,25 @@ export function SourcesCard({ siteId, dateRange }: { siteId: string; dateRange?:
                   {item.count} ({item.percentage.toFixed(1)}%)
                 </span>
               </div>
-              <Progress value={item.percentage} className="h-2" />
             </div>
           );
         })}
       </div>
+    );
+
+    return (
+      <>
+        {renderItems(data)}
+        {allData && allData.length > 0 && (
+          <DetailsModal
+            title={title || "All elements"}
+            description={`Showing ${allData.length} elements total`}
+            itemCount={allData.length}
+          >
+            {renderItems(allData)}
+          </DetailsModal>
+        )}
+      </>
     );
   };
 
@@ -287,10 +323,10 @@ export function SourcesCard({ siteId, dateRange }: { siteId: string; dateRange?:
         <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
       </TabsList>
       <TabsContent value="channels" className="mt-4">
-        {renderList(channels)}
+        {renderList(channels, false, allChannels, "All channels")}
       </TabsContent>
       <TabsContent value="sources" className="mt-4">
-        {renderList(sources, true)}
+        {renderList(sources, true, allSources, "All sources")}
       </TabsContent>
       <TabsContent value="campaigns" className="mt-4 space-y-4">
         <Select
@@ -308,7 +344,7 @@ export function SourcesCard({ siteId, dateRange }: { siteId: string; dateRange?:
             ))}
           </SelectContent>
         </Select>
-        {renderList(campaigns)}
+        {renderList(campaigns, false, allCampaigns, "All campaigns")}
       </TabsContent>
     </Tabs>
   );

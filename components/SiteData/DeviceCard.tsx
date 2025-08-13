@@ -12,6 +12,7 @@ import {
   Percent,
 } from "lucide-react";
 import Image from "next/image";
+import { DetailsModal } from "@/components/ui/details-modal";
 
 interface DeviceData {
   browser: string | null;
@@ -27,8 +28,19 @@ interface DeviceStats {
   screenSizes: Record<string, number>;
 }
 
-export function DeviceCard({ siteId, dateRange }: { siteId: string; dateRange?: { from: Date; to: Date } | null }) {
+export function DeviceCard({
+  siteId,
+  dateRange,
+}: {
+  siteId: string;
+  dateRange?: { from: Date; to: Date } | null;
+}) {
   const [deviceStats, setDeviceStats] = useState<DeviceStats>({
+    browsers: {},
+    os: {},
+    screenSizes: {},
+  });
+  const [allDeviceStats, setAllDeviceStats] = useState<DeviceStats>({
     browsers: {},
     os: {},
     screenSizes: {},
@@ -87,7 +99,29 @@ export function DeviceCard({ siteId, dateRange }: { siteId: string; dateRange?: 
         }
       });
 
-      setDeviceStats(stats);
+      // Store all data
+      setAllDeviceStats(stats);
+
+      // Limit display data to top 10
+      const limitedStats: DeviceStats = {
+        browsers: Object.fromEntries(
+          Object.entries(stats.browsers)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 7)
+        ),
+        os: Object.fromEntries(
+          Object.entries(stats.os)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 7)
+        ),
+        screenSizes: Object.fromEntries(
+          Object.entries(stats.screenSizes)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 7)
+        ),
+      };
+
+      setDeviceStats(limitedStats);
       setLoading(false);
     };
 
@@ -96,12 +130,12 @@ export function DeviceCard({ siteId, dateRange }: { siteId: string; dateRange?: 
 
   const getBrowserIcon = (browserName: string) => {
     const name = browserName.toLowerCase();
-    
+
     // Check for Chrome Headless first (specific case)
-    if (name.includes('chrome') && name.includes('headless')) {
+    if (name.includes("chrome") && name.includes("headless")) {
       return (
-        <Image 
-          src="/images/browser/chromium-webview.png" 
+        <Image
+          src="/images/browser/chromium-webview.png"
           alt={browserName}
           width={16}
           height={16}
@@ -109,26 +143,26 @@ export function DeviceCard({ siteId, dateRange }: { siteId: string; dateRange?: 
         />
       );
     }
-    
+
     // Map browser names to image filenames
     const browserImageMap: Record<string, string> = {
-      'chrome': 'chrome.png',
-      'firefox': 'firefox.png',
-      'safari': 'safari.png',
-      'edge': 'edge.png',
-      'opera': 'opera.png',
-      'brave': 'brave.png',
-      'samsung': 'samsung.png',
-      'internet explorer': 'ie.png',
-      'ie': 'ie.png'
+      chrome: "chrome.png",
+      firefox: "firefox.png",
+      safari: "safari.png",
+      edge: "edge.png",
+      opera: "opera.png",
+      brave: "brave.png",
+      samsung: "samsung.png",
+      "internet explorer": "ie.png",
+      ie: "ie.png",
     };
-    
+
     // Find matching browser
     for (const [browser, filename] of Object.entries(browserImageMap)) {
       if (name.includes(browser)) {
         return (
-          <Image 
-            src={`/images/browser/${filename}`} 
+          <Image
+            src={`/images/browser/${filename}`}
             alt={browserName}
             width={16}
             height={16}
@@ -137,11 +171,11 @@ export function DeviceCard({ siteId, dateRange }: { siteId: string; dateRange?: 
         );
       }
     }
-    
+
     // Default fallback
     return (
-      <Image 
-        src="/images/browser/unknown.png" 
+      <Image
+        src="/images/browser/unknown.png"
         alt={browserName}
         width={16}
         height={16}
@@ -152,26 +186,26 @@ export function DeviceCard({ siteId, dateRange }: { siteId: string; dateRange?: 
 
   const getOSIcon = (osName: string) => {
     const name = osName.toLowerCase();
-    
+
     // Map OS names to image filenames
     const osImageMap: Record<string, string> = {
-      'windows': 'windows-11.png',
-      'mac': 'mac-os.png',
-      'macos': 'mac-os.png',
-      'ios': 'ios.png',
-      'iphone': 'ios.png',
-      'android': 'android-os.png',
-      'linux': 'linux.png',
-      'chrome os': 'chrome-os.png',
-      'chromeos': 'chrome-os.png'
+      windows: "windows-11.png",
+      mac: "mac-os.png",
+      macos: "mac-os.png",
+      ios: "ios.png",
+      iphone: "ios.png",
+      android: "android-os.png",
+      linux: "linux.png",
+      "chrome os": "chrome-os.png",
+      chromeos: "chrome-os.png",
     };
-    
+
     // Find matching OS
     for (const [os, filename] of Object.entries(osImageMap)) {
       if (name.includes(os)) {
         return (
-          <Image 
-            src={`/images/os/${filename}`} 
+          <Image
+            src={`/images/os/${filename}`}
             alt={osName}
             width={16}
             height={16}
@@ -180,11 +214,11 @@ export function DeviceCard({ siteId, dateRange }: { siteId: string; dateRange?: 
         );
       }
     }
-    
+
     // Default fallback
     return (
-      <Image 
-        src="/images/os/unknown.png" 
+      <Image
+        src="/images/os/unknown.png"
         alt={osName}
         width={16}
         height={16}
@@ -203,7 +237,9 @@ export function DeviceCard({ siteId, dateRange }: { siteId: string; dateRange?: 
 
   const renderStats = (
     data: Record<string, number>,
-    type: "browser" | "os" | "screen" = "browser"
+    type: "browser" | "os" | "screen" = "browser",
+    allData?: Record<string, number>,
+    title?: string
   ) => {
     const sortedData = Object.entries(data).sort(([, a], [, b]) => b - a);
 
@@ -214,7 +250,7 @@ export function DeviceCard({ siteId, dateRange }: { siteId: string; dateRange?: 
     }
 
     return (
-      <div className="space-y-3">
+      <div className="space-y-1">
         <div className="flex items-center justify-between mb-2">
           <div className="text-xs text-muted-foreground">
             Showing {sortedData.length} item{sortedData.length !== 1 ? "s" : ""}
@@ -247,24 +283,70 @@ export function DeviceCard({ siteId, dateRange }: { siteId: string; dateRange?: 
               : getScreenIcon(name);
           return (
             <div key={name} className="space-y-1">
-              <div className="flex justify-between text-sm">
-                <div className="flex items-center gap-2 truncate mr-2">
+              <div className="flex justify-between text-sm relative">
+                <div
+                  className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-slate-500 opacity-15 transition-all"
+                  style={{ width: `${percentage}%` }}
+                />
+                <div className="flex items-center gap-2 truncate p-2">
                   {icon}
-                  <span className="truncate">{name}</span>
+                  <span className="truncate text-sm">{name}</span>
                 </div>
                 <span className="text-muted-foreground font-medium">
                   {showPercentage ? `${percentage}%` : count.toLocaleString()}
                 </span>
               </div>
-              <div className="w-full bg-muted rounded-full h-2">
-                <div
-                  className="bg-primary h-2 rounded-full transition-all"
-                  style={{ width: `${percentage}%` }}
-                />
-              </div>
             </div>
           );
         })}
+        {allData && Object.keys(allData).length > 0 && (
+          <DetailsModal
+            title={title || `All elements`}
+            description={`Showing ${
+              Object.keys(allData).length
+            } elements total`}
+            itemCount={Object.keys(allData).length}
+          >
+            <div className="space-y-2">
+              {Object.entries(allData)
+                .sort(([, a], [, b]) => b - a)
+                .map(([name, count]) => {
+                  const allTotal = Object.values(allData).reduce(
+                    (sum, itemCount) => sum + itemCount,
+                    0
+                  );
+                  const percentage =
+                    allTotal > 0 ? ((count / allTotal) * 100).toFixed(1) : 0;
+                  const icon =
+                    type === "browser"
+                      ? getBrowserIcon(name)
+                      : type === "os"
+                      ? getOSIcon(name)
+                      : getScreenIcon(name);
+
+                  return (
+                    <div key={name} className="space-y-1">
+                      <div className="flex justify-between text-sm relative">
+                        <div
+                          className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-slate-500 opacity-15 transition-all"
+                          style={{ width: `${percentage}%` }}
+                        />
+                        <div className="flex items-center gap-2 truncate mr-2 p-2">
+                          {icon}
+                          <span className="truncate text-sm">{name}</span>
+                        </div>
+                        <span className="text-muted-foreground font-medium">
+                          {showPercentage
+                            ? `${percentage}%`
+                            : count.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </DetailsModal>
+        )}
       </div>
     );
   };
@@ -281,13 +363,28 @@ export function DeviceCard({ siteId, dateRange }: { siteId: string; dateRange?: 
         <TabsTrigger value="screen">Screen Size</TabsTrigger>
       </TabsList>
       <TabsContent value="browser" className="mt-4">
-        {renderStats(deviceStats.browsers, "browser")}
+        {renderStats(
+          deviceStats.browsers,
+          "browser",
+          allDeviceStats.browsers,
+          "All browsers"
+        )}
       </TabsContent>
       <TabsContent value="os" className="mt-4">
-        {renderStats(deviceStats.os, "os")}
+        {renderStats(
+          deviceStats.os,
+          "os",
+          allDeviceStats.os,
+          "All operating systems"
+        )}
       </TabsContent>
       <TabsContent value="screen" className="mt-4">
-        {renderStats(deviceStats.screenSizes, "screen")}
+        {renderStats(
+          deviceStats.screenSizes,
+          "screen",
+          allDeviceStats.screenSizes,
+          "All screen sizes"
+        )}
       </TabsContent>
     </Tabs>
   );
