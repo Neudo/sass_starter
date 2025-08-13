@@ -28,7 +28,7 @@ export function SiteSelector({ sites, currentDomain }: SiteSelectorProps) {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-4 justify-between w-full">
+    <div className="flex flex-wrap items-center gap-4 justify-between">
       <Select value={currentDomain} onValueChange={handleSiteChange}>
         <SelectTrigger className="w-[180px] md:w-[280]">
           <SelectValue placeholder="Select a site" />
@@ -41,7 +41,11 @@ export function SiteSelector({ sites, currentDomain }: SiteSelectorProps) {
           ))}
         </SelectContent>
       </Select>
-      <Button variant="outline" onClick={() => router.push("/dashboard")}>
+      <Button
+        variant="outline"
+        className="hidden sm:block"
+        onClick={() => router.push("/dashboard")}
+      >
         View all sites
       </Button>
     </div>

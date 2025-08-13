@@ -399,7 +399,7 @@ export function MetricsChart({
               <Area
                 key={metric}
                 dataKey={metric}
-                type="natural"
+                type="linear"
                 fill={`url(#fill${metric})`}
                 stroke={chartConfig[metric as keyof typeof chartConfig].color}
                 strokeWidth={2}

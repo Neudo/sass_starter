@@ -21,7 +21,6 @@ export function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isLoggedIn = false;
   const isProd = process.env.NEXT_PUBLIC_NODE_ENV === "production";
-  console.log(isProd);
 
   // Navigation items definition
   const navItems = [
