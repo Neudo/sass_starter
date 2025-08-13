@@ -27,7 +27,7 @@ interface DeviceStats {
   screenSizes: Record<string, number>;
 }
 
-export function DeviceCard({ siteId }: { siteId: string }) {
+export function DeviceCard({ siteId, dateRange }: { siteId: string; dateRange?: { from: Date; to: Date } | null }) {
   const [deviceStats, setDeviceStats] = useState<DeviceStats>({
     browsers: {},
     os: {},
@@ -40,10 +40,18 @@ export function DeviceCard({ siteId }: { siteId: string }) {
     const fetchDeviceData = async () => {
       const supabase = createClient();
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("sessions")
         .select("browser, browser_version, os, os_version, screen_size")
         .eq("site_id", siteId);
+
+      if (dateRange) {
+        query = query
+          .gte("created_at", dateRange.from.toISOString())
+          .lte("created_at", dateRange.to.toISOString());
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error("Error fetching device data:", error);
@@ -84,7 +92,7 @@ export function DeviceCard({ siteId }: { siteId: string }) {
     };
 
     fetchDeviceData();
-  }, [siteId]);
+  }, [siteId, dateRange]);
 
   const getBrowserIcon = (browserName: string) => {
     const name = browserName.toLowerCase();

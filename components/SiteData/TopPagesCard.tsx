@@ -11,7 +11,7 @@ interface PageData {
   percentage: number;
 }
 
-export function TopPagesCard({ siteId }: { siteId: string }) {
+export function TopPagesCard({ siteId, dateRange }: { siteId: string; dateRange?: { from: Date; to: Date } | null }) {
   const [topPages, setTopPages] = useState<PageData[]>([]);
   const [entryPages, setEntryPages] = useState<PageData[]>([]);
   const [exitPages, setExitPages] = useState<PageData[]>([]);
@@ -22,10 +22,18 @@ export function TopPagesCard({ siteId }: { siteId: string }) {
       const supabase = createClient();
 
       // Fetch all sessions with entry_page, exit_page and page_views
-      const { data: sessionsData } = await supabase
+      let query = supabase
         .from("sessions")
         .select("entry_page, exit_page, page_views")
         .eq("site_id", siteId);
+
+      if (dateRange) {
+        query = query
+          .gte("created_at", dateRange.from.toISOString())
+          .lte("created_at", dateRange.to.toISOString());
+      }
+
+      const { data: sessionsData } = await query;
 
       // Process top pages by counting all pages
       if (sessionsData) {
@@ -111,7 +119,7 @@ export function TopPagesCard({ siteId }: { siteId: string }) {
     };
 
     fetchPageData();
-  }, [siteId]);
+  }, [siteId, dateRange]);
 
   const renderList = (data: PageData[]) => {
     if (loading) {

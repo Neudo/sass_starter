@@ -15,6 +15,7 @@ export type GeoMercatorProps = {
   height: number;
   events?: boolean;
   siteId: string;
+  dateRange?: { from: Date; to: Date } | null;
 };
 
 interface FeatureShape {
@@ -24,7 +25,7 @@ interface FeatureShape {
   properties: { name: string };
 }
 
-export default function WorldMap({ width, height, siteId }: GeoMercatorProps) {
+export default function WorldMap({ width, height, siteId, dateRange }: GeoMercatorProps) {
   const [world, setWorld] = useState<{
     type: "FeatureCollection";
     features: FeatureShape[];
@@ -62,11 +63,19 @@ export default function WorldMap({ width, height, siteId }: GeoMercatorProps) {
     const fetchCountryData = async () => {
       const supabase = createClient();
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("sessions")
         .select("country")
         .eq("site_id", siteId)
         .not("country", "is", null);
+
+      if (dateRange) {
+        query = query
+          .gte("created_at", dateRange.from.toISOString())
+          .lte("created_at", dateRange.to.toISOString());
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error("Error fetching country data:", error);
@@ -88,7 +97,7 @@ export default function WorldMap({ width, height, siteId }: GeoMercatorProps) {
     if (siteId) {
       fetchCountryData();
     }
-  }, [siteId]);
+  }, [siteId, dateRange]);
 
   if (!world) {
     return (

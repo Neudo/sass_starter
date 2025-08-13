@@ -18,7 +18,7 @@ interface LocationStats {
   cities: Record<string, { count: number; country?: string }>;
 }
 
-export function LocationCard({ siteId }: { siteId: string }) {
+export function LocationCard({ siteId, dateRange }: { siteId: string; dateRange?: { from: Date; to: Date } | null }) {
   const [locationStats, setLocationStats] = useState<LocationStats>({
     countries: {},
     regions: {},
@@ -31,10 +31,18 @@ export function LocationCard({ siteId }: { siteId: string }) {
     const fetchLocationData = async () => {
       const supabase = createClient();
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("sessions")
         .select("country, region, city")
         .eq("site_id", siteId);
+
+      if (dateRange) {
+        query = query
+          .gte("created_at", dateRange.from.toISOString())
+          .lte("created_at", dateRange.to.toISOString());
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error("Error fetching location data:", error);
@@ -87,7 +95,7 @@ export function LocationCard({ siteId }: { siteId: string }) {
     };
 
     fetchLocationData();
-  }, [siteId]);
+  }, [siteId, dateRange]);
 
 
   const renderStats = (

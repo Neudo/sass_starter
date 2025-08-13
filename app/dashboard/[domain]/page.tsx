@@ -1,14 +1,7 @@
 import React from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DeviceCard } from "@/components/SiteData/DeviceCard";
-import { LocationCard } from "@/components/SiteData/LocationCard";
-import { SourcesCard } from "@/components/SiteData/SourcesCard";
-import { TopPagesCard } from "@/components/SiteData/TopPagesCard";
-import { ActiveVisitors } from "@/components/SiteData/ActiveVisitors";
-import { AnalyticsMetrics } from "@/components/SiteData/AnalyticsMetrics";
-import Link from "next/link";
-import WorldMapWrapper from "@/components/SiteData/wordMapWrapper";
+import { createClient } from "@/lib/supabase/server";
+import { DashboardClient } from "@/components/DashboardClient";
 
 export default async function Page({
   params,
@@ -26,54 +19,29 @@ export default async function Page({
     return data?.[0]?.id;
   };
 
+  const getUserSites = async () => {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) return [];
+    
+    const { data, error } = await createAdminClient()
+      .from("sites")
+      .select("id, domain")
+      .eq("user_id", user.id);
+    
+    if (error) throw error;
+    return data || [];
+  };
+
   const siteId = await getSiteId(domain);
+  const userSites = await getUserSites();
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">
-        Dashboard for: <Link href={`/dashboard/${domain}`}>{domain}</Link>
-      </h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <ActiveVisitors siteId={siteId} />
-      </div>
-      <AnalyticsMetrics siteId={siteId} />
-      <div className="mt-6">
-        <WorldMapWrapper siteId={siteId} />
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Locations</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <LocationCard siteId={siteId} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Devices</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DeviceCard siteId={siteId} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Sources</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <SourcesCard siteId={siteId} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Pages</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TopPagesCard siteId={siteId} />
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+    <DashboardClient
+      siteId={siteId}
+      domain={domain}
+      userSites={userSites}
+    />
   );
 }

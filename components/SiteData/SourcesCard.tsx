@@ -85,7 +85,7 @@ const getSourceIcon = (sourceName: string) => {
   return null;
 };
 
-export function SourcesCard({ siteId }: { siteId: string }) {
+export function SourcesCard({ siteId, dateRange }: { siteId: string; dateRange?: { from: Date; to: Date } | null }) {
   const [channels, setChannels] = useState<SourceData[]>([]);
   const [sources, setSources] = useState<SourceData[]>([]);
   const [campaigns, setCampaigns] = useState<SourceData[]>([]);
@@ -96,24 +96,48 @@ export function SourcesCard({ siteId }: { siteId: string }) {
     const fetchSourceData = async () => {
       const supabase = createClient();
 
-      // Fetch all session data to calculate channels dynamically
-      const { data: sessionsData } = await supabase
+      // Build base query
+      let sessionsQuery = supabase
         .from("sessions")
         .select("utm_medium, utm_source, referrer_domain")
         .eq("site_id", siteId);
 
-      // Fetch sources data
-      const { data: sourcesData } = await supabase
+      let sourcesQuery = supabase
         .from("sessions")
         .select("utm_source, referrer")
         .eq("site_id", siteId);
 
+      // Apply date filters if provided
+      if (dateRange) {
+        sessionsQuery = sessionsQuery
+          .gte("created_at", dateRange.from.toISOString())
+          .lte("created_at", dateRange.to.toISOString());
+        
+        sourcesQuery = sourcesQuery
+          .gte("created_at", dateRange.from.toISOString())
+          .lte("created_at", dateRange.to.toISOString());
+      }
+
+      // Fetch all session data to calculate channels dynamically
+      const { data: sessionsData } = await sessionsQuery;
+
+      // Fetch sources data
+      const { data: sourcesData } = await sourcesQuery;
+
       // Fetch UTM data based on selected type
-      const { data: utmData } = await supabase
+      let utmQuery = supabase
         .from("sessions")
         .select("utm_campaign, utm_source, utm_medium, utm_term, utm_content")
         .eq("site_id", siteId)
         .not(selectedUTM, "is", null);
+
+      if (dateRange) {
+        utmQuery = utmQuery
+          .gte("created_at", dateRange.from.toISOString())
+          .lte("created_at", dateRange.to.toISOString());
+      }
+
+      const { data: utmData } = await utmQuery;
 
       // Calculate channels dynamically from existing data
       if (sessionsData) {
@@ -207,7 +231,7 @@ export function SourcesCard({ siteId }: { siteId: string }) {
     };
 
     fetchSourceData();
-  }, [siteId, selectedUTM]);
+  }, [siteId, selectedUTM, dateRange]);
 
   const renderList = (data: SourceData[], showIcons = false) => {
     if (loading) {

@@ -13,10 +13,13 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react";
+import { MetricsChart } from "./MetricsChart";
+import { DateRangeOption } from "@/components/DateFilter";
 
 interface AnalyticsMetricsProps {
   siteId: string;
   dateRange?: { from: Date; to: Date };
+  dateRangeOption?: DateRangeOption;
 }
 
 interface Metrics {
@@ -33,7 +36,7 @@ interface Metrics {
   };
 }
 
-export function AnalyticsMetrics({ siteId, dateRange }: AnalyticsMetricsProps) {
+export function AnalyticsMetrics({ siteId, dateRange, dateRangeOption = "today" }: AnalyticsMetricsProps) {
   const [metrics, setMetrics] = useState<Metrics>({
     uniqueVisitors: 0,
     totalVisits: 0,
@@ -43,6 +46,7 @@ export function AnalyticsMetrics({ siteId, dateRange }: AnalyticsMetricsProps) {
     avgDuration: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(["uniqueVisitors"]);
 
   useEffect(() => {
     const fetchMetrics = async () => {
@@ -75,9 +79,8 @@ export function AnalyticsMetrics({ siteId, dateRange }: AnalyticsMetricsProps) {
         // Count unique visitors (unique session IDs)
         uniqueVisitorsSet.add(session.id);
 
-        // Calculate pageviews (for now, 1 per session, but can be enhanced)
-        // In a real implementation, this would come from analytics_events
-        const sessionPageviews = session.pageviews || 1;
+        // Calculate pageviews from the page_views column
+        const sessionPageviews = session.page_views || 1;
         totalPageviews += sessionPageviews;
 
         // Calculate duration (difference between created_at and last_seen)
@@ -136,6 +139,7 @@ export function AnalyticsMetrics({ siteId, dateRange }: AnalyticsMetricsProps) {
     format = "number",
     change,
     suffix = "",
+    metricKey,
   }: {
     title: string;
     value: number | string;
@@ -143,6 +147,7 @@ export function AnalyticsMetrics({ siteId, dateRange }: AnalyticsMetricsProps) {
     format?: "number" | "percentage" | "duration";
     change?: number;
     suffix?: string;
+    metricKey?: string;
   }) => {
     const formattedValue =
       format === "number"
@@ -153,8 +158,26 @@ export function AnalyticsMetrics({ siteId, dateRange }: AnalyticsMetricsProps) {
         ? `${value}%`
         : value;
 
+    const isSelected = metricKey && selectedMetrics.includes(metricKey);
+    
+    const handleClick = () => {
+      if (!metricKey) return;
+      
+      setSelectedMetrics((prev) => {
+        if (prev.includes(metricKey)) {
+          return prev.filter((m) => m !== metricKey);
+        }
+        return [...prev, metricKey];
+      });
+    };
+
     return (
-      <Card>
+      <Card 
+        className={`transition-all cursor-pointer hover:border-primary/50 ${
+          isSelected ? "border-primary" : ""
+        }`}
+        onClick={handleClick}
+      >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">{title}</CardTitle>
           <Icon className="h-4 w-4 text-muted-foreground" />
@@ -204,46 +227,60 @@ export function AnalyticsMetrics({ siteId, dateRange }: AnalyticsMetricsProps) {
   }
 
   return (
-    <div className="grid gap-4 grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-      <MetricCard
-        title="Unique Visitors"
-        value={metrics.uniqueVisitors}
-        icon={Users}
-        format="number"
-        change={metrics.change?.uniqueVisitors}
-      />
-      <MetricCard
-        title="Total Visits"
-        value={metrics.totalVisits}
-        icon={MousePointerClick}
-        format="number"
-        change={metrics.change?.totalVisits}
-      />
-      <MetricCard
-        title="Pageviews"
-        value={metrics.totalPageviews}
-        icon={Eye}
-        format="number"
-        change={metrics.change?.totalPageviews}
-      />
-      <MetricCard
-        title="Views per Visit"
-        value={metrics.viewsPerVisit}
-        icon={BarChart3}
-        format="number"
-      />
-      <MetricCard
-        title="Bounce Rate"
-        value={metrics.bounceRate}
-        icon={Activity}
-        format="percentage"
-      />
-      <MetricCard
-        title="Avg. Duration"
-        value={formatDuration(metrics.avgDuration)}
-        icon={Clock}
-        format="duration"
-      />
+    <div className="space-y-6">
+      <div className="grid gap-4 grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <MetricCard
+          title="Unique Visitors"
+          value={metrics.uniqueVisitors}
+          icon={Users}
+          format="number"
+          change={metrics.change?.uniqueVisitors}
+          metricKey="uniqueVisitors"
+        />
+        <MetricCard
+          title="Total Visits"
+          value={metrics.totalVisits}
+          icon={MousePointerClick}
+          format="number"
+          change={metrics.change?.totalVisits}
+          metricKey="totalVisits"
+        />
+        <MetricCard
+          title="Total pageviews"
+          value={metrics.totalPageviews}
+          icon={Eye}
+          format="number"
+          change={metrics.change?.totalPageviews}
+          metricKey="totalPageviews"
+        />
+        <MetricCard
+          title="Views per Visit"
+          value={metrics.viewsPerVisit}
+          icon={BarChart3}
+          format="number"
+        />
+        <MetricCard
+          title="Bounce Rate"
+          value={metrics.bounceRate}
+          icon={Activity}
+          format="percentage"
+          metricKey="bounceRate"
+        />
+        <MetricCard
+          title="Avg. Duration"
+          value={formatDuration(metrics.avgDuration)}
+          icon={Clock}
+          format="duration"
+          metricKey="avgDuration"
+        />
+      </div>
+      {selectedMetrics.length > 0 && (
+        <MetricsChart 
+          siteId={siteId} 
+          dateRange={dateRangeOption} 
+          selectedMetrics={selectedMetrics} 
+        />
+      )}
     </div>
   );
 }
