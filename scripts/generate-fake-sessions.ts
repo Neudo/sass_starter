@@ -66,6 +66,10 @@ function generateSessionId(): string {
   return `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
 }
 
+function generateVisitorId(): string {
+  return `visitor_${Math.random().toString(36).substring(2, 15)}`;
+}
+
 // Generate realistic session duration (in seconds)
 function generateSessionDuration(): number {
   // 70% short sessions (0-60 seconds)
@@ -114,6 +118,13 @@ async function generateFakeSessions() {
   const siteId = sites[0].id;
   console.log("Using site_id:", siteId);
   
+  // Create a pool of unique visitors (30% of sessions will be returning visitors)
+  const uniqueVisitors = [];
+  const numUniqueVisitors = Math.floor(500 * 0.7); // 70% unique visitors
+  for (let i = 0; i < numUniqueVisitors; i++) {
+    uniqueVisitors.push(generateVisitorId());
+  }
+  
   const sessions = [];
   const now = new Date();
   
@@ -131,6 +142,17 @@ async function generateFakeSessions() {
     const duration = generateSessionDuration();
     const lastSeen = new Date(createdAt.getTime() + duration * 1000);
     
+    // Assign visitor ID: 70% get unique visitor, 30% are returning visitors
+    let visitorId;
+    if (Math.random() < 0.3 && uniqueVisitors.length > 0) {
+      // Returning visitor - pick from existing pool
+      visitorId = getRandomElement(uniqueVisitors);
+    } else {
+      // New unique visitor
+      visitorId = generateVisitorId();
+      uniqueVisitors.push(visitorId);
+    }
+    
     // Get random location
     const country = getRandomElement(countries);
     const city = getRandomElement(country.cities);
@@ -142,6 +164,7 @@ async function generateFakeSessions() {
     const osVersion = getRandomElement(os.versions);
     
     // Generate session data (only include fields that exist in the sessions table)
+    // We'll store the visitor_id in a custom field for identification
     const session = {
       id: generateSessionId(),
       site_id: siteId,

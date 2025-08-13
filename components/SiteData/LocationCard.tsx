@@ -18,7 +18,13 @@ interface LocationStats {
   cities: Record<string, { count: number; country?: string }>;
 }
 
-export function LocationCard({ siteId, dateRange }: { siteId: string; dateRange?: { from: Date; to: Date } | null }) {
+export function LocationCard({
+  siteId,
+  dateRange,
+}: {
+  siteId: string;
+  dateRange?: { from: Date; to: Date } | null;
+}) {
   const [locationStats, setLocationStats] = useState<LocationStats>({
     countries: {},
     regions: {},
@@ -97,7 +103,6 @@ export function LocationCard({ siteId, dateRange }: { siteId: string; dateRange?
     fetchLocationData();
   }, [siteId, dateRange]);
 
-
   const renderStats = (
     data:
       | Record<string, number>
@@ -150,16 +155,16 @@ export function LocationCard({ siteId, dateRange }: { siteId: string; dateRange?
           </button>
         </div>
         {sortedData.map(([name, item]) => {
-          const count = typeof item === 'number' ? item : item.count;
+          const count = typeof item === "number" ? item : item.count;
           const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
-          
+
           // Get flag based on type
           let flag = null;
           if (type === "country") {
             flag = getCountryFlag(name);
           } else if (type === "region" || type === "city") {
             // Get country from the data structure
-            if (typeof item !== 'number' && item.country) {
+            if (typeof item !== "number" && item.country) {
               flag = getCountryFlag(item.country);
             }
           }

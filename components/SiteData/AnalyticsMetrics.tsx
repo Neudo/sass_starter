@@ -18,7 +18,7 @@ import { DateRangeOption } from "@/components/DateFilter";
 
 interface AnalyticsMetricsProps {
   siteId: string;
-  dateRange?: { from: Date; to: Date };
+  dateRange?: { from: Date; to: Date } | null;
   dateRangeOption?: DateRangeOption;
 }
 
@@ -36,7 +36,11 @@ interface Metrics {
   };
 }
 
-export function AnalyticsMetrics({ siteId, dateRange, dateRangeOption = "today" }: AnalyticsMetricsProps) {
+export function AnalyticsMetrics({
+  siteId,
+  dateRange,
+  dateRangeOption = "today",
+}: AnalyticsMetricsProps) {
   const [metrics, setMetrics] = useState<Metrics>({
     uniqueVisitors: 0,
     totalVisits: 0,
@@ -46,7 +50,8 @@ export function AnalyticsMetrics({ siteId, dateRange, dateRangeOption = "today" 
     avgDuration: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(["uniqueVisitors"]);
+  const [selectedMetric, setSelectedMetric] =
+    useState<string>("uniqueVisitors");
 
   useEffect(() => {
     const fetchMetrics = async () => {
@@ -76,8 +81,12 @@ export function AnalyticsMetrics({ siteId, dateRange, dateRangeOption = "today" 
       let bounces = 0;
 
       sessions?.forEach((session) => {
-        // Count unique visitors (unique session IDs)
-        uniqueVisitorsSet.add(session.id);
+        // Create visitor fingerprint from available data for unique visitor identification
+        // This combines browser, OS, and screen size for privacy-friendly visitor tracking
+        const visitorFingerprint = `${session.browser || "unknown"}-${
+          session.os || "unknown"
+        }-${session.screen_size || "unknown"}-${session.country || "unknown"}`;
+        uniqueVisitorsSet.add(visitorFingerprint);
 
         // Calculate pageviews from the page_views column
         const sessionPageviews = session.page_views || 1;
@@ -158,21 +167,15 @@ export function AnalyticsMetrics({ siteId, dateRange, dateRangeOption = "today" 
         ? `${value}%`
         : value;
 
-    const isSelected = metricKey && selectedMetrics.includes(metricKey);
-    
+    const isSelected = metricKey && selectedMetric === metricKey;
+
     const handleClick = () => {
       if (!metricKey) return;
-      
-      setSelectedMetrics((prev) => {
-        if (prev.includes(metricKey)) {
-          return prev.filter((m) => m !== metricKey);
-        }
-        return [...prev, metricKey];
-      });
+      setSelectedMetric(metricKey);
     };
 
     return (
-      <Card 
+      <Card
         className={`transition-all cursor-pointer hover:border-primary/50 ${
           isSelected ? "border-primary" : ""
         }`}
@@ -228,7 +231,7 @@ export function AnalyticsMetrics({ siteId, dateRange, dateRangeOption = "today" 
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <MetricCard
           title="Unique Visitors"
           value={metrics.uniqueVisitors}
@@ -274,13 +277,11 @@ export function AnalyticsMetrics({ siteId, dateRange, dateRangeOption = "today" 
           metricKey="avgDuration"
         />
       </div>
-      {selectedMetrics.length > 0 && (
-        <MetricsChart 
-          siteId={siteId} 
-          dateRange={dateRangeOption} 
-          selectedMetrics={selectedMetrics} 
-        />
-      )}
+      <MetricsChart
+        siteId={siteId}
+        dateRange={dateRangeOption}
+        selectedMetrics={[selectedMetric]}
+      />
     </div>
   );
 }

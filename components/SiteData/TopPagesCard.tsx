@@ -11,7 +11,13 @@ interface PageData {
   percentage: number;
 }
 
-export function TopPagesCard({ siteId, dateRange }: { siteId: string; dateRange?: { from: Date; to: Date } | null }) {
+export function TopPagesCard({
+  siteId,
+  dateRange,
+}: {
+  siteId: string;
+  dateRange?: { from: Date; to: Date } | null;
+}) {
   const [topPages, setTopPages] = useState<PageData[]>([]);
   const [entryPages, setEntryPages] = useState<PageData[]>([]);
   const [exitPages, setExitPages] = useState<PageData[]>([]);
@@ -38,22 +44,25 @@ export function TopPagesCard({ siteId, dateRange }: { siteId: string; dateRange?
       // Process top pages by counting all pages
       if (sessionsData) {
         const pageCounts: Record<string, number> = {};
-        
+
         // Count each page - both entry and exit pages represent visited pages
-        sessionsData.forEach(session => {
+        sessionsData.forEach((session) => {
           // Count entry page
           if (session.entry_page) {
-            pageCounts[session.entry_page] = (pageCounts[session.entry_page] || 0) + 1;
+            pageCounts[session.entry_page] =
+              (pageCounts[session.entry_page] || 0) + 1;
           }
-          
+
           // Count exit page (it's a separate page view if different from entry)
           if (session.exit_page) {
             // If it's the same as entry_page and page_views > 1, or if it's different, count it
             if (session.exit_page !== session.entry_page) {
-              pageCounts[session.exit_page] = (pageCounts[session.exit_page] || 0) + 1;
+              pageCounts[session.exit_page] =
+                (pageCounts[session.exit_page] || 0) + 1;
             } else if (session.page_views && session.page_views > 1) {
               // Same page but multiple views
-              pageCounts[session.exit_page] = (pageCounts[session.exit_page] || 0) + (session.page_views - 1);
+              pageCounts[session.exit_page] =
+                (pageCounts[session.exit_page] || 0) + (session.page_views - 1);
             }
           }
         });
@@ -69,7 +78,7 @@ export function TopPagesCard({ siteId, dateRange }: { siteId: string; dateRange?
           .slice(0, 10);
 
         setTopPages(processedPages);
-        
+
         // Process entry pages
         const entryCounts = sessionsData.reduce(
           (acc: Record<string, number>, item) => {
@@ -80,7 +89,10 @@ export function TopPagesCard({ siteId, dateRange }: { siteId: string; dateRange?
           {}
         );
 
-        const entryTotal = Object.values(entryCounts).reduce((a, b) => a + b, 0);
+        const entryTotal = Object.values(entryCounts).reduce(
+          (a, b) => a + b,
+          0
+        );
         const processedEntryPages = Object.entries(entryCounts)
           .map(([page, count]) => ({
             page,
@@ -91,7 +103,7 @@ export function TopPagesCard({ siteId, dateRange }: { siteId: string; dateRange?
           .slice(0, 10);
 
         setEntryPages(processedEntryPages);
-        
+
         // Process exit pages
         const exitCounts = sessionsData.reduce(
           (acc: Record<string, number>, item) => {

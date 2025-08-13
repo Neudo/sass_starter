@@ -9,7 +9,11 @@ import { TopPagesCard } from "@/components/SiteData/TopPagesCard";
 import { ActiveVisitors } from "@/components/SiteData/ActiveVisitors";
 import { AnalyticsMetrics } from "@/components/SiteData/AnalyticsMetrics";
 import { SiteSelector } from "@/components/SiteSelector";
-import { DateFilter, DateRangeOption, getDateRange } from "@/components/DateFilter";
+import {
+  DateFilter,
+  DateRangeOption,
+  getDateRange,
+} from "@/components/DateFilter";
 import WorldMapWrapper from "@/components/SiteData/wordMapWrapper";
 
 interface Site {
@@ -23,15 +27,20 @@ interface DashboardClientProps {
   userSites: Site[];
 }
 
-export function DashboardClient({ siteId, domain, userSites }: DashboardClientProps) {
-  const [selectedDateRange, setSelectedDateRange] = useState<DateRangeOption>("today");
+export function DashboardClient({
+  siteId,
+  domain,
+  userSites,
+}: DashboardClientProps) {
+  const [selectedDateRange, setSelectedDateRange] =
+    useState<DateRangeOption>("alltime");
   const dateRange = getDateRange(selectedDateRange);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex gap-4 flex-wrap items-center justify-between">
         <SiteSelector sites={userSites} currentDomain={domain} />
-        <DateFilter 
+        <DateFilter
           selectedRange={selectedDateRange}
           onRangeChange={setSelectedDateRange}
         />
@@ -39,7 +48,11 @@ export function DashboardClient({ siteId, domain, userSites }: DashboardClientPr
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <ActiveVisitors siteId={siteId} />
       </div>
-      <AnalyticsMetrics siteId={siteId} dateRange={dateRange} dateRangeOption={selectedDateRange} />
+      <AnalyticsMetrics
+        siteId={siteId}
+        dateRange={dateRange}
+        dateRangeOption={selectedDateRange}
+      />
       <div className="mt-6">
         <WorldMapWrapper siteId={siteId} dateRange={dateRange} />
       </div>
