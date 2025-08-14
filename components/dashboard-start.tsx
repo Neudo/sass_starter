@@ -13,7 +13,7 @@ import {
 import { Plus, Globe, Users } from "lucide-react";
 import Image from "next/image";
 
-function SiteFavicon({ domain }: { domain: string }) {
+export function SiteFavicon({ domain }: { domain: string }) {
   const [hasError, setHasError] = useState(false);
 
   if (hasError) {

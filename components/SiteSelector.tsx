@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -9,6 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@radix-ui/react-dropdown-menu";
+import { SiteFavicon } from "./dashboard-start";
 
 interface Site {
   id: string;
@@ -24,7 +25,7 @@ export function SiteSelector({ sites, currentDomain }: SiteSelectorProps) {
   const router = useRouter();
 
   const handleSiteChange = (domain: string) => {
-    router.push(`/dashboard/${domain}`);
+    router.push(`/dashboard/${domain === "all" ? "" : domain}`);
   };
 
   return (
@@ -34,20 +35,18 @@ export function SiteSelector({ sites, currentDomain }: SiteSelectorProps) {
           <SelectValue placeholder="Select a site" />
         </SelectTrigger>
         <SelectContent>
+          <SelectItem className=" mb-2" value="all">
+            All sites
+          </SelectItem>
+          <Separator />
           {sites.map((site) => (
             <SelectItem key={site.id} value={site.domain}>
+              <SiteFavicon domain={site.domain} />
               {site.domain}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
-      <Button
-        variant="outline"
-        className="hidden sm:block"
-        onClick={() => router.push("/dashboard")}
-      >
-        View all sites
-      </Button>
     </div>
   );
 }

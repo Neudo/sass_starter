@@ -51,23 +51,18 @@ interface ChartDataPoint {
 const chartConfig = {
   uniqueVisitors: {
     label: "Unique Visitors",
-    color: "hsl(var(--chart-1))",
   },
   totalVisits: {
     label: "Total Visits",
-    color: "hsl(var(--chart-1))",
   },
   totalPageviews: {
     label: "Total Pageviews",
-    color: "hsl(var(--chart-1))",
   },
   bounceRate: {
     label: "Bounce Rate (%)",
-    color: "hsl(var(--chart-1))",
   },
   avgDuration: {
-    label: "Avg. Duration (s)",
-    color: "hsl(var(--chart-1))",
+    label: "Avg. Duration",
   },
 } satisfies ChartConfig;
 
@@ -366,16 +361,12 @@ export function MetricsChart({
                 >
                   <stop
                     offset="5%"
-                    stopColor={
-                      chartConfig[metric as keyof typeof chartConfig].color
-                    }
+                    stopColor={"hsl(var(--chart-1))"}
                     stopOpacity={0.8}
                   />
                   <stop
                     offset="95%"
-                    stopColor={
-                      chartConfig[metric as keyof typeof chartConfig].color
-                    }
+                    stopColor={"hsl(var(--chart-1))"}
                     stopOpacity={0.1}
                   />
                 </linearGradient>
@@ -400,8 +391,8 @@ export function MetricsChart({
                 key={metric}
                 dataKey={metric}
                 type="linear"
-                fill={`url(#fill${metric})`}
-                stroke={chartConfig[metric as keyof typeof chartConfig].color}
+                fill={`#3d9dbd`}
+                stroke={"hsl(var(--chart-1))"}
                 strokeWidth={2}
                 stackId={
                   metric === "bounceRate" || metric === "avgDuration"

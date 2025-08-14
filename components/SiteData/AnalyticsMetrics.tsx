@@ -176,8 +176,8 @@ export function AnalyticsMetrics({
 
     return (
       <Card
-        className={`transition-all cursor-pointer hover:border-primary/50 ${
-          isSelected ? "border-primary" : ""
+        className={`transition-all cursor-pointer hover:border-primary hover:bg-primary/15 ${
+          isSelected ? "border-primary bg-primary/15" : ""
         }`}
         onClick={handleClick}
       >
@@ -230,8 +230,8 @@ export function AnalyticsMetrics({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <div className="space-y-6 dark:bg-slate-800 dark:border-0 bg-white shadow-sm border border-gray-200 p-4 rounded-2xl">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <MetricCard
           title="Unique Visitors"
           value={metrics.uniqueVisitors}
@@ -255,12 +255,6 @@ export function AnalyticsMetrics({
           format="number"
           change={metrics.change?.totalPageviews}
           metricKey="totalPageviews"
-        />
-        <MetricCard
-          title="Views per Visit"
-          value={metrics.viewsPerVisit}
-          icon={BarChart3}
-          format="number"
         />
         <MetricCard
           title="Bounce Rate"
