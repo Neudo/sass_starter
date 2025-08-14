@@ -155,7 +155,7 @@ export function TopPagesCard({
           <div key={index} className="space-y-1">
             <div className="flex justify-between items-center text-sm relative">
               <div
-                className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-slate-500 opacity-15 transition-all"
+                className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-primary opacity-15 transition-all"
                 style={{ width: `${item.percentage}%` }}
               />
               <span
@@ -164,7 +164,7 @@ export function TopPagesCard({
               >
                 {item.page}
               </span>
-              <span className="text-muted-foreground ml-2">
+              <span className="text-muted-foreground ml-2 pr-4">
                 {item.count} ({item.percentage.toFixed(1)}%)
               </span>
             </div>

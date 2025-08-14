@@ -126,7 +126,7 @@ export default function WorldMap({
     const visitors = countryData[countryName] || 0;
 
     if (visitors === 0) {
-      return theme === "dark" ? "#1e293b" : "oklch(98.5% 0.002 247.839)"; // slate-800 - couleur de base pour les pays sans visiteurs
+      return theme === "dark" ? "#1e293b" : "oklch(98.5% 0.002 247.839)";
     }
 
     // Calculer l'intensité (0 à 1)
@@ -138,7 +138,9 @@ export default function WorldMap({
     const opacity = baseOpacity + intensity * (maxOpacity - baseOpacity);
 
     // Utiliser des couleurs cyan/bleu clair pour contraster avec le fond bleu nuit
-    return `rgba(103, 232, 249, ${opacity})`; // sky-300 with variable opacity
+    return theme === "dark"
+      ? `rgba(103, 232, 249, ${opacity})`
+      : `rgba(61, 157, 189, ${opacity})`;
   };
 
   const handleMouseEnter = (event: React.MouseEvent, countryName: string) => {
