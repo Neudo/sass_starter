@@ -1,8 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Mercator, Graticule } from "@visx/geo";
+import { Mercator } from "@visx/geo";
 import * as topojson from "topojson-client";
 import { createClient } from "@/lib/supabase/client";
+import { useTheme } from "next-themes";
 
 export const background = "#0f172a";
 
@@ -25,7 +26,12 @@ interface FeatureShape {
   properties: { name: string };
 }
 
-export default function WorldMap({ width, height, siteId, dateRange }: GeoMercatorProps) {
+export default function WorldMap({
+  width,
+  height,
+  siteId,
+  dateRange,
+}: GeoMercatorProps) {
   const [world, setWorld] = useState<{
     type: "FeatureCollection";
     features: FeatureShape[];
@@ -37,7 +43,9 @@ export default function WorldMap({ width, height, siteId, dateRange }: GeoMercat
     y: number;
   } | null>(null);
 
+  const { theme } = useTheme();
   // Charger les données géographiques
+
   useEffect(() => {
     fetch("/features.json")
       .then((response) => response.json())
@@ -118,7 +126,7 @@ export default function WorldMap({ width, height, siteId, dateRange }: GeoMercat
     const visitors = countryData[countryName] || 0;
 
     if (visitors === 0) {
-      return "#1e293b"; // slate-800 - couleur de base pour les pays sans visiteurs
+      return theme === "dark" ? "#1e293b" : "oklch(98.5% 0.002 247.839)"; // slate-800 - couleur de base pour les pays sans visiteurs
     }
 
     // Calculer l'intensité (0 à 1)
@@ -161,7 +169,9 @@ export default function WorldMap({ width, height, siteId, dateRange }: GeoMercat
           y={0}
           width={width}
           height={height}
-          fill="rgb(12 20 37)"
+          fill={
+            theme === "dark" ? "rgb(12 20 37)" : "oklch(93.2% 0.032 255.585)"
+          }
           rx={14}
         />
         <Mercator<FeatureShape>
@@ -171,10 +181,6 @@ export default function WorldMap({ width, height, siteId, dateRange }: GeoMercat
         >
           {(mercator) => (
             <g>
-              <Graticule
-                graticule={(g) => mercator.path(g) || ""}
-                stroke="rgba(33,33,33,0.05)"
-              />
               {mercator.features.map(({ feature, path }, i) => {
                 const countryName =
                   feature.properties.name || feature.id || "Unknown Country";
@@ -185,7 +191,7 @@ export default function WorldMap({ width, height, siteId, dateRange }: GeoMercat
                     d={path || ""}
                     fill={getCountryFill(countryName)}
                     stroke="#314158"
-                    strokeWidth={0.7}
+                    strokeWidth={0.4}
                     style={{
                       cursor: "pointer",
                       transition: "all 0.2s ease-in-out",

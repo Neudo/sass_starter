@@ -8,7 +8,6 @@ import {
   Eye,
   MousePointerClick,
   Clock,
-  BarChart3,
   Activity,
   ArrowUpRight,
   ArrowDownRight,
@@ -23,6 +22,7 @@ interface AnalyticsMetricsProps {
 }
 
 interface Metrics {
+  activeVisitors: number;
   uniqueVisitors: number;
   totalVisits: number;
   totalPageviews: number;
@@ -30,6 +30,7 @@ interface Metrics {
   bounceRate: number;
   avgDuration: number;
   change?: {
+    activeVisitors: number;
     uniqueVisitors: number;
     totalVisits: number;
     totalPageviews: number;
@@ -42,6 +43,7 @@ export function AnalyticsMetrics({
   dateRangeOption = "today",
 }: AnalyticsMetricsProps) {
   const [metrics, setMetrics] = useState<Metrics>({
+    activeVisitors: 0,
     uniqueVisitors: 0,
     totalVisits: 0,
     totalPageviews: 0,
@@ -74,6 +76,11 @@ export function AnalyticsMetrics({
         return;
       }
 
+      // Calculate active visitors (last 30 minutes)
+      const now = new Date();
+      const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
+      let activeVisitors = 0;
+
       // Calculate metrics from sessions data
       const uniqueVisitorsSet = new Set<string>();
       let totalPageviews = 0;
@@ -81,6 +88,13 @@ export function AnalyticsMetrics({
       let bounces = 0;
 
       sessions?.forEach((session) => {
+        // Check if session was active in last 30 minutes
+        if (session.last_seen) {
+          const lastSeen = new Date(session.last_seen);
+          if (lastSeen >= thirtyMinutesAgo) {
+            activeVisitors++;
+          }
+        }
         // Create visitor fingerprint from available data for unique visitor identification
         // This combines browser, OS, and screen size for privacy-friendly visitor tracking
         const visitorFingerprint = `${session.browser || "unknown"}-${
@@ -110,6 +124,7 @@ export function AnalyticsMetrics({
       const uniqueVisitors = uniqueVisitorsSet.size;
 
       setMetrics({
+        activeVisitors,
         uniqueVisitors,
         totalVisits,
         totalPageviews,
@@ -181,9 +196,9 @@ export function AnalyticsMetrics({
         }`}
         onClick={handleClick}
       >
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-start gap-x-1 space-y-0 p-2">
           <Icon className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium">{title}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
@@ -231,7 +246,15 @@ export function AnalyticsMetrics({
 
   return (
     <div className="space-y-6 dark:bg-slate-800 dark:border-0 bg-white shadow-sm border border-gray-200 p-4 rounded-2xl">
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <MetricCard
+          title="Active Visitors"
+          value={metrics.activeVisitors}
+          icon={Users}
+          format="number"
+          change={metrics.change?.activeVisitors}
+          metricKey="activeVisitors"
+        />
         <MetricCard
           title="Unique Visitors"
           value={metrics.uniqueVisitors}

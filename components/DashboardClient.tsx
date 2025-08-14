@@ -6,7 +6,6 @@ import { DeviceCard } from "@/components/SiteData/DeviceCard";
 import { LocationCard } from "@/components/SiteData/LocationCard";
 import { SourcesCard } from "@/components/SiteData/SourcesCard";
 import { TopPagesCard } from "@/components/SiteData/TopPagesCard";
-import { ActiveVisitors } from "@/components/SiteData/ActiveVisitors";
 import { AnalyticsMetrics } from "@/components/SiteData/AnalyticsMetrics";
 import { SiteSelector } from "@/components/SiteSelector";
 import {
@@ -44,9 +43,6 @@ export function DashboardClient({
           selectedRange={selectedDateRange}
           onRangeChange={setSelectedDateRange}
         />
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <ActiveVisitors siteId={siteId} />
       </div>
       <AnalyticsMetrics
         siteId={siteId}

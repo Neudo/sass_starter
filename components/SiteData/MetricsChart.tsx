@@ -46,9 +46,13 @@ interface ChartDataPoint {
   totalPageviews: number;
   bounceRate: number;
   avgDuration: number;
+  activeVisitors?: number;
 }
 
 const chartConfig = {
+  activeVisitors: {
+    label: "Active Visitors",
+  },
   uniqueVisitors: {
     label: "Unique Visitors",
   },
@@ -74,6 +78,7 @@ export function MetricsChart({
   // Get the display title for the selected metric
   const getMetricTitle = (metric: string): string => {
     const titles: Record<string, string> = {
+      activeVisitors: "Active Visitors",
       uniqueVisitors: "Unique Visitors",
       totalVisits: "Total Visits",
       totalPageviews: "Total Pageviews",
@@ -172,7 +177,59 @@ export function MetricsChart({
       const supabase = createClient();
       const range = getDateRange(dateRange);
 
-      // Build query
+      // Special handling for activeVisitors metric
+      if (selectedMetrics[0] === "activeVisitors") {
+        // Generate last 30 minutes with 4-minute intervals
+        const now = new Date();
+        const activeVisitorsData: ChartDataPoint[] = [];
+        
+        // Fetch all sessions from last 30 minutes
+        const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
+        const { data: recentSessions, error } = await supabase
+          .from("sessions")
+          .select("*")
+          .eq("site_id", siteId)
+          .gte("last_seen", thirtyMinutesAgo.toISOString())
+          .order("last_seen", { ascending: true });
+
+        if (error) {
+          console.error("Error fetching active visitors:", error);
+          setLoading(false);
+          return;
+        }
+
+        // Create 8 time intervals (every 4 minutes for the last 30 minutes)
+        for (let i = 7; i >= 0; i--) {
+          const intervalEnd = new Date(now.getTime() - i * 4 * 60 * 1000);
+          const intervalStart = new Date(intervalEnd.getTime() - 4 * 60 * 1000);
+          
+          // Count sessions active in this interval
+          const activeCount = recentSessions?.filter(session => {
+            const lastSeen = new Date(session.last_seen || session.created_at);
+            return lastSeen >= intervalStart && lastSeen <= intervalEnd;
+          }).length || 0;
+
+          const minutesAgo = i * 4;
+          const displayLabel = minutesAgo === 0 ? "Now" : `-${minutesAgo}min`;
+          
+          activeVisitorsData.push({
+            date: intervalEnd.toISOString(),
+            displayDate: displayLabel,
+            activeVisitors: activeCount,
+            uniqueVisitors: 0,
+            totalVisits: 0,
+            totalPageviews: 0,
+            bounceRate: 0,
+            avgDuration: 0,
+          });
+        }
+
+        setChartData(activeVisitorsData);
+        setLoading(false);
+        return;
+      }
+
+      // Build query for other metrics
       let query = supabase
         .from("sessions")
         .select("*")
@@ -318,7 +375,7 @@ export function MetricsChart({
     };
 
     fetchChartData();
-  }, [siteId, dateRange]);
+  }, [siteId, dateRange, selectedMetrics]);
 
   if (loading) {
     return (

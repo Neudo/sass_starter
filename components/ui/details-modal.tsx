@@ -22,7 +22,6 @@ export function DetailsModal({
   title,
   description,
   children,
-  itemCount,
 }: DetailsModalProps) {
   const [open, setOpen] = React.useState(false);
 
@@ -45,9 +44,7 @@ export function DetailsModal({
               <DialogDescription>{description}</DialogDescription>
             )}
           </DialogHeader>
-          <div className="max-h-[60vh] overflow-y-auto pr-4">
-            {children}
-          </div>
+          <div className="max-h-[60vh] overflow-y-auto pr-4">{children}</div>
         </DialogContent>
       </Dialog>
     </>
