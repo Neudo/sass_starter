@@ -47,6 +47,7 @@ interface ChartDataPoint {
   bounceRate: number;
   avgDuration: number;
   activeVisitors?: number;
+  realtimePageViews?: number;
 }
 
 const chartConfig = {
@@ -68,6 +69,9 @@ const chartConfig = {
   avgDuration: {
     label: "Avg. Duration",
   },
+  realtimePageViews: {
+    label: "Page Views (last 30 min)",
+  },
 } satisfies ChartConfig;
 
 export function MetricsChart({
@@ -84,6 +88,7 @@ export function MetricsChart({
       totalPageviews: "Total Pageviews",
       bounceRate: "Bounce Rate",
       avgDuration: "Average Duration",
+      realtimePageViews: "Page Views (last 30 min)",
     };
     return titles[metric] || metric;
   };

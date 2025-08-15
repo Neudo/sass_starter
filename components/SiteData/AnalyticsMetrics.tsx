@@ -11,6 +11,7 @@ import {
   Activity,
   ArrowUpRight,
   ArrowDownRight,
+  User,
 } from "lucide-react";
 import { MetricsChart } from "./MetricsChart";
 import { DateRangeOption } from "@/components/DateFilter";
@@ -19,6 +20,7 @@ interface AnalyticsMetricsProps {
   siteId: string;
   dateRange?: { from: Date; to: Date } | null;
   dateRangeOption?: DateRangeOption;
+  onMetricChange?: (metric: string) => void;
 }
 
 interface Metrics {
@@ -29,6 +31,7 @@ interface Metrics {
   viewsPerVisit: number;
   bounceRate: number;
   avgDuration: number;
+  realtimePageViews?: number;
   change?: {
     activeVisitors: number;
     uniqueVisitors: number;
@@ -41,6 +44,7 @@ export function AnalyticsMetrics({
   siteId,
   dateRange,
   dateRangeOption = "today",
+  onMetricChange,
 }: AnalyticsMetricsProps) {
   const [metrics, setMetrics] = useState<Metrics>({
     activeVisitors: 0,
@@ -50,6 +54,7 @@ export function AnalyticsMetrics({
     viewsPerVisit: 0,
     bounceRate: 0,
     avgDuration: 0,
+    realtimePageViews: 0,
   });
   const [loading, setLoading] = useState(true);
   const [selectedMetric, setSelectedMetric] =
@@ -80,6 +85,7 @@ export function AnalyticsMetrics({
       const now = new Date();
       const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
       let activeVisitors = 0;
+      let realtimePageViews = 0;
 
       // Calculate metrics from sessions data
       const uniqueVisitorsSet = new Set<string>();
@@ -93,6 +99,8 @@ export function AnalyticsMetrics({
           const lastSeen = new Date(session.last_seen);
           if (lastSeen >= thirtyMinutesAgo) {
             activeVisitors++;
+            // Add page views from sessions active in last 30 minutes for realtime metric
+            realtimePageViews += session.page_views || 1;
           }
         }
         // Create visitor fingerprint from available data for unique visitor identification
@@ -138,6 +146,7 @@ export function AnalyticsMetrics({
             : 0,
         avgDuration:
           totalVisits > 0 ? Math.round(totalDuration / totalVisits) : 0,
+        realtimePageViews,
       });
 
       setLoading(false);
@@ -187,6 +196,7 @@ export function AnalyticsMetrics({
     const handleClick = () => {
       if (!metricKey) return;
       setSelectedMetric(metricKey);
+      onMetricChange?.(metricKey);
     };
 
     return (
@@ -197,7 +207,17 @@ export function AnalyticsMetrics({
         onClick={handleClick}
       >
         <CardHeader className="flex flex-row items-center justify-start gap-x-1 space-y-0 p-2">
-          <Icon className="h-4 w-4 text-muted-foreground" />
+          <div className="relative">
+            <Icon className="h-4 w-4 text-muted-foreground" />
+            {metricKey === "activeVisitors" ? (
+              <div className="absolute -top-1 -right-1">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+              </div>
+            ) : null}
+          </div>
           <CardTitle className="text-sm font-medium">{title}</CardTitle>
         </CardHeader>
         <CardContent>
@@ -244,9 +264,15 @@ export function AnalyticsMetrics({
     );
   }
 
+  // Determine grid columns based on realtime mode
+  const isRealtimeMode = dateRangeOption === "realtime";
+  const gridCols = isRealtimeMode
+    ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+    : "grid-cols-2 lg:grid-cols-3 xl:grid-cols-6";
+
   return (
     <div className="space-y-6 dark:bg-slate-800 dark:border-0 bg-white shadow-sm border border-gray-200 p-4 rounded-2xl">
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className={`grid gap-4 ${gridCols}`}>
         <MetricCard
           title="Active Visitors"
           value={metrics.activeVisitors}
@@ -258,41 +284,54 @@ export function AnalyticsMetrics({
         <MetricCard
           title="Unique Visitors"
           value={metrics.uniqueVisitors}
-          icon={Users}
+          icon={User}
           format="number"
           change={metrics.change?.uniqueVisitors}
           metricKey="uniqueVisitors"
         />
-        <MetricCard
-          title="Total Visits"
-          value={metrics.totalVisits}
-          icon={MousePointerClick}
-          format="number"
-          change={metrics.change?.totalVisits}
-          metricKey="totalVisits"
-        />
-        <MetricCard
-          title="Total pageviews"
-          value={metrics.totalPageviews}
-          icon={Eye}
-          format="number"
-          change={metrics.change?.totalPageviews}
-          metricKey="totalPageviews"
-        />
-        <MetricCard
-          title="Bounce Rate"
-          value={metrics.bounceRate}
-          icon={Activity}
-          format="percentage"
-          metricKey="bounceRate"
-        />
-        <MetricCard
-          title="Avg. Duration"
-          value={formatDuration(metrics.avgDuration)}
-          icon={Clock}
-          format="duration"
-          metricKey="avgDuration"
-        />
+        {isRealtimeMode && (
+          <MetricCard
+            title="Page Views (last 30 min)"
+            value={metrics.realtimePageViews || 0}
+            icon={Eye}
+            format="number"
+            metricKey="realtimePageViews"
+          />
+        )}
+        {!isRealtimeMode && (
+          <>
+            <MetricCard
+              title="Total Visits"
+              value={metrics.totalVisits}
+              icon={MousePointerClick}
+              format="number"
+              change={metrics.change?.totalVisits}
+              metricKey="totalVisits"
+            />
+            <MetricCard
+              title="Total pageviews"
+              value={metrics.totalPageviews}
+              icon={Eye}
+              format="number"
+              change={metrics.change?.totalPageviews}
+              metricKey="totalPageviews"
+            />
+            <MetricCard
+              title="Bounce Rate"
+              value={metrics.bounceRate}
+              icon={Activity}
+              format="percentage"
+              metricKey="bounceRate"
+            />
+            <MetricCard
+              title="Avg. Duration"
+              value={formatDuration(metrics.avgDuration)}
+              icon={Clock}
+              format="duration"
+              metricKey="avgDuration"
+            />
+          </>
+        )}
       </div>
       <MetricsChart
         siteId={siteId}

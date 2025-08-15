@@ -15,7 +15,8 @@ export type DateRangeOption =
   | "last7days"
   | "last30days"
   | "last90days"
-  | "alltime";
+  | "alltime"
+  | "realtime";
 
 interface DateFilterProps {
   selectedRange: DateRangeOption;
@@ -30,6 +31,7 @@ export function DateFilter({ selectedRange, onRangeChange }: DateFilterProps) {
     { value: "last7days", label: "Last 7 days" },
     { value: "last30days", label: "Last 30 days" },
     { value: "last90days", label: "Last 90 days" },
+    { value: "realtime", label: "Realtime" },
   ];
 
   return (
@@ -93,5 +95,12 @@ export function getDateRange(
       };
     case "alltime":
       return null; // No date filter
+    case "realtime":
+      // Last 30 minutes for realtime data
+      const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
+      return {
+        from: thirtyMinutesAgo,
+        to: now,
+      };
   }
 }

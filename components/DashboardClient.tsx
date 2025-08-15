@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeviceCard } from "@/components/SiteData/DeviceCard";
 import { LocationCard } from "@/components/SiteData/LocationCard";
@@ -33,7 +33,15 @@ export function DashboardClient({
 }: DashboardClientProps) {
   const [selectedDateRange, setSelectedDateRange] =
     useState<DateRangeOption>("alltime");
+  const [selectedMetric, setSelectedMetric] = useState<string>("uniqueVisitors");
   const dateRange = getDateRange(selectedDateRange);
+
+  // Automatically switch to realtime when Active Visitors is selected
+  useEffect(() => {
+    if (selectedMetric === "activeVisitors" && selectedDateRange !== "realtime") {
+      setSelectedDateRange("realtime");
+    }
+  }, [selectedMetric, selectedDateRange]);
 
   return (
     <div className="space-y-6">
@@ -48,6 +56,7 @@ export function DashboardClient({
         siteId={siteId}
         dateRange={dateRange}
         dateRangeOption={selectedDateRange}
+        onMetricChange={setSelectedMetric}
       />
       <div className="mt-6">
         <WorldMapWrapper siteId={siteId} dateRange={dateRange} />
