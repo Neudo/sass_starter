@@ -267,20 +267,22 @@ export function AnalyticsMetrics({
   // Determine grid columns based on realtime mode
   const isRealtimeMode = dateRangeOption === "realtime";
   const gridCols = isRealtimeMode
-    ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-    : "grid-cols-2 lg:grid-cols-3 xl:grid-cols-6";
+    ? "grid-cols-2 lg:grid-cols-3"
+    : "grid-cols-2 lg:grid-cols-5 ";
 
   return (
     <div className="space-y-6 dark:bg-slate-800 dark:border-0 bg-white shadow-sm border border-gray-200 p-4 rounded-2xl">
       <div className={`grid gap-4 ${gridCols}`}>
-        <MetricCard
-          title="Active Visitors"
-          value={metrics.activeVisitors}
-          icon={Users}
-          format="number"
-          change={metrics.change?.activeVisitors}
-          metricKey="activeVisitors"
-        />
+        {isRealtimeMode && (
+          <MetricCard
+            title="Active Visitors"
+            value={metrics.activeVisitors}
+            icon={Users}
+            format="number"
+            change={metrics.change?.activeVisitors}
+            metricKey="activeVisitors"
+          />
+        )}
         <MetricCard
           title="Unique Visitors"
           value={metrics.uniqueVisitors}

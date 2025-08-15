@@ -182,11 +182,13 @@ export function MetricsChart({
       const supabase = createClient();
       const range = getDateRange(dateRange);
 
-      // Special handling for activeVisitors metric
-      if (selectedMetrics[0] === "activeVisitors") {
+      // Special handling for realtime metrics (activeVisitors, uniqueVisitors in realtime, realtimePageViews)
+      if (selectedMetrics[0] === "activeVisitors" || 
+          (selectedMetrics[0] === "uniqueVisitors" && dateRange === "realtime") ||
+          selectedMetrics[0] === "realtimePageViews") {
         // Generate last 30 minutes with 4-minute intervals
         const now = new Date();
-        const activeVisitorsData: ChartDataPoint[] = [];
+        const realtimeData: ChartDataPoint[] = [];
         
         // Fetch all sessions from last 30 minutes
         const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
@@ -198,7 +200,7 @@ export function MetricsChart({
           .order("last_seen", { ascending: true });
 
         if (error) {
-          console.error("Error fetching active visitors:", error);
+          console.error("Error fetching realtime data:", error);
           setLoading(false);
           return;
         }
@@ -214,14 +216,32 @@ export function MetricsChart({
             return lastSeen >= intervalStart && lastSeen <= intervalEnd;
           }).length || 0;
 
+          // Count unique visitors in this interval
+          const intervalSessions = recentSessions?.filter(session => {
+            const lastSeen = new Date(session.last_seen || session.created_at);
+            return lastSeen >= intervalStart && lastSeen <= intervalEnd;
+          }) || [];
+
+          const uniqueVisitorsSet = new Set<string>();
+          let intervalPageViews = 0;
+
+          intervalSessions.forEach(session => {
+            const visitorFingerprint = `${session.browser || "unknown"}-${
+              session.os || "unknown"
+            }-${session.screen_size || "unknown"}-${session.country || "unknown"}`;
+            uniqueVisitorsSet.add(visitorFingerprint);
+            intervalPageViews += session.page_views || 1;
+          });
+
           const minutesAgo = i * 4;
           const displayLabel = minutesAgo === 0 ? "Now" : `-${minutesAgo}min`;
           
-          activeVisitorsData.push({
+          realtimeData.push({
             date: intervalEnd.toISOString(),
             displayDate: displayLabel,
             activeVisitors: activeCount,
-            uniqueVisitors: 0,
+            uniqueVisitors: uniqueVisitorsSet.size,
+            realtimePageViews: intervalPageViews,
             totalVisits: 0,
             totalPageviews: 0,
             bounceRate: 0,
@@ -229,7 +249,7 @@ export function MetricsChart({
           });
         }
 
-        setChartData(activeVisitorsData);
+        setChartData(realtimeData);
         setLoading(false);
         return;
       }
