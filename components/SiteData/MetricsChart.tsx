@@ -274,7 +274,11 @@ export function MetricsChart({
         const daysDiff = Math.ceil(
           (to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24)
         );
-        if (daysDiff > 30) {
+        
+        // Force daily intervals for last30days and last90days
+        if (dateRange === "last30days" || dateRange === "last90days") {
+          interval = "day";
+        } else if (daysDiff > 30) {
           interval = "month";
         } else if (daysDiff > 2) {
           interval = "day";
@@ -461,7 +465,23 @@ export function MetricsChart({
               axisLine={false}
               tickMargin={8}
               minTickGap={32}
-              interval={chartData.length <= 7 ? 0 : "preserveStartEnd"}
+              interval={(() => {
+                // For last 7 days or realtime: show all labels
+                if (chartData.length <= 8) return 0;
+                
+                // For last 30 days: show every 4th day (30/4 ≈ 7 labels)
+                if (dateRange === "last30days") {
+                  return Math.floor(chartData.length / 7) - 1;
+                }
+                
+                // For last 90 days: show every 11th day (90/11 ≈ 8 labels)
+                if (dateRange === "last90days") {
+                  return Math.floor(chartData.length / 8) - 1;
+                }
+                
+                // Default behavior for other periods
+                return "preserveStartEnd";
+              })()}
             />
             <YAxis tickLine={false} axisLine={false} tickMargin={8} />
             <ChartTooltip

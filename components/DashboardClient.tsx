@@ -7,13 +7,13 @@ import { LocationCard } from "@/components/SiteData/LocationCard";
 import { SourcesCard } from "@/components/SiteData/SourcesCard";
 import { TopPagesCard } from "@/components/SiteData/TopPagesCard";
 import { AnalyticsMetrics } from "@/components/SiteData/AnalyticsMetrics";
+import { WorldMapCard } from "@/components/SiteData/WorldMapCard";
 import { SiteSelector } from "@/components/SiteSelector";
 import {
   DateFilter,
   DateRangeOption,
   getDateRange,
 } from "@/components/DateFilter";
-import WorldMapWrapper from "@/components/SiteData/wordMapWrapper";
 
 interface Site {
   id: string;
@@ -58,10 +58,10 @@ export function DashboardClient({
         dateRangeOption={selectedDateRange}
         onMetricChange={setSelectedMetric}
       />
-      <div className="mt-6">
-        <WorldMapWrapper siteId={siteId} dateRange={dateRange} />
-      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="sm:col-span-2">
+          <WorldMapCard siteId={siteId} dateRange={dateRange} />
+        </div>
         <Card>
           <CardHeader>
             <CardTitle>Locations</CardTitle>
