@@ -1,4 +1,7 @@
 (function () {
+  // Signaler que le script est chargé (pour la détection des bloqueurs)
+  window.hectorAnalyticsLoaded = true;
+  
   function sendHeartbeat() {
     let sessionId = localStorage.getItem("user_session_id");
     if (!sessionId) {
