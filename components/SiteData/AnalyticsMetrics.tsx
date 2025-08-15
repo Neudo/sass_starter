@@ -271,7 +271,7 @@ export function AnalyticsMetrics({
     : "grid-cols-2 lg:grid-cols-5 ";
 
   return (
-    <div className="space-y-6 dark:bg-slate-800 dark:border-0 bg-white shadow-sm border border-gray-200 p-4 rounded-2xl">
+    <div className="space-y-6 dark:bg-slate-800 dark:border-0 bg-white shadow-sm border border-gray-200 p-4 rounded-sm">
       <div className={`grid gap-4 ${gridCols}`}>
         {isRealtimeMode && (
           <MetricCard

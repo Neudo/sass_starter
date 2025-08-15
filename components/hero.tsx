@@ -113,7 +113,7 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
           className="mt-16 sm:mt-20"
         >
           <div className="relative max-w-5xl mx-auto">
-            <div className="relative bg-card rounded-xl border border-border shadow-2xl overflow-hidden">
+            <div className="relative bg-card rounded-sm shadow-2xl overflow-hidden">
               <div className="bg-gradient-to-br from-muted/50 to-muted/20">
                 <div className="p-2 md:p-6 h-full">
                   <div className="flex items-center gap-2 mb-4">

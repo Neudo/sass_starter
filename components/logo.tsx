@@ -26,7 +26,7 @@ export function Logo({
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      <div className={`${containerSize} relative rounded-xl overflow-hidden`}>
+      <div className={`${containerSize} relative rounded-sm overflow-hidden`}>
         <Image
           src="/logo.svg"
           alt="Logo"
