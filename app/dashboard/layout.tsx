@@ -16,6 +16,8 @@ import { useRouter } from "next/navigation";
 import { LogoutButton } from "@/components/logout-button";
 import { QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider } from "@tanstack/react-query";
+import Link from "next/link";
+import { useShowUserInfos } from "@/hooks/useLoggedUser";
 
 export default function ProtectedLayout({
   children,
@@ -24,6 +26,8 @@ export default function ProtectedLayout({
 }) {
   const queryClient = new QueryClient();
   const router = useRouter();
+  const { userInfo: userEmail, loading: emailLoading } = useShowUserInfos("email");
+  const { userInfo: userName, loading: nameLoading } = useShowUserInfos("name");
   return (
     <QueryClientProvider client={queryClient}>
       <main className="min-h-screen flex flex-col items-center">
@@ -43,10 +47,10 @@ export default function ProtectedLayout({
 
                     <Badge
                       variant="outline"
-                      className="border-ring/30 text-ring bg-ring/5 px-3 py-1"
+                      className="border-ring/30 text-ring bg-ring/5 px-3 py-1 hidden sm:block"
                     >
                       <Clock className="w-3 h-3 mr-1" />
-                      29 trial days left
+                      <Link href="/dashboard/pricing">29 trial days left</Link>
                     </Badge>
                   </div>
 
@@ -63,15 +67,15 @@ export default function ProtectedLayout({
                               alt="User"
                             />
                             <AvatarFallback className="bg-primary text-primary-foreground">
-                              JD
+                              {userName ? userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'}
                             </AvatarFallback>
                           </Avatar>
                           <div className="hidden sm:block">
                             <div className="text-sm font-medium text-foreground">
-                              John Doe
+                              {nameLoading ? "Loading..." : userName || "User"}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              john@company.com
+                              {emailLoading ? "Loading..." : userEmail}
                             </div>
                           </div>
                           <ChevronDown className="w-4 h-4 text-muted-foreground" />
