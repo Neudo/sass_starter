@@ -33,7 +33,7 @@ export function WorldMapCard({ siteId, dateRange }: WorldMapCardProps) {
       </CardHeader>
       {isMapVisible && (
         <CardContent className="pt-0">
-          <div className="rounded-lg overflow-hidden border">
+          <div className="rounded-sm overflow-hidden">
             <WorldMapWrapper siteId={siteId} dateRange={dateRange} />
           </div>
         </CardContent>

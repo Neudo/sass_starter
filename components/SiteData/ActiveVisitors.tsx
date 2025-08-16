@@ -46,9 +46,14 @@ export function ActiveVisitors({ siteId }: ActiveVisitorsProps) {
   }, [siteId]);
 
   return (
-    <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium flex items-center gap-2">
+    <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 px-2 py-4 md:py-4 md:px-6">
+      {loading ? (
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-12 bg-muted animate-pulse rounded" />
+          <span className="text-xs text-muted-foreground">Loading...</span>
+        </div>
+      ) : (
+        <div className="flex items-center gap-3">
           <div className="relative">
             <Users className="h-4 w-4" />
             {}
@@ -60,27 +65,9 @@ export function ActiveVisitors({ siteId }: ActiveVisitorsProps) {
             </div>
           </div>
           Current Visitors
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-12 bg-muted animate-pulse rounded" />
-            <span className="text-xs text-muted-foreground">Loading...</span>
-          </div>
-        ) : (
-          <div className="flex items-center gap-3">
-            <div className="text-3xl font-bold">{activeCount}</div>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Activity className="h-3 w-3" />
-              <span>Active now</span>
-            </div>
-          </div>
-        )}
-        <p className="text-xs text-muted-foreground mt-2">
-          Visitors in the last 5 minutes
-        </p>
-      </CardContent>
+          <div className="text-3xl font-bold">{activeCount}</div>
+        </div>
+      )}
     </Card>
   );
 }

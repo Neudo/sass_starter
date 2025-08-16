@@ -26,7 +26,8 @@ export default function ProtectedLayout({
 }) {
   const queryClient = new QueryClient();
   const router = useRouter();
-  const { userInfo: userEmail, loading: emailLoading } = useShowUserInfos("email");
+  const { userInfo: userEmail, loading: emailLoading } =
+    useShowUserInfos("email");
   const { userInfo: userName, loading: nameLoading } = useShowUserInfos("name");
   return (
     <QueryClientProvider client={queryClient}>
@@ -67,7 +68,14 @@ export default function ProtectedLayout({
                               alt="User"
                             />
                             <AvatarFallback className="bg-primary text-primary-foreground">
-                              {userName ? userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'}
+                              {userName
+                                ? userName
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")
+                                    .toUpperCase()
+                                    .slice(0, 2)
+                                : "U"}
                             </AvatarFallback>
                           </Avatar>
                           <div className="hidden sm:block">
@@ -84,17 +92,13 @@ export default function ProtectedLayout({
                       <DropdownMenuContent align="end" className="w-56">
                         <DropdownMenuLabel>My Account</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <span className="mr-2 h-4 w-4">👤</span>
-                          <span>Profile</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <span className="mr-2 h-4 w-4">⚙️</span>
-                          <span>Settings</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <span className="mr-2 h-4 w-4">💳</span>
-                          <span>Billing</span>
+                        <DropdownMenuItem className="p-4 relative">
+                          <Link
+                            className="before:absolute before:content-[''] before:-inset-0"
+                            href="/settings"
+                          >
+                            Settings
+                          </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive">

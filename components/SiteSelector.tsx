@@ -31,7 +31,7 @@ export function SiteSelector({ sites, currentDomain }: SiteSelectorProps) {
   return (
     <div className="flex flex-wrap items-center gap-4 justify-between">
       <Select value={currentDomain} onValueChange={handleSiteChange}>
-        <SelectTrigger className="w-[180px] md:w-[280]">
+        <SelectTrigger>
           <SelectValue placeholder="Select a site" />
         </SelectTrigger>
         <SelectContent>

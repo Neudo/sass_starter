@@ -9,6 +9,7 @@ import { TopPagesCard } from "@/components/SiteData/TopPagesCard";
 import { AnalyticsMetrics } from "@/components/SiteData/AnalyticsMetrics";
 import { WorldMapCard } from "@/components/SiteData/WorldMapCard";
 import { SiteSelector } from "@/components/SiteSelector";
+import { ActiveVisitors } from "@/components/SiteData/ActiveVisitors";
 import {
   DateFilter,
   DateRangeOption,
@@ -33,12 +34,16 @@ export function DashboardClient({
 }: DashboardClientProps) {
   const [selectedDateRange, setSelectedDateRange] =
     useState<DateRangeOption>("alltime");
-  const [selectedMetric, setSelectedMetric] = useState<string>("uniqueVisitors");
+  const [selectedMetric, setSelectedMetric] =
+    useState<string>("uniqueVisitors");
   const dateRange = getDateRange(selectedDateRange);
 
   // Automatically switch to realtime when Active Visitors is selected
   useEffect(() => {
-    if (selectedMetric === "activeVisitors" && selectedDateRange !== "realtime") {
+    if (
+      selectedMetric === "activeVisitors" &&
+      selectedDateRange !== "realtime"
+    ) {
       setSelectedDateRange("realtime");
     }
   }, [selectedMetric, selectedDateRange]);
@@ -47,6 +52,7 @@ export function DashboardClient({
     <div className="space-y-6">
       <div className="flex gap-4 flex-wrap items-center justify-between">
         <SiteSelector sites={userSites} currentDomain={domain} />
+        <ActiveVisitors siteId={siteId} />
         <DateFilter
           selectedRange={selectedDateRange}
           onRangeChange={setSelectedDateRange}
