@@ -11,18 +11,21 @@ export function AnalyticsBlockedNotice() {
 
   useEffect(() => {
     // Charger le script de détection
-    const script = document.createElement('script');
-    script.src = '/adblocker-detect.js';
+    const script = document.createElement("script");
+    script.src = "/adblocker-detect.js";
     script.async = true;
     document.head.appendChild(script);
 
     // Écouter l'événement de blocage
     const handleAnalyticsBlocked = (event: CustomEvent) => {
-      console.log('Analytics blocked detected:', event.detail);
+      console.log("Analytics blocked detected:", event.detail);
       setIsBlocked(true);
     };
 
-    window.addEventListener('analyticsBlocked', handleAnalyticsBlocked as EventListener);
+    window.addEventListener(
+      "analyticsBlocked",
+      handleAnalyticsBlocked as EventListener
+    );
 
     // Vérifier après un délai
     const checkTimeout = setTimeout(() => {
@@ -32,7 +35,10 @@ export function AnalyticsBlockedNotice() {
     }, 3000);
 
     return () => {
-      window.removeEventListener('analyticsBlocked', handleAnalyticsBlocked as EventListener);
+      window.removeEventListener(
+        "analyticsBlocked",
+        handleAnalyticsBlocked as EventListener
+      );
       clearTimeout(checkTimeout);
     };
   }, []);
@@ -49,9 +55,9 @@ export function AnalyticsBlockedNotice() {
           Analytics Blocked
         </AlertTitle>
         <AlertDescription className="text-orange-800 dark:text-orange-200">
-          Your ad blocker is preventing analytics from loading. 
-          Hector Analytics is privacy-focused and doesn't track personal data. 
-          Consider whitelisting our domain to help us improve your experience.
+          Your ad blocker is preventing analytics from loading. Hector Analytics
+          is privacy-focused and doesn&apos;t track personal data. Consider
+          whitelisting our domain to help us improve your experience.
         </AlertDescription>
         <Button
           variant="ghost"
@@ -94,13 +100,13 @@ export function useAnalyticsBlocked() {
       checkStatus();
     };
 
-    window.addEventListener('analyticsBlocked', handleAnalyticsBlocked);
+    window.addEventListener("analyticsBlocked", handleAnalyticsBlocked);
 
     // Vérifier après un délai
     const timeout = setTimeout(checkStatus, 3000);
 
     return () => {
-      window.removeEventListener('analyticsBlocked', handleAnalyticsBlocked);
+      window.removeEventListener("analyticsBlocked", handleAnalyticsBlocked);
       clearTimeout(timeout);
     };
   }, []);

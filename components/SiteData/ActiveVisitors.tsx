@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Activity } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Users } from "lucide-react";
 
 interface ActiveVisitorsProps {
   siteId: string;

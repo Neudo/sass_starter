@@ -1,31 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServiceRoleClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { headers } from "next/headers";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const headersList = headers();
-    const ip = headersList.get("x-forwarded-for") || "unknown";
-    
+    const ip = (await headersList).get("x-forwarded-for") || "unknown";
+
     // Log que le fallback est utilisé (pour monitoring)
     console.log("Fallback tracking utilisé - Bloqueur détecté", {
       domain: body.domain,
       page: body.page,
-      blocked: true
+      blocked: true,
     });
 
     // Si vous voulez quand même tracker (optionnel)
     // Vous pouvez utiliser une approche server-side
     if (body.domain && body.page) {
-      const supabase = createServiceRoleClient();
-      
+      const supabase = createAdminClient();
+
       // Créer une session avec un flag "blocked"
       await supabase.from("sessions").insert({
         site_id: await getSiteIdFromDomain(body.domain),
         page_path: body.page,
         referrer: body.referrer,
-        user_agent: headersList.get("user-agent"),
+        user_agent: (await headersList).get("user-agent"),
         ip_address: ip,
         // Marquer comme tracking de fallback
         tracking_method: "fallback",
@@ -35,9 +35,9 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: "Fallback tracking received" 
+    return NextResponse.json({
+      success: true,
+      message: "Fallback tracking received",
     });
   } catch (error) {
     console.error("Erreur fallback tracking:", error);
@@ -49,12 +49,12 @@ export async function POST(request: NextRequest) {
 }
 
 async function getSiteIdFromDomain(domain: string) {
-  const supabase = createServiceRoleClient();
+  const supabase = createAdminClient();
   const { data } = await supabase
     .from("sites")
     .select("id")
     .eq("domain", domain)
     .single();
-  
+
   return data?.id || null;
 }
