@@ -1,10 +1,10 @@
 "use client";
 import { PricingSection } from "@/components/pricing-section";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, X, ArrowRight, HelpCircle } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
+import Link from "next/link";
 import {
   Accordion,
   AccordionContent,
@@ -14,103 +14,103 @@ import {
 import { Navigation } from "@/components/navigation";
 
 export default function Page() {
-  const comparisonFeatures = [
-    {
-      category: "Basic Analytics",
-      features: [
-        { name: "Page views", starter: true, pro: true, enterprise: true },
-        { name: "Unique visitors", starter: true, pro: true, enterprise: true },
-        { name: "Sessions", starter: true, pro: true, enterprise: true },
-        { name: "Bounce rate", starter: true, pro: true, enterprise: true },
-        {
-          name: "Session duration",
-          starter: true,
-          pro: true,
-          enterprise: true,
-        },
-      ],
-    },
-    {
-      category: "Traffic Sources",
-      features: [
-        { name: "Referrers", starter: true, pro: true, enterprise: true },
-        { name: "Search engines", starter: true, pro: true, enterprise: true },
-        { name: "Social networks", starter: true, pro: true, enterprise: true },
-        { name: "UTM campaigns", starter: false, pro: true, enterprise: true },
-        {
-          name: "Keyword analysis",
-          starter: false,
-          pro: true,
-          enterprise: true,
-        },
-      ],
-    },
-    {
-      category: "Technology",
-      features: [
-        { name: "Devices", starter: true, pro: true, enterprise: true },
-        { name: "Browsers", starter: true, pro: true, enterprise: true },
-        {
-          name: "Operating systems",
-          starter: true,
-          pro: true,
-          enterprise: true,
-        },
-        {
-          name: "Screen resolutions",
-          starter: false,
-          pro: true,
-          enterprise: true,
-        },
-        { name: "Languages", starter: false, pro: true, enterprise: true },
-      ],
-    },
-    {
-      category: "Advanced Features",
-      features: [
-        { name: "Custom alerts", starter: false, pro: true, enterprise: true },
-        {
-          name: "Custom dashboards",
-          starter: false,
-          pro: true,
-          enterprise: true,
-        },
-        { name: "Data export", starter: false, pro: true, enterprise: true },
-        { name: "API access", starter: false, pro: false, enterprise: true },
-        {
-          name: "Third-party integrations",
-          starter: false,
-          pro: false,
-          enterprise: true,
-        },
-      ],
-    },
-    {
-      category: "Support",
-      features: [
-        { name: "Email support", starter: true, pro: true, enterprise: true },
-        {
-          name: "Priority support",
-          starter: false,
-          pro: true,
-          enterprise: true,
-        },
-        { name: "Phone support", starter: false, pro: false, enterprise: true },
-        {
-          name: "Dedicated manager",
-          starter: false,
-          pro: false,
-          enterprise: true,
-        },
-        {
-          name: "Custom training",
-          starter: false,
-          pro: false,
-          enterprise: true,
-        },
-      ],
-    },
-  ];
+  // const comparisonFeatures = [
+  //   {
+  //     category: "Basic Analytics",
+  //     features: [
+  //       { name: "Page views", starter: true, pro: true, enterprise: true },
+  //       { name: "Unique visitors", starter: true, pro: true, enterprise: true },
+  //       { name: "Sessions", starter: true, pro: true, enterprise: true },
+  //       { name: "Bounce rate", starter: true, pro: true, enterprise: true },
+  //       {
+  //         name: "Session duration",
+  //         starter: true,
+  //         pro: true,
+  //         enterprise: true,
+  //       },
+  //     ],
+  //   },
+  //   {
+  //     category: "Traffic Sources",
+  //     features: [
+  //       { name: "Referrers", starter: true, pro: true, enterprise: true },
+  //       { name: "Search engines", starter: true, pro: true, enterprise: true },
+  //       { name: "Social networks", starter: true, pro: true, enterprise: true },
+  //       { name: "UTM campaigns", starter: false, pro: true, enterprise: true },
+  //       {
+  //         name: "Keyword analysis",
+  //         starter: false,
+  //         pro: true,
+  //         enterprise: true,
+  //       },
+  //     ],
+  //   },
+  //   {
+  //     category: "Technology",
+  //     features: [
+  //       { name: "Devices", starter: true, pro: true, enterprise: true },
+  //       { name: "Browsers", starter: true, pro: true, enterprise: true },
+  //       {
+  //         name: "Operating systems",
+  //         starter: true,
+  //         pro: true,
+  //         enterprise: true,
+  //       },
+  //       {
+  //         name: "Screen resolutions",
+  //         starter: false,
+  //         pro: true,
+  //         enterprise: true,
+  //       },
+  //       { name: "Languages", starter: false, pro: true, enterprise: true },
+  //     ],
+  //   },
+  //   {
+  //     category: "Advanced Features",
+  //     features: [
+  //       { name: "Custom alerts", starter: false, pro: true, enterprise: true },
+  //       {
+  //         name: "Custom dashboards",
+  //         starter: false,
+  //         pro: true,
+  //         enterprise: true,
+  //       },
+  //       { name: "Data export", starter: false, pro: true, enterprise: true },
+  //       { name: "API access", starter: false, pro: false, enterprise: true },
+  //       {
+  //         name: "Third-party integrations",
+  //         starter: false,
+  //         pro: false,
+  //         enterprise: true,
+  //       },
+  //     ],
+  //   },
+  //   {
+  //     category: "Support",
+  //     features: [
+  //       { name: "Email support", starter: true, pro: true, enterprise: true },
+  //       {
+  //         name: "Priority support",
+  //         starter: false,
+  //         pro: true,
+  //         enterprise: true,
+  //       },
+  //       { name: "Phone support", starter: false, pro: false, enterprise: true },
+  //       {
+  //         name: "Dedicated manager",
+  //         starter: false,
+  //         pro: false,
+  //         enterprise: true,
+  //       },
+  //       {
+  //         name: "Custom training",
+  //         starter: false,
+  //         pro: false,
+  //         enterprise: true,
+  //       },
+  //     ],
+  //   },
+  // ];
 
   const faqs = [
     {
@@ -148,47 +148,11 @@ export default function Page() {
   return (
     <div className="min-h-screen">
       <Navigation />
-      <div className="pt-16">
-        {/* Hero Section */}
-        <section className="py-24 bg-gradient-to-b from-background to-muted/20">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <Badge variant="secondary" className="mb-4">
-                Pricing
-              </Badge>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-                Simple and transparent pricing
-              </h1>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-                Go as you growth
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                <div className="flex items-center gap-2 text-green-600">
-                  <Check className="w-5 h-5" />
-                  <span>30 days free</span>
-                </div>
-                <div className="flex items-center gap-2 text-green-600">
-                  <Check className="w-5 h-5" />
-                  <span>Cancel anytime</span>
-                </div>
-                <div className="flex items-center gap-2 text-green-600">
-                  <Check className="w-5 h-5" />
-                  <span>No credit card required</span>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-
+      <div>
         <PricingSection showFullPage={true} />
 
         {/* Detailed comparison */}
-        <section className="py-24 bg-muted/10">
+        {/* <section className="py-24 bg-muted/10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <motion.div
@@ -288,7 +252,7 @@ export default function Page() {
               </Card>
             </motion.div>
           </div>
-        </section>
+        </section> */}
 
         {/* FAQ */}
         <section className="py-24">
@@ -300,10 +264,6 @@ export default function Page() {
                 transition={{ duration: 0.5 }}
                 viewport={{ once: true }}
               >
-                <Badge variant="secondary" className="mb-4">
-                  <HelpCircle className="w-4 h-4 mr-2" />
-                  FAQ
-                </Badge>
                 <h2 className="text-3xl sm:text-4xl font-bold mb-4">
                   Frequently Asked Questions
                 </h2>
@@ -341,18 +301,22 @@ export default function Page() {
               viewport={{ once: true }}
               className="text-center mt-12"
             >
-              <Card className="bg-gradient-to-r from-primary/5 to-primary/10">
-                <CardContent className="p-8">
+              <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-0">
+                <CardHeader>
                   <h3 className="text-xl font-semibold mb-4">
                     Have other questions?
                   </h3>
+                </CardHeader>
+                <CardContent className="p-8">
                   <p className="text-muted-foreground mb-6">
-                    Our team is here to help you choose the plan that best fits
-                    your needs.
+                    If you have any additional questions, please don&apos;t
+                    hesitate to send us a mail.
                   </p>
-                  <Button>
-                    Talk to an expert
-                    <ArrowRight className="ml-2 w-4 h-4" />
+                  <Button asChild>
+                    <Link href="mailto:contact@sassanalytics.com">
+                      Contact us
+                      <ArrowRight className="ml-2 w-4 h-4" />
+                    </Link>
                   </Button>
                 </CardContent>
               </Card>

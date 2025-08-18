@@ -1,12 +1,6 @@
 "use client";
 import { Button } from "./ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Switch } from "./ui/switch";
 import { Slider } from "./ui/slider";
@@ -45,7 +39,7 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
     },
     professional: {
       monthly: [14, 29, 46, 69, 99, 129, 189, 229, "Custom"],
-      yearly: [140, 290, 460, 690, 990, 1290, 1890, 2290, "Custom"], // 10 months price (2 months free)
+      yearly: [140, 290, 450, 690, 990, 1290, 1890, 2290, "Custom"], // 10 months price (2 months free)
     },
   };
 
@@ -104,7 +98,7 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
   return (
     <section className={`${showFullPage ? "py-24" : "py-16"} bg-background`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
+        <div className="text-center mb-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -136,40 +130,8 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
               </div>
             </div>
 
-            {/* Event tier selector */}
-            <div className="max-w-2xl mx-auto mb-8">
-              <label className="block text-sm font-medium text-muted-foreground mb-4 text-center">
-                Monthly events
-              </label>
-              <div className="relative px-4">
-                <Slider
-                  value={[eventTier]}
-                  onValueChange={(value) => setEventTier(value[0])}
-                  min={0}
-                  max={eventTiers.length - 1}
-                  step={1}
-                  className="mb-2"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                  {eventTiers.map((tier, index) => (
-                    <span
-                      key={tier.value}
-                      className={`cursor-pointer transition-all ${
-                        index === eventTier
-                          ? "text-primary font-semibold scale-110"
-                          : "hover:text-foreground"
-                      }`}
-                      onClick={() => setEventTier(index)}
-                    >
-                      {tier.label}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-
             {/* Annual/Monthly toggle */}
-            <div className="flex items-center justify-center gap-4 mb-2 bg-slate-50 w-fit px-4 py-2 mx-auto rounded-lg">
+            <div className="flex items-center justify-center gap-4 mb-10 bg-slate-50 dark:bg-slate-800 w-fit px-4 py-4 mx-auto rounded-lg">
               <button
                 onClick={() => setIsYearly(false)}
                 className={`text-xl cursor-pointer transition-colors ${
@@ -202,6 +164,38 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
                 2 months free
               </Badge>
             </div>
+
+            {/* Event tier selector */}
+            <div className="max-w-2xl mx-auto mb-5 md:mb-16">
+              <label className="block text-sm font-medium text-muted-foreground mb-4 text-center">
+                Monthly events
+              </label>
+              <div className="relative px-4">
+                <Slider
+                  value={[eventTier]}
+                  onValueChange={(value) => setEventTier(value[0])}
+                  min={0}
+                  max={eventTiers.length - 1}
+                  step={1}
+                  className="mb-2"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                  {eventTiers.map((tier, index) => (
+                    <span
+                      key={tier.value}
+                      className={`cursor-pointer transition-all ${
+                        index === eventTier
+                          ? "text-primary font-semibold scale-110"
+                          : "hover:text-foreground"
+                      }`}
+                      onClick={() => setEventTier(index)}
+                    >
+                      {tier.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
           </motion.div>
         </div>
 
@@ -219,7 +213,7 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
                   plan.popular
                     ? "border-primary shadow-lg scale-105 ring-2 ring-primary/20"
                     : plan.color === "secondary"
-                    ? "border-secondary/30 hover:border-secondary/50 transition-colors"
+                    ? "border-slate-100 hover:border-slate-200 dark:border-slate-800 dark:hover:border-slate-700 transition-colors"
                     : ""
                 }`}
               >
@@ -240,9 +234,7 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
                       <div className="flex items-baseline justify-center gap-1">
                         <span
                           className={`text-3xl font-bold ${
-                            plan.color === "primary"
-                              ? "text-primary"
-                              : "text-secondary"
+                            plan.color === "primary" ? "text-primary" : "black"
                           }`}
                         >
                           Custom
@@ -255,7 +247,7 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
                             className={`text-4xl font-bold ${
                               plan.color === "primary"
                                 ? "text-primary"
-                                : "text-secondary"
+                                : "black"
                             }`}
                           >
                             ${isYearly ? plan.yearlyPrice : plan.monthlyPrice}
@@ -264,16 +256,18 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
                             {isYearly ? "/year" : "/month"}
                           </span>
                         </div>
-                        {isYearly && typeof plan.monthlyPrice === "number" && (
-                          <div className="text-sm text-muted-foreground">
-                            <span className="line-through">
-                              ${plan.monthlyPrice * 12}
-                            </span>
-                            <span className="ml-2 text-slate-500">
-                              ${(plan.yearlyPrice / 12).toFixed(2)}/month
-                            </span>
-                          </div>
-                        )}
+                        {isYearly &&
+                          typeof plan.monthlyPrice === "number" &&
+                          typeof plan.yearlyPrice === "number" && (
+                            <div className="text-sm text-muted-foreground">
+                              <span className="line-through">
+                                ${plan.monthlyPrice * 12}
+                              </span>
+                              <span className="ml-2 text-slate-500">
+                                ${(plan.yearlyPrice / 12).toFixed(2)}/month
+                              </span>
+                            </div>
+                          )}
                       </>
                     )}
                   </div>
@@ -285,15 +279,15 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
                       plan.popular
                         ? ""
                         : plan.color === "secondary"
-                        ? "bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+                        ? "text-secondar y-foreground"
                         : "variant-outline border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                     }`}
                     variant={
                       plan.popular
                         ? "default"
                         : plan.color === "secondary"
-                        ? "default"
-                        : "outline"
+                        ? "outline"
+                        : "ghost"
                     }
                   >
                     {plan.cta}
@@ -312,8 +306,6 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
                     </div>
                   ))}
                 </CardContent>
-
-                <CardFooter></CardFooter>
               </Card>
             </motion.div>
           ))}
@@ -338,22 +330,6 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
             </Button>
           </motion.div>
         )}
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          viewport={{ once: true }}
-          className="text-center mt-16 space-y-4"
-        >
-          <h3 className="text-xl font-semibold">Frequently Asked Questions</h3>
-          <div className="max-w-2xl mx-auto text-muted-foreground space-y-2">
-            <p>✅ Cancel anytime</p>
-            <p>✅ No hidden fees</p>
-            <p>✅ Free migration from Google Analytics</p>
-            <p>✅ Responsive customer support</p>
-          </div>
-        </motion.div>
       </div>
     </section>
   );
