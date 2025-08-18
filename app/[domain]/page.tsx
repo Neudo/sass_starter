@@ -16,17 +16,17 @@ export default async function PublicDashboardPage({
       .select("id, public_enabled")
       .eq("domain", domain)
       .single();
-    
+
     if (error || !data) {
       throw new Error("Site not found");
     }
-    
+
     return data;
   };
 
   try {
     const siteData = await getSiteData(domain);
-    
+
     // Check if public dashboard is enabled
     if (!siteData.public_enabled) {
       return notFound();
@@ -35,7 +35,7 @@ export default async function PublicDashboardPage({
     // Create a mock userSites array for the public view
     const publicSite = {
       id: siteData.id,
-      domain: domain
+      domain: domain,
     };
 
     return (
@@ -50,7 +50,7 @@ export default async function PublicDashboardPage({
             </div>
           </div>
         </div>
-        
+
         <div className="container mx-auto px-4 py-6">
           <DashboardClient
             siteId={siteData.id}
@@ -62,6 +62,8 @@ export default async function PublicDashboardPage({
       </div>
     );
   } catch (error) {
+    console.log(error);
+
     return notFound();
   }
 }

@@ -1,12 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle2, XCircle, Loader2, Copy, ExternalLink, ArrowLeft } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  Copy,
+  ExternalLink,
+  ArrowLeft,
+} from "lucide-react";
 import { togglePublicDashboard } from "./actions";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -25,7 +38,10 @@ export function SiteSettingsClient({
   const router = useRouter();
   const [publicEnabled, setPublicEnabled] = useState(initialPublicEnabled);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const publicUrl = `https://www.hectoranalytics.com/${domain}`;
 
@@ -48,7 +64,7 @@ export function SiteSettingsClient({
     try {
       await navigator.clipboard.writeText(publicUrl);
       toast.success("Public URL copied to clipboard");
-    } catch (err) {
+    } catch {
       toast.error("Failed to copy URL");
     }
   };
@@ -92,13 +108,25 @@ export function SiteSettingsClient({
           </div>
 
           {message && (
-            <Alert className={message.type === "error" ? "border-destructive" : "border-green-500"}>
+            <Alert
+              className={
+                message.type === "error"
+                  ? "border-destructive"
+                  : "border-green-500"
+              }
+            >
               {message.type === "error" ? (
                 <XCircle className="h-4 w-4 text-destructive" />
               ) : (
                 <CheckCircle2 className="h-4 w-4 text-green-600" />
               )}
-              <AlertDescription className={message.type === "error" ? "text-destructive" : "text-green-600"}>
+              <AlertDescription
+                className={
+                  message.type === "error"
+                    ? "text-destructive"
+                    : "text-green-600"
+                }
+              >
                 {message.text}
               </AlertDescription>
             </Alert>
@@ -128,10 +156,13 @@ export function SiteSettingsClient({
                   </Button>
                 </div>
               </div>
-              
+
               <Alert>
                 <AlertDescription>
-                  Anyone with this link can view your analytics data. The dashboard will show the same information as your private dashboard, but visitors won't be able to modify settings or access other sites.
+                  Anyone with this link can view your analytics data. The
+                  dashboard will show the same information as your private
+                  dashboard, but visitors won&apos;t be able to modify settings
+                  or access other sites.
                 </AlertDescription>
               </Alert>
             </div>
@@ -160,7 +191,9 @@ export function SiteSettingsClient({
           </div>
           <div>
             <Label className="text-sm font-medium">Site ID</Label>
-            <p className="text-sm text-muted-foreground mt-1 font-mono">{siteId}</p>
+            <p className="text-sm text-muted-foreground mt-1 font-mono">
+              {siteId}
+            </p>
           </div>
         </CardContent>
       </Card>
