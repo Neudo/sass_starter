@@ -46,13 +46,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Store tokens in database
-    const { data: upsertData, error: dbError } = await adminClient
+    const { error: dbError } = await adminClient
       .from("google_auth_tokens")
       .upsert({
         user_id: user.id,
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,
-        expires_at: tokens.expiry_date ? new Date(tokens.expiry_date).toISOString() : null,
+        expires_at: tokens.expiry_date
+          ? new Date(tokens.expiry_date).toISOString()
+          : null,
         scope:
           tokens.scope || "https://www.googleapis.com/auth/analytics.readonly",
         updated_at: new Date().toISOString(),
@@ -61,19 +63,26 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (dbError) {
-      console.error("Error storing Google tokens:", JSON.stringify(dbError, null, 2));
-      throw new Error(`Failed to store authentication tokens: ${dbError.message || 'Unknown error'}`);
+      console.error(
+        "Error storing Google tokens:",
+        JSON.stringify(dbError, null, 2)
+      );
+      throw new Error(
+        `Failed to store authentication tokens: ${
+          dbError.message || "Unknown error"
+        }`
+      );
     }
 
     console.log("Successfully stored Google tokens for user:", user.id);
 
     // Parse state to get domain
     let redirectPath = "/dashboard/settings/imports?success=connected";
-    
+
     try {
       const state = searchParams.get("state");
       if (state) {
-        const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+        const stateData = JSON.parse(Buffer.from(state, "base64").toString());
         if (stateData.domain) {
           redirectPath = `/dashboard/${stateData.domain}/settings/imports?success=connected`;
         }
@@ -83,9 +92,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Redirect back to imports page with success
-    return NextResponse.redirect(
-      new URL(redirectPath, request.url)
-    );
+    return NextResponse.redirect(new URL(redirectPath, request.url));
   } catch (error) {
     console.error("Error in Google OAuth callback:", error);
     return NextResponse.redirect(

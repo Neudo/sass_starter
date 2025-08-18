@@ -40,6 +40,19 @@ const countryMapping: { [key: string]: string } = {
   // Add more mappings as needed
 };
 
+// Mapping des OS GA vers noms standardisés
+const osMapping: { [key: string]: string } = {
+  Macintosh: "macOS",
+  "Mac OS": "macOS",
+  "Mac OS X": "macOS",
+  Windows: "Windows",
+  Android: "Android",
+  iOS: "iOS",
+  "Chrome OS": "Chrome OS",
+  Linux: "Linux",
+  // Add more mappings as needed
+};
+
 // Mapping des sources GA vers referrers Hector
 function mapReferrer(source: string, medium: string): string | null {
   if (source === "(direct)" || medium === "(none)") {
@@ -76,8 +89,6 @@ export async function importGA4DataToHector(
   const adminClient = createAdminClient();
 
   try {
-    console.log(`Starting GA4 import for job ${job.id}`);
-
     // Update progress
     await updateJobProgress(
       job.id,
@@ -107,13 +118,36 @@ export async function importGA4DataToHector(
 
     // Convert to Hector sessions and insert
     let importedSessions = 0;
+    let skippedDuplicates = 0;
     const totalSessions = Object.keys(sessionGroups).length;
     let sessionIndex = 0;
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for (const [sessionKey, sessionData] of Object.entries(sessionGroups)) {
       try {
-        const hectorSession = mapToHectorSession(sessionData, job.site_id, sessionIndex++);
+        const hectorSession = mapToHectorSession(
+          sessionData,
+          job.site_id,
+          sessionIndex++
+        );
+
+        // Check for existing sessions to avoid duplicates
+        const { data: existingSessions } = await adminClient
+          .from("sessions")
+          .select("id")
+          .eq("site_id", hectorSession.site_id)
+          .eq("created_at", hectorSession.created_at)
+          .eq("country", hectorSession.country || "")
+          .eq("city", hectorSession.city || "")
+          .eq("browser", hectorSession.browser || "")
+          .eq("os", hectorSession.os || "")
+          .limit(1);
+
+        if (existingSessions && existingSessions.length > 0) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          skippedDuplicates++;
+          continue;
+        }
 
         // Insert session into Hector database
         const { error } = await adminClient
@@ -155,10 +189,6 @@ export async function importGA4DataToHector(
         completed_at: new Date().toISOString(),
       })
       .eq("id", job.id);
-
-    console.log(
-      `GA4 import completed for job ${job.id}. Imported ${importedSessions}/${totalSessions} sessions`
-    );
   } catch (error) {
     console.error("Error in importGA4DataToHector:", error);
 
@@ -245,7 +275,9 @@ function mapToHectorSession(
   const lastSeen = new Date(date.getTime() + avgDuration * 1000);
 
   // Generate a unique ID for the session (similar to Hector's format)
-  const sessionId = `ga4_import_${date.getTime()}_${sessionIndex}_${Math.random().toString(36).substring(2, 9)}`;
+  const sessionId = `ga4_import_${date.getTime()}_${sessionIndex}_${Math.random()
+    .toString(36)
+    .substring(2, 9)}`;
 
   return {
     id: sessionId,
@@ -261,7 +293,10 @@ function mapToHectorSession(
     region: sessionData.region || undefined,
     city: sessionData.city || undefined,
     browser: sessionData.browser || undefined,
-    os: sessionData.operatingSystem || undefined,
+    os:
+      osMapping[sessionData.operatingSystem] ||
+      sessionData.operatingSystem ||
+      undefined,
     referrer: mapReferrer(sessionData.source, sessionData.medium) || undefined,
     // user_agent removed as not in sessions table
   };

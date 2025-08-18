@@ -13,8 +13,6 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
-  CheckCircle2,
-  XCircle,
   Loader2,
   Copy,
   ExternalLink,
@@ -35,24 +33,19 @@ export function PublicDashboardSettings({
 }: PublicDashboardSettingsProps) {
   const [publicEnabled, setPublicEnabled] = useState(initialPublicEnabled);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
 
   const publicUrl = `https://www.hectoranalytics.com/${domain}`;
 
   const handleTogglePublic = async () => {
     setLoading(true);
-    setMessage(null);
 
     const result = await togglePublicDashboard(siteId, !publicEnabled);
 
     if (result.error) {
-      setMessage({ type: "error", text: result.error });
+      toast.error(result.error);
     } else if (result.success) {
       setPublicEnabled(!publicEnabled);
-      setMessage({ type: "success", text: result.success });
+      toast.success(result.success);
     }
     setLoading(false);
   };
@@ -92,31 +85,6 @@ export function PublicDashboardSettings({
               disabled={loading}
             />
           </div>
-
-          {message && (
-            <Alert
-              className={
-                message.type === "error"
-                  ? "border-destructive"
-                  : "border-green-500"
-              }
-            >
-              {message.type === "error" ? (
-                <XCircle className="h-4 w-4 text-destructive" />
-              ) : (
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-              )}
-              <AlertDescription
-                className={
-                  message.type === "error"
-                    ? "text-destructive"
-                    : "text-green-600"
-                }
-              >
-                {message.text}
-              </AlertDescription>
-            </Alert>
-          )}
 
           {publicEnabled && (
             <div className="space-y-4 p-4 bg-muted/50 rounded-lg">

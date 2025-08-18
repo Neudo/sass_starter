@@ -70,7 +70,6 @@ export function ImportsExportsClient({
   const [selectedProperty, setSelectedProperty] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [includeGoals, setIncludeGoals] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
@@ -127,7 +126,9 @@ export function ImportsExportsClient({
   const handleGoogleConnect = async () => {
     setIsConnecting(true);
     try {
-      const response = await fetch(`/api/auth/google?domain=${encodeURIComponent(domain)}`);
+      const response = await fetch(
+        `/api/auth/google?domain=${encodeURIComponent(domain)}`
+      );
       if (!response.ok) {
         throw new Error("Failed to get auth URL");
       }
@@ -141,7 +142,11 @@ export function ImportsExportsClient({
   };
 
   const handleGoogleDisconnect = async () => {
-    if (!confirm("Are you sure you want to disconnect your Google Analytics account?")) {
+    if (
+      !confirm(
+        "Are you sure you want to disconnect your Google Analytics account?"
+      )
+    ) {
       return;
     }
 
@@ -150,16 +155,65 @@ export function ImportsExportsClient({
       const response = await fetch("/api/auth/google/disconnect", {
         method: "DELETE",
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to disconnect");
       }
-      
+
       // Reload the page to update the connection status
       window.location.reload();
     } catch (error) {
       console.error("Error disconnecting Google:", error);
       setError("Failed to disconnect Google Analytics");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleExport = async () => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        `/api/export/csv?domain=${encodeURIComponent(domain)}`
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to export data");
+      }
+
+      // Get the ZIP data and trigger download
+      const zipData = await response.arrayBuffer();
+      const blob = new Blob([zipData], { type: "application/zip" });
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+
+      // Generate filename with current date
+      const today = new Date().toISOString().split("T")[0];
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0];
+      link.download = `${domain.replace(
+        ".",
+        "_"
+      )}_analytics_export_${thirtyDaysAgo.replace(/-/g, "")}_${today.replace(
+        /-/g,
+        ""
+      )}.zip`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to export data"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -192,7 +246,6 @@ export function ImportsExportsClient({
           propertyName: selectedProp.displayName,
           startDate,
           endDate,
-          includeGoals,
         }),
       });
 
@@ -211,7 +264,6 @@ export function ImportsExportsClient({
       setSelectedProperty("");
       setStartDate("");
       setEndDate("");
-      setIncludeGoals(false);
     } catch (error) {
       console.error("Error starting import:", error);
       setError(
@@ -310,16 +362,19 @@ export function ImportsExportsClient({
                 <div className="flex items-center gap-3">
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <div>
-                    <p className="font-medium text-green-900">Google Analytics Connected</p>
-                    <p className="text-sm text-green-700">Your account is connected and ready to import data</p>
+                    <p className="font-medium text-green-900">
+                      Google Analytics Connected
+                    </p>
+                    <p className="text-sm text-green-700">
+                      Your account is connected and ready to import data
+                    </p>
                   </div>
                 </div>
                 <Button
-                  variant="outline"
+                  variant="destructive"
                   size="sm"
                   onClick={handleGoogleDisconnect}
                   disabled={isLoading}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
                   Disconnect
@@ -374,17 +429,6 @@ export function ImportsExportsClient({
                       />
                     </div>
                   </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="includeGoals"
-                      checked={includeGoals}
-                      onCheckedChange={(checked) => setIncludeGoals(checked === true)}
-                    />
-                    <Label htmlFor="includeGoals">
-                      Include Goals & Conversions
-                    </Label>
-                  </div>
                 </div>
 
                 <div className="flex items-end">
@@ -416,46 +460,21 @@ export function ImportsExportsClient({
           <CardContent>
             <div className="space-y-4">
               {importJobs.map((job) => (
-                <div key={job.id} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
+                <div key={job.id} className="border rounded-sm p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-1 flex-wrap items-center gap-4">
                       <div className="font-medium">{job.propertyName}</div>
                       <div className="text-sm text-gray-500">
                         {job.startDate} to {job.endDate}
                       </div>
+                      {job.status === "completed" && (
+                        <div className="text-sm text-green-600">
+                          {job.importedSessions} sessions imported
+                        </div>
+                      )}
                     </div>
                     {getStatusBadge(job.status)}
                   </div>
-
-                  {(job.status === "running" || job.status === "pending") && (
-                    <div className="mb-3">
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Progress</span>
-                        <span>{job.progress}%</span>
-                      </div>
-                      <Progress value={job.progress} className="h-2" />
-                    </div>
-                  )}
-
-                  <div className="flex justify-between text-sm text-gray-500">
-                    <span>Started: {formatDate(job.createdAt)}</span>
-                    {job.completedAt && (
-                      <span>Completed: {formatDate(job.completedAt)}</span>
-                    )}
-                  </div>
-
-                  {job.status === "completed" && (
-                    <div className="mt-2 text-sm text-green-600">
-                      Imported {job.importedSessions} of {job.totalSessions}{" "}
-                      sessions
-                    </div>
-                  )}
-
-                  {job.status === "failed" && job.errorMessage && (
-                    <div className="mt-2 text-sm text-red-600">
-                      Error: {job.errorMessage}
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
@@ -471,20 +490,41 @@ export function ImportsExportsClient({
             Export Data
           </CardTitle>
           <CardDescription>
-            Export your analytics data in various formats
+            Export your analytics data in CSV format
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <div className="mb-4">
-              <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <Download className="h-6 w-6 text-gray-600" />
+            <div className="mb-6">
+              <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                <Download className="h-6 w-6 text-blue-600" />
               </div>
-              <h3 className="text-lg font-medium mb-2">Export Coming Soon</h3>
+              <h3 className="text-lg font-medium mb-2">
+                Export Analytics Data
+              </h3>
               <p className="text-gray-600 mb-6">
-                Data export functionality will be available in a future update
+                Download all your analytics data from the last 30 days in CSV
+                format. The ZIP file will contain visitors, locations, browsers,
+                sources, pages, and complete data exports.
               </p>
             </div>
+
+            <Button
+              onClick={handleExport}
+              disabled={isLoading}
+              size="lg"
+              className="min-w-48"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              {isLoading ? "Generating Export..." : "Download"}
+            </Button>
+
+            {error && (
+              <Alert variant="destructive" className="mt-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
           </div>
         </CardContent>
       </Card>
