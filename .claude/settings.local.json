@@ -11,7 +11,9 @@
       "Bash(npx tsx:*)",
       "mcp__supabase__apply_migration",
       "mcp__supabase__execute_sql",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(npm install:*)",
+      "Bash(npx supabase migration:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
