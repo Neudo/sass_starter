@@ -40,17 +40,17 @@ export default async function BlogPage() {
         <div className="container mx-auto px-4 py-16">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Blog Hector Analytics
+              Hector Analytics Blog
             </h1>
             <p className="text-xl text-gray-600 mb-8">
-              Guides, conseils et actualités sur l&apos;analytics web privacy-first, 
-              le RGPD et les alternatives à Google Analytics.
+              Expert guides on privacy-first web analytics, GDPR compliance, 
+              and Google Analytics alternatives.
             </p>
             <div className="flex justify-center gap-4 flex-wrap">
-              <Badge variant="outline" className="text-sm">Analytics sans cookies</Badge>
-              <Badge variant="outline" className="text-sm">RGPD</Badge>
+              <Badge variant="outline" className="text-sm">Cookie-free analytics</Badge>
+              <Badge variant="outline" className="text-sm">GDPR compliance</Badge>
               <Badge variant="outline" className="text-sm">Privacy-first</Badge>
-              <Badge variant="outline" className="text-sm">Guides techniques</Badge>
+              <Badge variant="outline" className="text-sm">Technical guides</Badge>
             </div>
           </div>
         </div>
@@ -174,12 +174,12 @@ export default async function BlogPage() {
 
 export async function generateMetadata() {
   return {
-    title: "Blog - Hector Analytics | Guides Analytics Privacy-First & RGPD",
-    description: "Découvrez nos guides sur l'analytics sans cookies, la conformité RGPD et les alternatives privacy-first à Google Analytics.",
-    keywords: ["analytics sans cookies", "RGPD", "privacy-first", "alternative google analytics", "blog analytics"],
+    title: "Blog - Hector Analytics | Privacy-First Web Analytics Guides",
+    description: "Expert guides on cookie-free web analytics, GDPR compliance, and privacy-first alternatives to Google Analytics. Learn from industry professionals.",
+    keywords: ["cookie-free analytics", "GDPR compliance", "privacy-first", "Google Analytics alternative", "web analytics blog"],
     openGraph: {
-      title: "Blog Hector Analytics - Guides Privacy-First",
-      description: "Guides et conseils sur l'analytics web respectueux de la vie privée",
+      title: "Hector Analytics Blog - Privacy-First Analytics Guides",
+      description: "Expert insights on privacy-respecting web analytics and GDPR compliance",
       type: "website",
       url: "https://www.hectoranalytics.com/blog",
     },

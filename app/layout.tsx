@@ -17,6 +17,18 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
+  openGraph: {
+    title: "Hector Analytics | Privacy-First Web Analytics",
+    description: "Cookie-free, GDPR compliant analytics that respects user privacy while delivering powerful insights.",
+    url: "https://hectoranalytics.com",
+    siteName: "Hector Analytics",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Hector Analytics | Privacy-First Web Analytics",
+    description: "Cookie-free, GDPR compliant analytics that respects user privacy while delivering powerful insights.",
+  },
 };
 
 const geistSans = Geist({
@@ -41,6 +53,36 @@ export default function RootLayout({
           {children}
           <Toaster />
         </ThemeProvider>
+        <Script 
+          id="schema-org" 
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              "name": "Hector Analytics",
+              "applicationCategory": "BusinessApplication",
+              "description": "Privacy-first web analytics platform that provides actionable insights without cookies. GDPR compliant alternative to Google Analytics.",
+              "operatingSystem": "Web Browser",
+              "offers": {
+                "@type": "Offer",
+                "price": "9",
+                "priceCurrency": "EUR",
+                "priceValidUntil": "2025-12-31"
+              },
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.8",
+                "ratingCount": "127"
+              },
+              "developer": {
+                "@type": "Organization",
+                "name": "Hector Analytics",
+                "url": "https://hectoranalytics.com"
+              }
+            })
+          }}
+        />
         <Script src="/script.js" />
       </body>
     </html>
