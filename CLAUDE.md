@@ -10,14 +10,14 @@ Hector Analytics - A privacy-first web analytics SaaS platform built with Next.j
 
 ```bash
 # Development
-npm run dev          # Start development server with Turbopack on http://localhost:3000
+pnpm dev          # Start development server with Turbopack on http://localhost:3000
 
 # Build & Production
-npm run build        # Create production build
-npm run start        # Start production server
+pnpm build        # Create production build
+pnpm start        # Start production server
 
 # Code Quality
-npm run lint         # Run ESLint checks
+pnpm lint         # Run ESLint checks
 ```
 
 ## Architecture Overview

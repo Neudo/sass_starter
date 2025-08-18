@@ -9,6 +9,7 @@ import {
 } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Switch } from "./ui/switch";
+import { Slider } from "./ui/slider";
 import { Check, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { motion } from "motion/react";
@@ -22,66 +23,83 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
   const router = useRouter();
   const onNavigateToPricing = () => router.push("/pricing");
   const [isYearly, setIsYearly] = useState(false);
+  const [eventTier, setEventTier] = useState(0); // Index for event tiers
 
-  const plans = [
+  const eventTiers = [
+    { value: "10k", label: "10K" },
+    { value: "100k", label: "100K" },
+    { value: "250k", label: "250K" },
+    { value: "500k", label: "500K" },
+    { value: "1m", label: "1M" },
+    { value: "2m", label: "2M" },
+    { value: "5m", label: "5M" },
+    { value: "10m", label: "10M" },
+    { value: "10m+", label: "10M+" },
+  ];
+
+  // Define pricing for each tier
+  const pricingTiers = {
+    hobby: {
+      monthly: [9, 19, 29, 44, 62, 85, 119, 159, "Custom"], // Prices for each tier
+      yearly: [90, 190, 290, 440, 620, 850, 1190, 1590, "Custom"], // 10 months price (2 months free)
+    },
+    professional: {
+      monthly: [14, 29, 46, 69, 99, 129, 189, 229, "Custom"],
+      yearly: [140, 290, 460, 690, 990, 1290, 1890, 2290, "Custom"], // 10 months price (2 months free)
+    },
+  };
+
+  const basePlans = [
     {
-      name: "Starter",
-      description: "Perfect for small websites",
-      monthlyPrice: 9,
-      yearlyPrice: 90, // 20% discount
+      name: "Hobby",
+      description: "Perfect for personal projects",
       features: [
-        "Up to 10,000 page views/month",
-        "1 website",
-        "Real-time data",
-        "Basic reports",
-        "Email support",
-        "GDPR compliant",
+        "events/month",
+        "2 websites",
+        "3 years retention",
+        "Goals (limited to 1)",
+        "Custom events (limited to 10)",
+        "Export data",
       ],
       cta: "Start free trial",
       popular: false,
       color: "secondary",
+      pricing: pricingTiers.hobby,
     },
     {
-      name: "Pro",
-      description: "For growing businesses",
-      monthlyPrice: 14,
-      yearlyPrice: 140, // 20% discount
+      name: "Professional",
+      description: "For serious businesses",
       features: [
-        "Up to 100,000 page views/month",
-        "3 websites",
-        "Real-time data",
-        "Advanced reports",
-        "Export API",
-        "Priority support",
-        "Custom dashboards",
-        "Custom alerts",
+        "events/month",
+        "Unlimited websites",
+        "5 years data retention",
+        "Unlimited goals",
+        "Unlimited custom events",
+        "Export/import data",
+        "Google Analytics import",
+        "Teams (unlimited members)",
+        "Public dashboard",
+        "Funnels",
       ],
       cta: "Start free trial",
       popular: true,
       color: "primary",
-    },
-    {
-      name: "Enterprise",
-      description: "For large organizations",
-      monthlyPrice: 24,
-      yearlyPrice: 240, // 20% discount
-      features: [
-        "Unlimited page views",
-        "Unlimited websites",
-        "Real-time data",
-        "All reports",
-        "Complete API",
-        "Dedicated support",
-        "On-premise installation",
-        "Guaranteed SLA",
-        "Custom training",
-        "Custom integrations",
-      ],
-      cta: "Start free trial",
-      popular: false,
-      color: "secondary",
+      pricing: pricingTiers.professional,
     },
   ];
+
+  // Get current prices based on selected tier
+  const isCustomTier = eventTier === eventTiers.length - 1; // Check if it's 10M+
+
+  const plans = basePlans.map((plan) => ({
+    ...plan,
+    monthlyPrice: plan.pricing.monthly[eventTier],
+    yearlyPrice: plan.pricing.yearly[eventTier],
+    features: plan.features.map((feature, index) =>
+      index === 0 ? `${eventTiers[eventTier].label} ${feature}` : feature
+    ),
+    cta: isCustomTier ? "Contact us" : plan.cta,
+  }));
 
   return (
     <section className={`${showFullPage ? "py-24" : "py-16"} bg-background`}>
@@ -100,42 +118,94 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
               Pricing
             </Badge>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
-              Transparent and affordable
+              Go as you growth
             </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-              Start free with 30 days trial on all plans. No commitment, cancel
-              anytime.
-            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+              <div className="flex items-center gap-2 text-green-600">
+                <Check className="w-5 h-5" />
+                <span>30 days free</span>
+              </div>
+              <div className="flex items-center gap-2 text-green-600">
+                <Check className="w-5 h-5" />
+                <span>Cancel anytime</span>
+              </div>
+              <div className="flex items-center gap-2 text-green-600">
+                <Check className="w-5 h-5" />
+                <span>No hidden fees</span>
+              </div>
+            </div>
+
+            {/* Event tier selector */}
+            <div className="max-w-2xl mx-auto mb-8">
+              <label className="block text-sm font-medium text-muted-foreground mb-4 text-center">
+                Monthly events
+              </label>
+              <div className="relative px-4">
+                <Slider
+                  value={[eventTier]}
+                  onValueChange={(value) => setEventTier(value[0])}
+                  min={0}
+                  max={eventTiers.length - 1}
+                  step={1}
+                  className="mb-2"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                  {eventTiers.map((tier, index) => (
+                    <span
+                      key={tier.value}
+                      className={`cursor-pointer transition-all ${
+                        index === eventTier
+                          ? "text-primary font-semibold scale-110"
+                          : "hover:text-foreground"
+                      }`}
+                      onClick={() => setEventTier(index)}
+                    >
+                      {tier.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
 
             {/* Annual/Monthly toggle */}
-            <div className="flex items-center justify-center gap-4 mb-2">
-              <span
-                className={`text-xl ${
+            <div className="flex items-center justify-center gap-4 mb-2 bg-slate-50 w-fit px-4 py-2 mx-auto rounded-lg">
+              <button
+                onClick={() => setIsYearly(false)}
+                className={`text-xl cursor-pointer transition-colors ${
                   !isYearly
                     ? "text-foreground font-medium"
-                    : "text-muted-foreground"
+                    : "text-muted-foreground hover:text-foreground/80"
                 }`}
               >
                 Monthly
-              </span>
-              <Switch checked={isYearly} onCheckedChange={setIsYearly} />
-              <span
-                className={`text-xl ${
+              </button>
+              <Switch
+                checked={isYearly}
+                onCheckedChange={setIsYearly}
+                className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-gray-300"
+              />
+              <button
+                onClick={() => setIsYearly(true)}
+                className={`text-xl cursor-pointer transition-colors ${
                   isYearly
                     ? "text-foreground font-medium"
-                    : "text-muted-foreground"
+                    : "text-muted-foreground hover:text-foreground/80"
                 }`}
               >
-                Annual{" "}
-                <span className="text-muted-foreground text-md italic">
-                  (20% discount)
-                </span>
-              </span>
+                Annual
+              </button>
+              <Badge
+                variant="secondary"
+                className="bg-green-50 text-green-700 border-green-200"
+              >
+                2 months free
+              </Badge>
             </div>
           </motion.div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 max-w-4xl mx-auto">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.name}
@@ -166,35 +236,45 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
                   </p>
 
                   <div className="space-y-2">
-                    <div className="flex items-baseline justify-center gap-1">
-                      <span
-                        className={`text-4xl font-bold ${
-                          plan.color === "primary"
-                            ? "text-primary"
-                            : "text-secondary"
-                        }`}
-                      >
-                        $
-                        {isYearly
-                          ? Math.round(plan.yearlyPrice / 12)
-                          : plan.monthlyPrice}
-                      </span>
-                      <span className="text-muted-foreground">/month</span>
-                    </div>
-                    {isYearly && (
-                      <div className="text-sm text-muted-foreground">
-                        <span className="line-through">
-                          ${plan.monthlyPrice}/month
-                        </span>
-                        <span className="text-green-600 ml-2 font-medium">
-                          -20%
+                    {isCustomTier ? (
+                      <div className="flex items-baseline justify-center gap-1">
+                        <span
+                          className={`text-3xl font-bold ${
+                            plan.color === "primary"
+                              ? "text-primary"
+                              : "text-secondary"
+                          }`}
+                        >
+                          Custom
                         </span>
                       </div>
-                    )}
-                    {isYearly && (
-                      <p className="text-sm text-muted-foreground">
-                        Billed ${plan.yearlyPrice} annually
-                      </p>
+                    ) : (
+                      <>
+                        <div className="flex items-baseline justify-center gap-1">
+                          <span
+                            className={`text-4xl font-bold ${
+                              plan.color === "primary"
+                                ? "text-primary"
+                                : "text-secondary"
+                            }`}
+                          >
+                            ${isYearly ? plan.yearlyPrice : plan.monthlyPrice}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {isYearly ? "/year" : "/month"}
+                          </span>
+                        </div>
+                        {isYearly && typeof plan.monthlyPrice === "number" && (
+                          <div className="text-sm text-muted-foreground">
+                            <span className="line-through">
+                              ${plan.monthlyPrice * 12}
+                            </span>
+                            <span className="ml-2 text-slate-500">
+                              ${(plan.yearlyPrice / 12).toFixed(2)}/month
+                            </span>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </CardHeader>

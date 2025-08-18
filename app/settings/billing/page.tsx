@@ -9,8 +9,46 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
-export default function BillingPage() {
+export default async function BillingPage() {
+  const supabase = await createClient();
+  const adminClient = createAdminClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Récupérer les sites de l'utilisateur
+  const { data: userSites } = await adminClient
+    .from("sites")
+    .select("id")
+    .eq("user_id", user?.id || "");
+
+  const siteCount = userSites?.length || 0;
+
+  // Récupérer le nombre total de pageviews pour tous les sites de l'utilisateur
+  let totalPageViews = 0;
+
+  if (userSites && userSites.length > 0) {
+    const siteIds = userSites.map((site) => site.id);
+
+    // Récupérer les pageviews du mois en cours
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const { data: sessions } = await adminClient
+      .from("sessions")
+      .select("page_views")
+      .in("site_id", siteIds)
+      .gte("created_at", startOfMonth.toISOString());
+
+    totalPageViews =
+      sessions?.reduce((sum, session) => sum + (session.page_views || 0), 0) ||
+      0;
+  }
   return (
     <div className="space-y-6">
       <Card>
@@ -29,13 +67,18 @@ export default function BillingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Monthly Pageviews</p>
-              <p className="text-2xl font-bold">2,450 / 10,000</p>
-              <Progress value={24.5} className="h-2" />
+              <p className="text-2xl font-bold">
+                {totalPageViews.toLocaleString()} / 10,000
+              </p>
+              <Progress
+                value={(totalPageViews / 10000) * 100}
+                className="h-2"
+              />
             </div>
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Websites</p>
-              <p className="text-2xl font-bold">1 / 3</p>
-              <Progress value={33} className="h-2" />
+              <p className="text-2xl font-bold">{siteCount} / 3</p>
+              <Progress value={(siteCount / 3) * 100} className="h-2" />
             </div>
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Data Retention</p>
