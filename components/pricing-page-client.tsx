@@ -1,0 +1,129 @@
+"use client";
+
+import { PricingSection } from "@/components/pricing-section";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
+import { motion } from "motion/react";
+import Link from "next/link";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Navigation } from "@/components/navigation";
+
+export default function PricingPageClient() {
+  const faqs = [
+    {
+      question: "Can I change my plan anytime?",
+      answer:
+        "Yes, you can upgrade or downgrade your plan at any time. Changes are applied immediately and billed pro-rata.",
+    },
+    {
+      question: "What happens if I exceed my limits?",
+      answer:
+        "You'll receive a notification before reaching 80% of your limit. If you exceed it, we'll automatically offer to upgrade you to the next plan.",
+    },
+    {
+      question: "Is my data really private?",
+      answer:
+        "Absolutely. We don't collect any personal data, no cookies, and all data is anonymized. We are GDPR compliant by default.",
+    },
+    {
+      question: "How does the free trial work?",
+      answer:
+        "The 30-day free trial gives you access to all features of the chosen plan. No credit card required to start.",
+    },
+    {
+      question: "Can I import my data from Google Analytics?",
+      answer:
+        "Yes, we provide a free migration tool to import your historical data from Google Analytics, Universal Analytics or GA4.",
+    },
+    {
+      question: "How does support work?",
+      answer:
+        "All plans include email support. Pro and Enterprise plans benefit from priority support with guaranteed response times.",
+    },
+  ];
+
+  return (
+    <div className="min-h-screen">
+      <Navigation />
+      <div>
+        <PricingSection showFullPage={true} />
+
+        {/* FAQ */}
+        <section className="py-24">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                viewport={{ once: true }}
+              >
+                <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+                  Frequently Asked Questions
+                </h2>
+                <p className="text-xl text-muted-foreground">
+                  Quickly find answers to your questions about our pricing and
+                  features.
+                </p>
+              </motion.div>
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              viewport={{ once: true }}
+            >
+              <Accordion type="single" collapsible className="w-full">
+                {faqs.map((faq, index) => (
+                  <AccordionItem key={index} value={`item-${index}`}>
+                    <AccordionTrigger className="text-left">
+                      {faq.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              viewport={{ once: true }}
+              className="text-center mt-12"
+            >
+              <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-0">
+                <CardHeader>
+                  <h3 className="text-xl font-semibold mb-4">
+                    Have other questions?
+                  </h3>
+                </CardHeader>
+                <CardContent className="p-8">
+                  <p className="text-muted-foreground mb-6">
+                    If you have any additional questions, please don&apos;t
+                    hesitate to send us a mail.
+                  </p>
+                  <Button asChild>
+                    <Link href="mailto:contact@sassanalytics.com">
+                      Contact us
+                      <ArrowRight className="ml-2 w-4 h-4" />
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
