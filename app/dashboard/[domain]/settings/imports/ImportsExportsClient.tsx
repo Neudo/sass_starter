@@ -29,6 +29,7 @@ import {
   CheckCircle,
   Clock,
   ExternalLink,
+  LogOut,
 } from "lucide-react";
 
 interface Property {
@@ -55,11 +56,13 @@ interface ImportJob {
 
 interface ImportsExportsClientProps {
   siteId: string;
+  domain: string;
   isGoogleConnected: boolean;
 }
 
 export function ImportsExportsClient({
   siteId,
+  domain,
   isGoogleConnected,
 }: ImportsExportsClientProps) {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -124,7 +127,7 @@ export function ImportsExportsClient({
   const handleGoogleConnect = async () => {
     setIsConnecting(true);
     try {
-      const response = await fetch("/api/auth/google");
+      const response = await fetch(`/api/auth/google?domain=${encodeURIComponent(domain)}`);
       if (!response.ok) {
         throw new Error("Failed to get auth URL");
       }
@@ -134,6 +137,31 @@ export function ImportsExportsClient({
       console.error("Error connecting to Google:", error);
       setError("Failed to connect to Google Analytics");
       setIsConnecting(false);
+    }
+  };
+
+  const handleGoogleDisconnect = async () => {
+    if (!confirm("Are you sure you want to disconnect your Google Analytics account?")) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/auth/google/disconnect", {
+        method: "DELETE",
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to disconnect");
+      }
+      
+      // Reload the page to update the connection status
+      window.location.reload();
+    } catch (error) {
+      console.error("Error disconnecting Google:", error);
+      setError("Failed to disconnect Google Analytics");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -277,6 +305,27 @@ export function ImportsExportsClient({
             </div>
           ) : (
             <div className="space-y-6">
+              {/* Connected status with disconnect button */}
+              <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <div>
+                    <p className="font-medium text-green-900">Google Analytics Connected</p>
+                    <p className="text-sm text-green-700">Your account is connected and ready to import data</p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGoogleDisconnect}
+                  disabled={isLoading}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Disconnect
+                </Button>
+              </div>
+
               {error && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />

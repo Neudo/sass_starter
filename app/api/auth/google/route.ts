@@ -3,8 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { getAuthUrl } from "@/lib/google-analytics";
 
 export async function GET(request: NextRequest) {
-  console.log(request);
-
   const supabase = await createClient();
   const {
     data: { user },
@@ -16,14 +14,23 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Get the domain from the query params
+    const searchParams = request.nextUrl.searchParams;
+    const domain = searchParams.get('domain');
+    
     // Générer l'URL d'autorisation Google
     const authUrl = getAuthUrl();
 
-    // Stocker l'état pour la validation du callback
-    const state = crypto.randomUUID();
+    // Create state with domain info
+    const stateData = {
+      id: crypto.randomUUID(),
+      domain: domain || '',
+      userId: user.id
+    };
+    
+    const state = Buffer.from(JSON.stringify(stateData)).toString('base64');
 
-    // Vous pourriez vouloir stocker l'état dans une session ou une base de données
-    // Pour simplifier, on le passe dans l'URL
+    // Add state to the auth URL
     const urlWithState = `${authUrl}&state=${state}`;
 
     return NextResponse.json({ authUrl: urlWithState });

@@ -16,14 +16,18 @@ interface GA4Row {
 }
 
 interface HectorSession {
+  id: string; // Added ID field
   site_id: string;
   created_at: string;
   last_seen: string;
   page_views: number;
   country?: string;
+  region?: string;
   city?: string;
+  browser?: string;
+  os?: string;
   referrer?: string;
-  user_agent?: string;
+  // user_agent?: string; // Removed as not in sessions table
 }
 
 // Mapping des pays GA vers codes ISO
@@ -104,11 +108,12 @@ export async function importGA4DataToHector(
     // Convert to Hector sessions and insert
     let importedSessions = 0;
     const totalSessions = Object.keys(sessionGroups).length;
+    let sessionIndex = 0;
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for (const [sessionKey, sessionData] of Object.entries(sessionGroups)) {
       try {
-        const hectorSession = mapToHectorSession(sessionData, job.site_id);
+        const hectorSession = mapToHectorSession(sessionData, job.site_id, sessionIndex++);
 
         // Insert session into Hector database
         const { error } = await adminClient
@@ -174,14 +179,16 @@ function groupSessionData(rows: GA4Row[]): { [key: string]: GA4SessionGroup } {
   const sessionGroups: { [key: string]: GA4SessionGroup } = {};
 
   for (const row of rows) {
-    // Extract dimensions
+    // Extract dimensions (9 max allowed by GA4 API)
     const date = row.dimensionValues[0]?.value || "";
-    const pagePath = row.dimensionValues[1]?.value || "";
-    const country = row.dimensionValues[2]?.value || "";
+    const country = row.dimensionValues[1]?.value || "";
+    const region = row.dimensionValues[2]?.value || "";
     const city = row.dimensionValues[3]?.value || "";
     const source = row.dimensionValues[4]?.value || "";
     const medium = row.dimensionValues[5]?.value || "";
     const deviceCategory = row.dimensionValues[6]?.value || "";
+    const operatingSystem = row.dimensionValues[7]?.value || "";
+    const browser = row.dimensionValues[8]?.value || "";
 
     // Extract metrics
     const sessions = parseInt(row.metricValues[0]?.value || "0");
@@ -190,16 +197,19 @@ function groupSessionData(rows: GA4Row[]): { [key: string]: GA4SessionGroup } {
     const engagementDuration = parseFloat(row.metricValues[3]?.value || "0");
 
     // Create a session key (group similar sessions)
-    const sessionKey = `${date}_${country}_${city}_${source}_${medium}_${deviceCategory}`;
+    const sessionKey = `${date}_${country}_${region}_${city}_${source}_${medium}_${deviceCategory}_${operatingSystem}_${browser}`;
 
     if (!sessionGroups[sessionKey]) {
       sessionGroups[sessionKey] = {
         date,
         country,
+        region,
         city,
         source,
         medium,
         deviceCategory,
+        operatingSystem,
+        browser,
         totalSessions: 0,
         totalPageViews: 0,
         totalEngagementDuration: 0,
@@ -211,7 +221,7 @@ function groupSessionData(rows: GA4Row[]): { [key: string]: GA4SessionGroup } {
     group.totalSessions += sessions;
     group.totalPageViews += pageViews;
     group.totalEngagementDuration += engagementDuration;
-    group.pages.add(pagePath);
+    // Note: pagePath removed due to GA4 API 9-dimension limit
   }
 
   return sessionGroups;
@@ -220,7 +230,8 @@ function groupSessionData(rows: GA4Row[]): { [key: string]: GA4SessionGroup } {
 // Convert grouped GA4 data to Hector session format
 function mapToHectorSession(
   sessionData: GA4SessionGroup,
-  siteId: string
+  siteId: string,
+  sessionIndex: number
 ): HectorSession {
   const date = new Date(
     parseInt(sessionData.date.substring(0, 4)), // year
@@ -233,7 +244,11 @@ function mapToHectorSession(
     sessionData.totalEngagementDuration / sessionData.totalSessions;
   const lastSeen = new Date(date.getTime() + avgDuration * 1000);
 
+  // Generate a unique ID for the session (similar to Hector's format)
+  const sessionId = `ga4_import_${date.getTime()}_${sessionIndex}_${Math.random().toString(36).substring(2, 9)}`;
+
   return {
+    id: sessionId,
     site_id: siteId,
     created_at: date.toISOString(),
     last_seen: lastSeen.toISOString(),
@@ -243,9 +258,12 @@ function mapToHectorSession(
     ),
     country:
       countryMapping[sessionData.country] || sessionData.country || undefined,
+    region: sessionData.region || undefined,
     city: sessionData.city || undefined,
+    browser: sessionData.browser || undefined,
+    os: sessionData.operatingSystem || undefined,
     referrer: mapReferrer(sessionData.source, sessionData.medium) || undefined,
-    user_agent: `Imported from GA4 - ${sessionData.deviceCategory}`,
+    // user_agent removed as not in sessions table
   };
 }
 
@@ -270,10 +288,13 @@ async function updateJobProgress(
 interface GA4SessionGroup {
   date: string;
   country: string;
+  region: string;
   city: string;
   source: string;
   medium: string;
   deviceCategory: string;
+  operatingSystem: string;
+  browser: string;
   totalSessions: number;
   totalPageViews: number;
   totalEngagementDuration: number;

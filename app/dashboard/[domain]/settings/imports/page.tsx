@@ -42,6 +42,7 @@ export default async function ImportsExportsPage({
   return (
     <ImportsExportsClient
       siteId={siteData.id}
+      domain={siteData.domain}
       isGoogleConnected={isGoogleConnected}
     />
   );

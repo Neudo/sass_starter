@@ -164,12 +164,14 @@ export async function getGA4BasicData(
         dateRanges: [{ startDate, endDate }],
         dimensions: [
           { name: "date" },
-          { name: "pagePath" },
           { name: "country" },
+          { name: "region" },
           { name: "city" },
           { name: "sessionSource" },
           { name: "sessionMedium" },
           { name: "deviceCategory" },
+          { name: "operatingSystem" },
+          { name: "browser" },
         ],
         metrics: [
           { name: "sessions" },
