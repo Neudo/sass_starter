@@ -25,12 +25,14 @@ interface DashboardClientProps {
   siteId: string;
   domain: string;
   userSites: Site[];
+  isPublic?: boolean;
 }
 
 export function DashboardClient({
   siteId,
   domain,
   userSites,
+  isPublic = false,
 }: DashboardClientProps) {
   const [selectedDateRange, setSelectedDateRange] =
     useState<DateRangeOption>("alltime");
@@ -51,7 +53,7 @@ export function DashboardClient({
   return (
     <div className="space-y-6">
       <div className="flex gap-4 flex-wrap items-center justify-between">
-        <SiteSelector sites={userSites} currentDomain={domain} />
+        {!isPublic && <SiteSelector sites={userSites} currentDomain={domain} />}
         <ActiveVisitors siteId={siteId} />
         <DateFilter
           selectedRange={selectedDateRange}

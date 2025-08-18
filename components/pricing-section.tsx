@@ -131,7 +131,7 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
             </div>
 
             {/* Annual/Monthly toggle */}
-            <div className="flex items-center justify-center gap-4 mb-10 bg-slate-50 dark:bg-slate-800 w-fit px-4 py-4 mx-auto rounded-lg">
+            <div className="relative flex items-center justify-center gap-4 mb-10 bg-slate-50 dark:bg-slate-800 w-fit px-4 py-4 mx-auto rounded-lg">
               <button
                 onClick={() => setIsYearly(false)}
                 className={`text-xl cursor-pointer transition-colors ${
@@ -159,7 +159,7 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
               </button>
               <Badge
                 variant="secondary"
-                className="bg-green-50 text-green-700 border-green-200"
+                className="bg-green-50 text-green-700 border-green-200 absolute top-[-7px] right-[-30px]"
               >
                 2 months free
               </Badge>
@@ -168,7 +168,7 @@ export function PricingSection({ showFullPage = false }: PricingSectionProps) {
             {/* Event tier selector */}
             <div className="max-w-2xl mx-auto mb-5 md:mb-16">
               <label className="block text-sm font-medium text-muted-foreground mb-4 text-center">
-                Monthly events
+                Monthly page views
               </label>
               <div className="relative px-4">
                 <Slider
