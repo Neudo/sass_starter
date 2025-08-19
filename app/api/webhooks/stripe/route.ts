@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -43,9 +44,9 @@ export async function POST(request: NextRequest) {
         const session = event.data.object as Stripe.Checkout.Session;
 
         // Get the subscription details
-        const subscription = await stripe.subscriptions.retrieve(
+        const subscription = (await stripe.subscriptions.retrieve(
           session.subscription as string
-        ) as any; // Cast to any to access all properties
+        )) as any; // Cast to any to access all properties
 
         console.log("📋 Checkout session details:", {
           customer: session.customer,
@@ -55,7 +56,10 @@ export async function POST(request: NextRequest) {
         });
 
         if (!session.metadata?.user_id) {
-          console.log("❌ No user_id in session metadata. Full session:", JSON.stringify(session, null, 2));
+          console.log(
+            "❌ No user_id in session metadata. Full session:",
+            JSON.stringify(session, null, 2)
+          );
           return NextResponse.json(
             { error: "No user_id in metadata" },
             { status: 400 }
