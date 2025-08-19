@@ -60,7 +60,7 @@ lib/
 
 - Use `createClient()` from `lib/supabase/server.ts` in Server Components
 - Use `createClient()` from `lib/supabase/client.ts` in Client Components
-- Use `createServiceRoleClient()` from `lib/supabase/admin.ts` for admin operations
+- Use `createAdminClient()` from `lib/supabase/admin.ts` for admin operations
 
 #### Authentication Flow
 

@@ -49,9 +49,34 @@ export default async function BillingPage() {
       sessions?.reduce((sum, session) => sum + (session.page_views || 0), 0) ||
       0;
   }
-  // TODO: Fetch actual subscription data from Stripe/database
-  const currentPlan = "free"; // This should come from your subscription data
-  const currentTier = "10k"; // This should come from your subscription data
+  // Récupérer les données de subscription réelles
+  const { data: subscription } = await adminClient
+    .from("subscriptions")
+    .select("plan_tier, events_limit, status, trial_end, stripe_subscription_id, billing_period")
+    .eq("user_id", user?.id || "")
+    .single();
+
+  // Déterminer le plan actuel
+  let currentPlan = "free";
+  let currentTier = "10k";
+  let isTrialing = false;
+
+  if (subscription) {
+    if (subscription.status === "trialing" && subscription.trial_end) {
+      const trialEndDate = new Date(subscription.trial_end);
+      isTrialing = trialEndDate > new Date();
+      
+      if (isTrialing) {
+        currentPlan = "trial";
+      } else if (subscription.stripe_subscription_id && subscription.stripe_subscription_id !== "") {
+        currentPlan = subscription.plan_tier;
+        currentTier = subscription.events_limit;
+      }
+    } else if (subscription.status === "active" && subscription.stripe_subscription_id) {
+      currentPlan = subscription.plan_tier;
+      currentTier = subscription.events_limit;
+    }
+  }
 
   // TODO: Fetch actual goals and custom events count from database
   const goalsCount = 0; // This should come from your database
@@ -65,6 +90,13 @@ export default async function BillingPage() {
       retention: "30 days",
       goals: 0,
       customEvents: 0,
+    },
+    trial: {
+      pageviews: 10000,
+      websites: 2,
+      retention: "3 years",
+      goals: 1,
+      customEvents: 10,
     },
     hobby: {
       "10k": {
@@ -187,6 +219,8 @@ export default async function BillingPage() {
   const limits =
     currentPlan === "free"
       ? planLimits.free
+      : currentPlan === "trial"
+      ? planLimits.trial
       : planLimits[currentPlan as "hobby" | "professional"]?.[
           currentTier as keyof typeof planLimits.hobby
         ] || planLimits.free;
@@ -199,12 +233,38 @@ export default async function BillingPage() {
             <div>
               <CardTitle>Current Plan</CardTitle>
               <CardDescription>
-                You are currently on the {currentPlan} plan
-                {currentPlan !== "free" && ` (${currentTier} events/month)`}
+                {currentPlan === "trial" ? (
+                  <>
+                    You are currently on a <strong>30-day free trial</strong>
+                    {subscription?.trial_end && (
+                      <span>
+                        {" "}
+                        (expires{" "}
+                        {new Date(subscription.trial_end).toLocaleDateString()})
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    You are currently on the {currentPlan} plan
+                    {currentPlan !== "free" && ` (${currentTier} events/month)`}
+                    {subscription?.billing_period && currentPlan !== "free" && (
+                      <span> - {subscription.billing_period}</span>
+                    )}
+                  </>
+                )}
               </CardDescription>
             </div>
-            <Badge variant={currentPlan === "free" ? "secondary" : "default"}>
-              {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}
+            <Badge
+              variant={
+                currentPlan === "free"
+                  ? "secondary"
+                  : currentPlan === "trial"
+                  ? "outline"
+                  : "default"
+              }
+            >
+              {currentPlan === "trial" ? "Free Trial" : currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}
             </Badge>
           </div>
         </CardHeader>
@@ -285,7 +345,11 @@ export default async function BillingPage() {
           <div className="pt-4 border-t">
             <Button asChild className="w-full md:w-auto">
               <Link href="/settings/billing/plans">
-                {currentPlan === "free" ? "Upgrade Plan" : "Change Plan"}
+                {currentPlan === "free"
+                  ? "Upgrade Plan"
+                  : currentPlan === "trial"
+                  ? "Choose Your Plan"
+                  : "Change Plan"}
               </Link>
             </Button>
           </div>
