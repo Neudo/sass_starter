@@ -10,6 +10,11 @@ import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { 
+  EVENT_TIERS, 
+  PRICING_TIERS, 
+  getStripePriceId 
+} from "@/lib/stripe-config";
 
 interface PricingSectionProps {
   showFullPage?: boolean;
@@ -22,7 +27,7 @@ export function PricingSection({
 }: PricingSectionProps) {
   const router = useRouter();
   const onNavigateToPricing = () => router.push("/pricing");
-  const [isYearly, setIsYearly] = useState(false);
+  const [isYearly, setIsYearly] = useState(true);
   const [eventTier, setEventTier] = useState(0); // Index for event tiers
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,65 +44,6 @@ export function PricingSection({
     checkUser();
   }, []);
 
-  // Mapping from your naming convention to actual Stripe price IDs
-  const stripePriceMapping: Record<string, string> = {
-    // Hobby Monthly
-    hobby_monthly_10k: "price_1RxrBSInt9j1ISHBbGn6XWpR", // Replace with your actual price IDs
-    hobby_monthly_100k: "price_1RxrBSInt9j1ISHBWCWy5L16",
-    hobby_monthly_250k: "price_1RxreuInt9j1ISHB5A4v7MxT",
-    hobby_monthly_500k: "price_1RxrfGInt9j1ISHBW07XPARX",
-    hobby_monthly_1m: "price_1RxrfgInt9j1ISHB9VRQWrFj",
-    hobby_monthly_2m: "price_1Rxrg7Int9j1ISHBJL4eS4CG",
-    hobby_monthly_5m: "price_1RxrgOInt9j1ISHBWbYz0kFH",
-    hobby_monthly_10m: "price_1RxrgjInt9j1ISHBYxbZF3t7",
-
-    // Hobby Yearly
-    hobby_yearly_10k: "price_1RxsJzInt9j1ISHBEmDZurno",
-    hobby_yearly_100k: "price_1RxsJzInt9j1ISHBPWDBR4xd",
-    hobby_yearly_250k: "price_1RxsJzInt9j1ISHBsTq5ZO8S",
-    hobby_yearly_500k: "price_1RxsJzInt9j1ISHB9JSkWfQi",
-    hobby_yearly_1m: "price_1RxsJzInt9j1ISHBqrnyO8da",
-    hobby_yearly_2m: "price_1RxsJzInt9j1ISHBmzdWoftc",
-    hobby_yearly_5m: "price_1RxsJzInt9j1ISHBhEMU1t0n",
-    hobby_yearly_10m: "price_1RxsJzInt9j1ISHBGJkkXOu1",
-
-    // Professional Monthly
-    professional_monthly_10k: "price_1RxsClInt9j1ISHBoPY4rob9",
-    professional_monthly_100k: "price_1RxsClInt9j1ISHBrpYRUtk4",
-    professional_monthly_250k: "price_1RxsClInt9j1ISHBEGANw1or",
-    professional_monthly_500k: "price_1RxsClInt9j1ISHBDrOLsvJl",
-    professional_monthly_1m: "price_1RxsClInt9j1ISHB8nq6Bd4a",
-    professional_monthly_2m: "price_1RxsClInt9j1ISHBCM2wDehy",
-    professional_monthly_5m: "price_1RxsClInt9j1ISHBkRGvCOT3",
-    professional_monthly_10m: "price_1RxsClInt9j1ISHBOOL5YSEw",
-    // ... add all your professional prices
-
-    // Professional Yearly
-    professional_yearly_10k: "price_1RxsR1Int9j1ISHBvrtE4zB3",
-    professional_yearly_100k: "price_1RxsR1Int9j1ISHBYvahz8Zp",
-    professional_yearly_250k: "price_1RxsR1Int9j1ISHBZ7q0UdCp",
-    professional_yearly_500k: "price_1RxsR1Int9j1ISHBoixryYmb",
-    professional_yearly_1m: "price_1RxsR1Int9j1ISHBGmKoyVLn",
-    professional_yearly_2m: "price_1RxsR1Int9j1ISHB0GwotGL9",
-    professional_yearly_5m: "price_1RxsR1Int9j1ISHBvO1fpdro",
-    professional_yearly_10m: "price_1RxsR1Int9j1ISHBLrgFfatU",
-  };
-
-  // Helper function to get actual Stripe price ID
-  const getStripePriceId = (
-    planName: string,
-    tierIndex: number,
-    isYearly: boolean
-  ) => {
-    const tierNames = ["10k", "100k", "250k", "500k", "1m", "2m", "5m", "10m"];
-    const tierName = tierNames[tierIndex];
-    const frequency = isYearly ? "yearly" : "monthly";
-
-    const conventionKey = `${planName.toLowerCase()}_${frequency}_${tierName}`;
-
-    // Return the actual Stripe price ID, or fallback to convention key for development
-    return stripePriceMapping[conventionKey] || conventionKey;
-  };
 
   const handleStartTrial = (plan: string) => {
     if (!user && !showUpgradeButtons) {
@@ -113,29 +59,6 @@ export function PricingSection({
     }
   };
 
-  const eventTiers = [
-    { value: "10k", label: "10K" },
-    { value: "100k", label: "100K" },
-    { value: "250k", label: "250K" },
-    { value: "500k", label: "500K" },
-    { value: "1m", label: "1M" },
-    { value: "2m", label: "2M" },
-    { value: "5m", label: "5M" },
-    { value: "10m", label: "10M" },
-    { value: "10m+", label: "10M+" },
-  ];
-
-  // Define pricing for each tier
-  const pricingTiers = {
-    hobby: {
-      monthly: [9, 19, 29, 44, 62, 85, 119, 159, "Custom"], // Prices for each tier
-      yearly: [90, 190, 290, 440, 620, 850, 1190, 1590, "Custom"], // 10 months price (2 months free)
-    },
-    professional: {
-      monthly: [14, 29, 46, 69, 99, 129, 189, 229, "Custom"],
-      yearly: [140, 290, 450, 690, 990, 1290, 1890, 2290, "Custom"], // 10 months price (2 months free)
-    },
-  };
 
   const basePlans = [
     {
@@ -152,7 +75,7 @@ export function PricingSection({
       cta: "Start free trial",
       popular: false,
       color: "secondary",
-      pricing: pricingTiers.hobby,
+      pricing: PRICING_TIERS.hobby,
     },
     {
       name: "Professional",
@@ -172,19 +95,19 @@ export function PricingSection({
       cta: "Start free trial",
       popular: true,
       color: "primary",
-      pricing: pricingTiers.professional,
+      pricing: PRICING_TIERS.professional,
     },
   ];
 
   // Get current prices based on selected tier
-  const isCustomTier = eventTier === eventTiers.length - 1; // Check if it's 10M+
+  const isCustomTier = eventTier === EVENT_TIERS.length - 1; // Check if it's 10M+
 
   const plans = basePlans.map((plan) => ({
     ...plan,
     monthlyPrice: plan.pricing.monthly[eventTier],
     yearlyPrice: plan.pricing.yearly[eventTier],
     features: plan.features.map((feature, index) =>
-      index === 0 ? `${eventTiers[eventTier].label} ${feature}` : feature
+      index === 0 ? `${EVENT_TIERS[eventTier].label} ${feature}` : feature
     ),
     cta: isCustomTier
       ? "Contact us"
@@ -273,12 +196,12 @@ export function PricingSection({
                   value={[eventTier]}
                   onValueChange={(value) => setEventTier(value[0])}
                   min={0}
-                  max={eventTiers.length - 1}
+                  max={EVENT_TIERS.length - 1}
                   step={1}
                   className="mb-2"
                 />
                 <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                  {eventTiers.map((tier, index) => (
+                  {EVENT_TIERS.map((tier, index) => (
                     <span
                       key={tier.value}
                       className={`cursor-pointer transition-all ${

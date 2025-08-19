@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { PLAN_LIMITS } from "@/lib/stripe-config";
 import Link from "next/link";
 
 export default async function BillingPage() {
@@ -82,148 +83,15 @@ export default async function BillingPage() {
   const goalsCount = 0; // This should come from your database
   const customEventsCount = 0; // This should come from your database
 
-  // Define limits based on plan
-  const planLimits = {
-    free: {
-      pageviews: 10000,
-      websites: 1,
-      retention: "30 days",
-      goals: 0,
-      customEvents: 0,
-    },
-    trial: {
-      pageviews: 10000,
-      websites: 2,
-      retention: "3 years",
-      goals: 1,
-      customEvents: 10,
-    },
-    hobby: {
-      "10k": {
-        pageviews: 10000,
-        websites: 2,
-        retention: "3 years",
-        goals: 1,
-        customEvents: 10,
-      },
-      "100k": {
-        pageviews: 100000,
-        websites: 2,
-        retention: "3 years",
-        goals: 1,
-        customEvents: 10,
-      },
-      "250k": {
-        pageviews: 250000,
-        websites: 2,
-        retention: "3 years",
-        goals: 1,
-        customEvents: 10,
-      },
-      "500k": {
-        pageviews: 500000,
-        websites: 2,
-        retention: "3 years",
-        goals: 1,
-        customEvents: 10,
-      },
-      "1m": {
-        pageviews: 1000000,
-        websites: 2,
-        retention: "3 years",
-        goals: 1,
-        customEvents: 10,
-      },
-      "2m": {
-        pageviews: 2000000,
-        websites: 2,
-        retention: "3 years",
-        goals: 1,
-        customEvents: 10,
-      },
-      "5m": {
-        pageviews: 5000000,
-        websites: 2,
-        retention: "3 years",
-        goals: 1,
-        customEvents: 10,
-      },
-      "10m": {
-        pageviews: 10000000,
-        websites: 2,
-        retention: "3 years",
-        goals: 1,
-        customEvents: 10,
-      },
-    },
-    professional: {
-      "10k": {
-        pageviews: 10000,
-        websites: -1,
-        retention: "5 years",
-        goals: -1,
-        customEvents: -1,
-      }, // -1 means unlimited
-      "100k": {
-        pageviews: 100000,
-        websites: -1,
-        retention: "5 years",
-        goals: -1,
-        customEvents: -1,
-      },
-      "250k": {
-        pageviews: 250000,
-        websites: -1,
-        retention: "5 years",
-        goals: -1,
-        customEvents: -1,
-      },
-      "500k": {
-        pageviews: 500000,
-        websites: -1,
-        retention: "5 years",
-        goals: -1,
-        customEvents: -1,
-      },
-      "1m": {
-        pageviews: 1000000,
-        websites: -1,
-        retention: "5 years",
-        goals: -1,
-        customEvents: -1,
-      },
-      "2m": {
-        pageviews: 2000000,
-        websites: -1,
-        retention: "5 years",
-        goals: -1,
-        customEvents: -1,
-      },
-      "5m": {
-        pageviews: 5000000,
-        websites: -1,
-        retention: "5 years",
-        goals: -1,
-        customEvents: -1,
-      },
-      "10m": {
-        pageviews: 10000000,
-        websites: -1,
-        retention: "5 years",
-        goals: -1,
-        customEvents: -1,
-      },
-    },
-  };
 
   const limits =
     currentPlan === "free"
-      ? planLimits.free
+      ? PLAN_LIMITS.free
       : currentPlan === "trial"
-      ? planLimits.trial
-      : planLimits[currentPlan as "hobby" | "professional"]?.[
-          currentTier as keyof typeof planLimits.hobby
-        ] || planLimits.free;
+      ? PLAN_LIMITS.trial
+      : PLAN_LIMITS[currentPlan as "hobby" | "professional"]?.[
+          currentTier as keyof typeof PLAN_LIMITS.hobby
+        ] || PLAN_LIMITS.free;
 
   return (
     <div className="space-y-6">
