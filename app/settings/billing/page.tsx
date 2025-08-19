@@ -8,9 +8,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import Link from "next/link";
 
 export default async function BillingPage() {
   const supabase = await createClient();
@@ -49,6 +49,148 @@ export default async function BillingPage() {
       sessions?.reduce((sum, session) => sum + (session.page_views || 0), 0) ||
       0;
   }
+  // TODO: Fetch actual subscription data from Stripe/database
+  const currentPlan = "free"; // This should come from your subscription data
+  const currentTier = "10k"; // This should come from your subscription data
+
+  // TODO: Fetch actual goals and custom events count from database
+  const goalsCount = 0; // This should come from your database
+  const customEventsCount = 0; // This should come from your database
+
+  // Define limits based on plan
+  const planLimits = {
+    free: {
+      pageviews: 10000,
+      websites: 1,
+      retention: "30 days",
+      goals: 0,
+      customEvents: 0,
+    },
+    hobby: {
+      "10k": {
+        pageviews: 10000,
+        websites: 2,
+        retention: "3 years",
+        goals: 1,
+        customEvents: 10,
+      },
+      "100k": {
+        pageviews: 100000,
+        websites: 2,
+        retention: "3 years",
+        goals: 1,
+        customEvents: 10,
+      },
+      "250k": {
+        pageviews: 250000,
+        websites: 2,
+        retention: "3 years",
+        goals: 1,
+        customEvents: 10,
+      },
+      "500k": {
+        pageviews: 500000,
+        websites: 2,
+        retention: "3 years",
+        goals: 1,
+        customEvents: 10,
+      },
+      "1m": {
+        pageviews: 1000000,
+        websites: 2,
+        retention: "3 years",
+        goals: 1,
+        customEvents: 10,
+      },
+      "2m": {
+        pageviews: 2000000,
+        websites: 2,
+        retention: "3 years",
+        goals: 1,
+        customEvents: 10,
+      },
+      "5m": {
+        pageviews: 5000000,
+        websites: 2,
+        retention: "3 years",
+        goals: 1,
+        customEvents: 10,
+      },
+      "10m": {
+        pageviews: 10000000,
+        websites: 2,
+        retention: "3 years",
+        goals: 1,
+        customEvents: 10,
+      },
+    },
+    professional: {
+      "10k": {
+        pageviews: 10000,
+        websites: -1,
+        retention: "5 years",
+        goals: -1,
+        customEvents: -1,
+      }, // -1 means unlimited
+      "100k": {
+        pageviews: 100000,
+        websites: -1,
+        retention: "5 years",
+        goals: -1,
+        customEvents: -1,
+      },
+      "250k": {
+        pageviews: 250000,
+        websites: -1,
+        retention: "5 years",
+        goals: -1,
+        customEvents: -1,
+      },
+      "500k": {
+        pageviews: 500000,
+        websites: -1,
+        retention: "5 years",
+        goals: -1,
+        customEvents: -1,
+      },
+      "1m": {
+        pageviews: 1000000,
+        websites: -1,
+        retention: "5 years",
+        goals: -1,
+        customEvents: -1,
+      },
+      "2m": {
+        pageviews: 2000000,
+        websites: -1,
+        retention: "5 years",
+        goals: -1,
+        customEvents: -1,
+      },
+      "5m": {
+        pageviews: 5000000,
+        websites: -1,
+        retention: "5 years",
+        goals: -1,
+        customEvents: -1,
+      },
+      "10m": {
+        pageviews: 10000000,
+        websites: -1,
+        retention: "5 years",
+        goals: -1,
+        customEvents: -1,
+      },
+    },
+  };
+
+  const limits =
+    currentPlan === "free"
+      ? planLimits.free
+      : planLimits[currentPlan as "hobby" | "professional"]?.[
+          currentTier as keyof typeof planLimits.hobby
+        ] || planLimits.free;
+
   return (
     <div className="space-y-6">
       <Card>
@@ -57,153 +199,99 @@ export default async function BillingPage() {
             <div>
               <CardTitle>Current Plan</CardTitle>
               <CardDescription>
-                You are currently on the free plan
+                You are currently on the {currentPlan} plan
+                {currentPlan !== "free" && ` (${currentTier} events/month)`}
               </CardDescription>
             </div>
-            <Badge variant="secondary">Free</Badge>
+            <Badge variant={currentPlan === "free" ? "secondary" : "default"}>
+              {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}
+            </Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Monthly Pageviews</p>
+              <p className="text-sm text-muted-foreground">Monthly Events</p>
               <p className="text-2xl font-bold">
-                {totalPageViews.toLocaleString()} / 10,000
+                {totalPageViews.toLocaleString()} /{" "}
+                {limits.pageviews.toLocaleString()}
               </p>
               <Progress
-                value={(totalPageViews / 10000) * 100}
+                value={(totalPageViews / limits.pageviews) * 100}
                 className="h-2"
               />
             </div>
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Websites</p>
-              <p className="text-2xl font-bold">{siteCount} / 3</p>
-              <Progress value={(siteCount / 3) * 100} className="h-2" />
+              <p className="text-2xl font-bold">
+                {siteCount} / {limits.websites === -1 ? "∞" : limits.websites}
+              </p>
+              {limits.websites !== -1 && (
+                <Progress
+                  value={(siteCount / limits.websites) * 100}
+                  className="h-2"
+                />
+              )}
+              {limits.websites === -1 && (
+                <div className="h-2 bg-primary rounded" />
+              )}
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Goals</p>
+              <p className="text-2xl font-bold">
+                {goalsCount} / {limits.goals === -1 ? "∞" : limits.goals}
+              </p>
+              {limits.goals !== -1 && limits.goals > 0 && (
+                <Progress
+                  value={(goalsCount / limits.goals) * 100}
+                  className="h-2"
+                />
+              )}
+              {(limits.goals === -1 || limits.goals === 0) && (
+                <div
+                  className={`h-2 rounded ${
+                    limits.goals === 0 ? "bg-gray-200" : "bg-primary"
+                  }`}
+                />
+              )}
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Custom Events</p>
+              <p className="text-2xl font-bold">
+                {customEventsCount} /{" "}
+                {limits.customEvents === -1 ? "∞" : limits.customEvents}
+              </p>
+              {limits.customEvents !== -1 && limits.customEvents > 0 && (
+                <Progress
+                  value={(customEventsCount / limits.customEvents) * 100}
+                  className="h-2"
+                />
+              )}
+              {(limits.customEvents === -1 || limits.customEvents === 0) && (
+                <div
+                  className={`h-2 rounded ${
+                    limits.customEvents === 0 ? "bg-gray-200" : "bg-primary"
+                  }`}
+                />
+              )}
             </div>
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Data Retention</p>
-              <p className="text-2xl font-bold">90 days</p>
+              <p className="text-2xl font-bold">{limits.retention}</p>
               <div className="h-2 bg-primary rounded" />
             </div>
           </div>
 
           <div className="pt-4 border-t">
-            <Button className="w-full md:w-auto">Upgrade to Pro</Button>
+            <Button asChild className="w-full md:w-auto">
+              <Link href="/settings/billing/plans">
+                {currentPlan === "free" ? "Upgrade Plan" : "Change Plan"}
+              </Link>
+            </Button>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Available Plans</CardTitle>
-          <CardDescription>
-            Choose the plan that best fits your needs
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="border rounded-lg p-6 space-y-4">
-              <div>
-                <h3 className="font-semibold text-lg">Free</h3>
-                <p className="text-2xl font-bold mt-2">
-                  $0
-                  <span className="text-sm font-normal text-muted-foreground">
-                    /month
-                  </span>
-                </p>
-              </div>
-              <ul className="space-y-2">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span className="text-sm">10,000 pageviews/month</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span className="text-sm">Up to 3 websites</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span className="text-sm">90 days data retention</span>
-                </li>
-              </ul>
-              <Button variant="outline" disabled className="w-full">
-                Current Plan
-              </Button>
-            </div>
-
-            <div className="border-2 border-primary rounded-lg p-6 space-y-4 relative">
-              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
-                Most Popular
-              </Badge>
-              <div>
-                <h3 className="font-semibold text-lg">Pro</h3>
-                <p className="text-2xl font-bold mt-2">
-                  $9
-                  <span className="text-sm font-normal text-muted-foreground">
-                    /month
-                  </span>
-                </p>
-              </div>
-              <ul className="space-y-2">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span className="text-sm">100,000 pageviews/month</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span className="text-sm">Unlimited websites</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span className="text-sm">1 year data retention</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span className="text-sm">Custom events tracking</span>
-                </li>
-              </ul>
-              <Button className="w-full">Upgrade to Pro</Button>
-            </div>
-
-            <div className="border rounded-lg p-6 space-y-4">
-              <div>
-                <h3 className="font-semibold text-lg">Business</h3>
-                <p className="text-2xl font-bold mt-2">
-                  $49
-                  <span className="text-sm font-normal text-muted-foreground">
-                    /month
-                  </span>
-                </p>
-              </div>
-              <ul className="space-y-2">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span className="text-sm">1M+ pageviews/month</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span className="text-sm">Unlimited websites</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span className="text-sm">Unlimited data retention</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span className="text-sm">API access</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span className="text-sm">Priority support</span>
-                </li>
-              </ul>
-              <Button variant="outline" className="w-full">
-                Contact Sales
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
       <Card>
         <CardHeader>
           <CardTitle>Billing History</CardTitle>
