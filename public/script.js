@@ -17,7 +17,8 @@
       localStorage.setItem("user_session_id", sessionId);
     }
 
-    fetch("https://www.hectoranalytics.com/api/track", {
+    // Send regular analytics tracking
+    const trackingPromise = fetch("https://www.hectoranalytics.com/api/track", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -31,8 +32,31 @@
     }).catch(() => {
       // silent fail en dev
     });
+
+    // Send funnel tracking (after getting site ID from main tracking)
+    trackingPromise.then(() => {
+      trackFunnels(sessionId);
+    });
     
     lastActivityTime = Date.now();
+  }
+
+  function trackFunnels(sessionId) {
+    // Extract site ID from the domain - this should match the logic in /api/track
+    const domain = window.location.hostname;
+    
+    fetch("https://www.hectoranalytics.com/api/track-funnel", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        siteId: domain, // The API will resolve domain to siteId
+        sessionId,
+        currentUrl: window.location.href,
+      }),
+      keepalive: true,
+    }).catch(() => {
+      // silent fail
+    });
   }
 
   function startHeartbeat() {
