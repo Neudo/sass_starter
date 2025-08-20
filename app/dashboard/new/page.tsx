@@ -46,8 +46,20 @@ function WelcomePageContent() {
   const [isDomainAvailable, setIsDomainAvailable] = useState<boolean | null>(
     null
   );
+  const [isVerified, setIsVerified] = useState(false);
 
   const router = useRouter();
+
+  // Function to clean domain consistently
+  const cleanDomainName = (rawDomain: string): string => {
+    return rawDomain
+      .trim() // Remove whitespace
+      .toLowerCase() // Normalize case
+      .replace(/^https?:\/\//, "") // Remove protocol
+      .replace(/^www\./, "") // Remove www.
+      .replace(/\/+$/, "") // Remove trailing slashes
+      .replace(/\/$/, ""); // Final cleanup
+  };
 
   // Detect user's timezone on mount
   useEffect(() => {
@@ -77,7 +89,10 @@ function WelcomePageContent() {
       setDomainError(null);
 
       const supabase = createClient();
-      const cleanDomain = domain.replace(/^https?:\/\//, "").replace(/\/$/, "");
+      const cleanDomain = cleanDomainName(domain);
+
+      console.log("🔍 Domain check - Original:", domain);
+      console.log("🔍 Domain check - Cleaned:", cleanDomain);
 
       try {
         const { data: existingSite } = await supabase
@@ -149,6 +164,7 @@ function WelcomePageContent() {
   const startVerification = () => {
     setVerificationStatus("checking");
     setVerificationTimer(20);
+    setIsVerified(false); // Reset verification state
 
     const countdown = setInterval(() => {
       setVerificationTimer((prev) => {
@@ -163,54 +179,92 @@ function WelcomePageContent() {
 
     // Check every 2 seconds for early detection
     const checkInterval = setInterval(() => {
-      checkInstallation(true);
+      checkInstallation(true, () => {
+        // Stop checking when script is found
+        clearInterval(checkInterval);
+        clearInterval(countdown);
+      });
     }, 2000);
 
     setTimeout(() => {
       clearInterval(checkInterval);
+      clearInterval(countdown);
       if (verificationStatus === "checking") {
         setVerificationStatus("error");
       }
     }, 20000);
   };
 
-  const checkInstallation = async (earlyCheck = false) => {
+  const checkInstallation = async (earlyCheck = false, onSuccess?: () => void) => {
+    // Don't check if already verified
+    if (isVerified) {
+      console.log("✅ Already verified, skipping check");
+      return;
+    }
+
     try {
+      const cleanDomainForCheck = cleanDomainName(domain);
+
+      console.log("🔍 Installation check - Original domain:", domain);
+      console.log("🔍 Installation check - Cleaned domain:", cleanDomainForCheck);
+
       // Call the API to check if script is installed
       const response = await fetch("/api/verify-installation", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ domain }),
+        body: JSON.stringify({ domain: cleanDomainForCheck }),
       });
 
       const result = await response.json();
+      console.log("🔍 Installation check result:", result);
 
       if (result.installed) {
+        console.log("🎉 Script detected! Stopping intervals and saving site...");
+        
+        // Mark as verified to prevent multiple checks
+        setIsVerified(true);
+        
+        // Stop any intervals first
+        if (onSuccess) {
+          console.log("🛑 Calling onSuccess to stop intervals");
+          onSuccess();
+        }
+
         // Site is verified, now save it to database
         const supabase = createClient();
-        const cleanDomain = domain
-          .replace(/^https?:\/\//, "")
-          .replace(/\/$/, "");
+        const cleanDomain = cleanDomainName(domain);
+
+        console.log("💾 Saving site with domain:", cleanDomain);
 
         const {
           data: { user },
         } = await supabase.auth.getUser();
 
         if (user) {
+          console.log("👤 User found:", user.id);
+          console.log("💾 Attempting to insert site:", { domain: cleanDomain, timezone, user_id: user.id });
+          
           const { error } = await supabase.from("sites").insert({
             domain: cleanDomain,
             timezone,
             user_id: user.id,
           });
 
-          if (error && error.code !== "23505") {
-            // Ignore duplicate key error (site already exists)
-            console.error("Error saving site:", error);
-            setVerificationStatus("error");
-            return;
+          if (error) {
+            console.error("❌ Error saving site:", error);
+            if (error.code === "23505") {
+              console.log("ℹ️  Site already exists (duplicate key), continuing...");
+            } else {
+              setVerificationStatus("error");
+              return;
+            }
+          } else {
+            console.log("✅ Site saved successfully!");
           }
+        } else {
+          console.error("❌ No user found!");
         }
 
         setVerificationStatus("success");
@@ -233,6 +287,7 @@ function WelcomePageContent() {
 
   const retryVerification = () => {
     setVerificationStatus("idle");
+    setIsVerified(false); // Reset verification state for retry
     startVerification();
   };
 
