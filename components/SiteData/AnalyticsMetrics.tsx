@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { MetricsChart } from "./MetricsChart";
 import { DateRangeOption } from "@/components/DateFilter";
-
 interface AnalyticsMetricsProps {
   siteId: string;
   dateRange?: { from: Date; to: Date } | null;

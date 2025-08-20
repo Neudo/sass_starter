@@ -10,10 +10,10 @@ import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
-import { 
-  EVENT_TIERS, 
-  PRICING_TIERS, 
-  getStripePriceId 
+import {
+  EVENT_TIERS,
+  PRICING_TIERS,
+  getStripePriceId,
 } from "@/lib/stripe-config";
 
 interface PricingSectionProps {
@@ -44,7 +44,6 @@ export function PricingSection({
     checkUser();
   }, []);
 
-
   const handleStartTrial = (plan: string) => {
     if (!user && !showUpgradeButtons) {
       router.push("/auth/sign-up");
@@ -59,7 +58,6 @@ export function PricingSection({
     }
   };
 
-
   const basePlans = [
     {
       name: "Hobby",
@@ -68,8 +66,7 @@ export function PricingSection({
         "events/month",
         "2 websites",
         "3 years retention",
-        "Goals (limited to 1)",
-        "Custom events (limited to 10)",
+        "Custom events (limited to 5)",
         "Export data",
       ],
       cta: "Start free trial",
@@ -84,7 +81,6 @@ export function PricingSection({
         "events/month",
         "Unlimited websites",
         "5 years data retention",
-        "Unlimited goals",
         "Unlimited custom events",
         "Export/import data",
         "Google Analytics import",

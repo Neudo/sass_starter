@@ -3,14 +3,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { 
-  Settings, 
-  Globe, 
-  Target, 
-  TrendingUp, 
-  Download, 
+import {
+  Settings,
+  Globe,
+  Target,
+  TrendingUp,
+  Download,
   AlertTriangle,
-  ArrowLeft 
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -26,8 +26,8 @@ const siteSettingsNavItems = [
     icon: Globe,
   },
   {
-    title: "Goals",
-    href: "/dashboard/[domain]/settings/goals",
+    title: "Custom events",
+    href: "/dashboard/[domain]/settings/custom-events",
     icon: Target,
   },
   {
@@ -58,8 +58,10 @@ export default async function SiteSettingsLayout({
   const supabase = await createClient();
   const adminClient = createAdminClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
-  
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   if (!user) {
     return redirect("/auth/login");
   }
@@ -95,7 +97,7 @@ export default async function SiteSettingsLayout({
         <aside className="w-full md:w-64 space-y-1">
           {siteSettingsNavItems.map((item) => {
             const Icon = item.icon;
-            const href = item.href.replace('[domain]', domain);
+            const href = item.href.replace("[domain]", domain);
             return (
               <Link
                 key={item.href}
@@ -106,15 +108,21 @@ export default async function SiteSettingsLayout({
                   "group"
                 )}
               >
-                <Icon className={cn(
-                  "h-4 w-4 group-hover:text-accent-foreground",
-                  item.title === "Danger zone" 
-                    ? "text-destructive group-hover:text-destructive" 
-                    : "text-muted-foreground"
-                )} />
-                <span className={cn(
-                  item.title === "Danger zone" && "text-destructive"
-                )}>{item.title}</span>
+                <Icon
+                  className={cn(
+                    "h-4 w-4 group-hover:text-accent-foreground",
+                    item.title === "Danger zone"
+                      ? "text-destructive group-hover:text-destructive"
+                      : "text-muted-foreground"
+                  )}
+                />
+                <span
+                  className={cn(
+                    item.title === "Danger zone" && "text-destructive"
+                  )}
+                >
+                  {item.title}
+                </span>
               </Link>
             );
           })}

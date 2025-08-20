@@ -12,7 +12,7 @@ interface WorldMapCardProps {
 }
 
 export function WorldMapCard({ siteId, dateRange }: WorldMapCardProps) {
-  const [isMapVisible, setIsMapVisible] = useState(false);
+  const [isMapVisible, setIsMapVisible] = useState(true);
 
   return (
     <Card>

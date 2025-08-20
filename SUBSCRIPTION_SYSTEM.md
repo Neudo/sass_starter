@@ -40,13 +40,16 @@ Le système d'abonnement a été simplifié pour éliminer la complexité des "p
 ## Logique de Vérification
 
 ### Utilisateur Payant
+
 ```typescript
-const hasPaidPlan = subscription.plan_tier !== "free" && 
-                   subscription.stripe_subscription_id && 
-                   subscription.stripe_subscription_id !== "";
+const hasPaidPlan =
+  subscription.plan_tier !== "free" &&
+  subscription.stripe_subscription_id &&
+  subscription.stripe_subscription_id !== "";
 ```
 
 ### Utilisateur Gratuit
+
 ```typescript
 const isWithinFreeLimit = subscription.trial_end > new Date();
 const hasLimitations = !isWithinFreeLimit;
@@ -55,18 +58,20 @@ const hasLimitations = !isWithinFreeLimit;
 ## Fonctionnalités Affectées
 
 ### ✅ Toujours Accessible
+
 - Analytics de base
 - Dashboard
 - 1 site web
 - Vues de base
 
 ### 🔒 Limité après 30 jours (plan free)
+
 - Funnels
-- Goals avancés
 - Export de données
 - Sites supplémentaires
 
 ### 💎 Accessible avec abonnement payant
+
 - Toutes les fonctionnalités
 - Limites d'événements augmentées
 - Support prioritaire

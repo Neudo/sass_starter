@@ -15,6 +15,7 @@ import {
   DateRangeOption,
   getDateRange,
 } from "@/components/DateFilter";
+import { FunnelsAndEventsCard } from "./SiteData/FunnelsAndEventsCard";
 
 interface Site {
   id: string;
@@ -103,6 +104,7 @@ export function DashboardClient({
           </CardContent>
         </Card>
       </div>
+      <FunnelsAndEventsCard siteId={siteId} dateRange={dateRange} />
     </div>
   );
 }
