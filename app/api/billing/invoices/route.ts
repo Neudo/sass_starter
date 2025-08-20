@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@/lib/supabase/server";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get user from Supabase
     const supabase = await createClient();
@@ -27,7 +27,10 @@ export async function GET(request: NextRequest) {
       .eq("user_id", user.id)
       .single();
 
-    if (!subscription?.stripe_customer_id || subscription.stripe_customer_id === '') {
+    if (
+      !subscription?.stripe_customer_id ||
+      subscription.stripe_customer_id === ""
+    ) {
       return NextResponse.json([]);
     }
 
@@ -35,7 +38,7 @@ export async function GET(request: NextRequest) {
     const invoices = await stripe.invoices.list({
       customer: subscription.stripe_customer_id,
       limit: 20,
-      expand: ['data.subscription'],
+      expand: ["data.subscription"],
     });
 
     // Format invoices for frontend
@@ -50,7 +53,7 @@ export async function GET(request: NextRequest) {
       hosted_invoice_url: invoice.hosted_invoice_url,
       period_start: invoice.period_start,
       period_end: invoice.period_end,
-      description: invoice.lines.data[0]?.description || 'Subscription',
+      description: invoice.lines.data[0]?.description || "Subscription",
     }));
 
     return NextResponse.json(formattedInvoices);

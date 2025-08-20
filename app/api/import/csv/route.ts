@@ -7,8 +7,11 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     const adminClient = createAdminClient();
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -44,8 +47,8 @@ export async function POST(request: NextRequest) {
 
     // Read CSV file
     const text = await file.text();
-    const lines = text.split("\n").filter(line => line.trim() !== "");
-    
+    const lines = text.split("\n").filter((line) => line.trim() !== "");
+
     if (lines.length < 2) {
       return NextResponse.json(
         { error: "CSV file must have at least a header and one data row" },
@@ -53,13 +56,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const headers = lines[0].split(",").map(h => h.trim().replace(/"/g, ""));
+    const headers = lines[0].split(",").map((h) => h.trim().replace(/"/g, ""));
     const dataLines = lines.slice(1);
 
     // Validate CSV format - expected columns from all_data export
     const expectedHeaders = [
       "date",
-      "session_id", 
+      "session_id",
       "country",
       "region",
       "city",
@@ -79,10 +82,12 @@ export async function POST(request: NextRequest) {
       "utm_campaign",
       "utm_term",
       "utm_content",
-      "channel"
+      "channel",
     ];
 
-    const missingHeaders = expectedHeaders.filter(header => !headers.includes(header));
+    const missingHeaders = expectedHeaders.filter(
+      (header) => !headers.includes(header)
+    );
     if (missingHeaders.length > 0) {
       return NextResponse.json(
         { error: `Missing required columns: ${missingHeaders.join(", ")}` },
@@ -96,27 +101,35 @@ export async function POST(request: NextRequest) {
 
     for (let i = 0; i < dataLines.length; i++) {
       try {
-        const values = dataLines[i].split(",").map(v => v.trim().replace(/"/g, ""));
-        
+        const values = dataLines[i]
+          .split(",")
+          .map((v) => v.trim().replace(/"/g, ""));
+
         if (values.length !== headers.length) {
           errorCount++;
           continue;
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const sessionData: any = {};
         headers.forEach((header, index) => {
           sessionData[header] = values[index] || null;
         });
 
         // Generate unique session ID
-        const sessionId = `imported_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const sessionId = `imported_${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}`;
 
         // Map CSV data to database columns
         const dbSession = {
           id: sessionId,
           site_id: siteId,
           created_at: new Date(sessionData.date).toISOString(),
-          last_seen: new Date(new Date(sessionData.date).getTime() + parseInt(sessionData.visit_duration) * 1000).toISOString(),
+          last_seen: new Date(
+            new Date(sessionData.date).getTime() +
+              parseInt(sessionData.visit_duration) * 1000
+          ).toISOString(),
           country: sessionData.country || null,
           region: sessionData.region || null,
           city: sessionData.city || null,
@@ -138,6 +151,8 @@ export async function POST(request: NextRequest) {
 
         sessions.push(dbSession);
       } catch (error) {
+        console.log(error);
+
         errorCount++;
       }
     }
@@ -155,7 +170,7 @@ export async function POST(request: NextRequest) {
 
     for (let i = 0; i < sessions.length; i += batchSize) {
       const batch = sessions.slice(i, i + batchSize);
-      
+
       const { error: insertError } = await adminClient
         .from("sessions")
         .insert(batch);
@@ -172,9 +187,8 @@ export async function POST(request: NextRequest) {
       success: true,
       imported: insertedCount,
       errors: errorCount,
-      total: dataLines.length
+      total: dataLines.length,
     });
-
   } catch (error) {
     console.error("CSV import error:", error);
     return NextResponse.json(
