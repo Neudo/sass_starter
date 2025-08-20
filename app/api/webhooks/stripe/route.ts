@@ -82,14 +82,7 @@ export async function POST(request: NextRequest) {
         };
 
         const eventsLimit = parseEventsLimit(planInfo.events);
-        
-        // Map "professional" to "pro" for database constraint
-        const mapPlanTier = (tier: string): string => {
-          if (tier === 'professional') return 'pro';
-          return tier;
-        };
-        
-        const planTier = mapPlanTier(planInfo.tier);
+        const planTier = planInfo.tier; // Use the tier directly now that DB accepts "professional"
 
         console.log("🎯 Extracted plan info:", planInfo);
         console.log("📊 Events limit:", eventsLimit);
