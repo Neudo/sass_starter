@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request: NextRequest) {
+  console.log("🎯 Funnel tracking request received");
   try {
     const body = await request.json();
-    const { siteId, sessionId, currentUrl } = body;
+    const { siteId, sessionId, currentUrl, eventType = 'page_view', customEvent } = body;
+
+    console.log("📊 Funnel tracking data:", { siteId, sessionId, currentUrl, eventType, customEvent });
 
     if (!siteId || !sessionId || !currentUrl) {
       return NextResponse.json(
@@ -17,16 +20,16 @@ export async function POST(request: NextRequest) {
 
     // Resolve domain to site_id if needed
     let resolvedSiteId = siteId;
+    
     if (typeof siteId === "string" && !siteId.match(/^[0-9a-f-]+$/i)) {
       // If siteId looks like a domain, resolve it
-      const { data: siteData } = await supabase
+      const { data: siteData, error: siteError } = await supabase
         .from("sites")
         .select("id")
         .eq("domain", siteId)
         .single();
       
-      if (!siteData) {
-        console.log(`No site found for domain: ${siteId}`);
+      if (siteError || !siteData) {
         return NextResponse.json({ tracked: false });
       }
       
@@ -40,49 +43,35 @@ export async function POST(request: NextRequest) {
         id,
         name,
         funnel_steps (
+          id,
           step_number,
           name,
+          step_type,
           url_pattern,
-          match_type
+          match_type,
+          event_type,
+          event_config
         )
       `)
       .eq("site_id", resolvedSiteId)
       .eq("is_active", true);
 
     if (funnelsError || !funnels) {
-      console.error("Error fetching funnels:", funnelsError);
+      console.log("❌ Error fetching funnels or no funnels found:", funnelsError);
       return NextResponse.json({ tracked: false });
     }
 
+    console.log(`🎯 Found ${funnels?.length || 0} active funnels for site`);
+
     const conversionsToInsert = [];
 
-    // Check each funnel to see if current URL matches any step
-    for (const funnel of funnels) {
-      for (const step of funnel.funnel_steps) {
-        const isMatch = checkUrlMatch(currentUrl, step.url_pattern, step.match_type);
-        
-        if (isMatch) {
-          // Check if this session already completed this step
-          const { data: existingConversion } = await supabase
-            .from("funnel_conversions")
-            .select("id")
-            .eq("funnel_id", funnel.id)
-            .eq("session_id", sessionId)
-            .eq("step_number", step.step_number)
-            .single();
-
-          if (!existingConversion) {
-            conversionsToInsert.push({
-              funnel_id: funnel.id,
-              session_id: sessionId,
-              site_id: resolvedSiteId,
-              step_number: step.step_number,
-              step_name: step.name,
-              url_visited: currentUrl,
-            });
-          }
-        }
-      }
+    // Handle different event types
+    if (eventType === 'custom_event' && customEvent) {
+      // Handle custom event tracking
+      await handleCustomEvent(supabase, funnels, sessionId, resolvedSiteId, customEvent, conversionsToInsert, currentUrl);
+    } else {
+      // Handle page view tracking
+      await handlePageViewTracking(supabase, funnels, sessionId, resolvedSiteId, currentUrl, conversionsToInsert);
     }
 
     // Insert all new conversions
@@ -92,11 +81,8 @@ export async function POST(request: NextRequest) {
         .insert(conversionsToInsert);
 
       if (insertError) {
-        console.error("Error inserting conversions:", insertError);
         return NextResponse.json({ tracked: false });
       }
-
-      console.log(`✅ Tracked ${conversionsToInsert.length} funnel conversions`);
     }
 
     return NextResponse.json({ 
@@ -105,8 +91,122 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("Funnel tracking error:", error);
     return NextResponse.json({ tracked: false }, { status: 500 });
+  }
+}
+
+// Handler for page view tracking
+async function handlePageViewTracking(supabase: any, funnels: any[], sessionId: string, siteId: string, currentUrl: string, conversionsToInsert: any[]) {
+  // Check each funnel to see if current URL matches any step
+  for (const funnel of funnels) {
+    // Get all existing conversions for this session and funnel
+    const { data: existingConversions } = await supabase
+      .from("funnel_conversions")
+      .select("step_number")
+      .eq("funnel_id", funnel.id)
+      .eq("session_id", sessionId)
+      .order("step_number");
+
+    const completedSteps = new Set(existingConversions?.map((c: any) => c.step_number) || []);
+
+    for (const step of funnel.funnel_steps) {
+      // Only process page_view steps for page view events
+      if (step.step_type !== 'page_view') continue;
+
+      const isMatch = checkUrlMatch(currentUrl, step.url_pattern, step.match_type);
+      
+      console.log(`📊 Checking step ${step.step_number} (${step.name}):`, {
+        step_type: step.step_type,
+        url_pattern: step.url_pattern,
+        match_type: step.match_type,
+        currentUrl,
+        isMatch,
+        alreadyCompleted: completedSteps.has(step.step_number)
+      });
+      
+      if (isMatch && !completedSteps.has(step.step_number)) {
+        // SEQUENTIAL VALIDATION: Check if previous steps are completed
+        let canCompleteThisStep = true;
+        
+        if (step.step_number > 1) {
+          // For steps 2+, check that the previous step is completed
+          const previousStepNumber = step.step_number - 1;
+          if (!completedSteps.has(previousStepNumber)) {
+            canCompleteThisStep = false;
+            console.log(`🚫 Step ${step.step_number} (${step.name}) skipped - previous step ${previousStepNumber} not completed`);
+          }
+        }
+
+        if (canCompleteThisStep) {
+          conversionsToInsert.push({
+            funnel_id: funnel.id,
+            session_id: sessionId,
+            site_id: siteId,
+            step_number: step.step_number,
+            step_name: step.name,
+            url_visited: currentUrl,
+          });
+          
+          // Add to completed steps for this session (in case there are multiple matching steps)
+          completedSteps.add(step.step_number);
+          
+          console.log(`✅ Step ${step.step_number} (${step.name}) completed in sequence`);
+        }
+      }
+    }
+  }
+}
+
+// Handler for custom event tracking
+async function handleCustomEvent(supabase: any, funnels: any[], sessionId: string, siteId: string, customEvent: any, conversionsToInsert: any[], currentUrl: string) {
+  const { step_id, funnel_id, step_number, event_type, event_data } = customEvent;
+
+  console.log(`🎯 Processing custom event:`, {
+    step_id,
+    funnel_id,
+    step_number,
+    event_type,
+    event_data
+  });
+
+  // Get all existing conversions for this session and funnel
+  const { data: existingConversions } = await supabase
+    .from("funnel_conversions")
+    .select("step_number")
+    .eq("funnel_id", funnel_id)
+    .eq("session_id", sessionId)
+    .order("step_number");
+
+  const completedSteps = new Set(existingConversions?.map((c: any) => c.step_number) || []);
+
+  // Check if this step is already completed
+  if (completedSteps.has(step_number)) {
+    console.log(`🚫 Custom event step ${step_number} already completed`);
+    return;
+  }
+
+  // SEQUENTIAL VALIDATION: Check if previous steps are completed
+  let canCompleteThisStep = true;
+  
+  if (step_number > 1) {
+    const previousStepNumber = step_number - 1;
+    if (!completedSteps.has(previousStepNumber)) {
+      canCompleteThisStep = false;
+      console.log(`🚫 Custom event step ${step_number} skipped - previous step ${previousStepNumber} not completed`);
+    }
+  }
+
+  if (canCompleteThisStep) {
+    conversionsToInsert.push({
+      funnel_id: funnel_id,
+      session_id: sessionId,
+      site_id: siteId,
+      step_number: step_number,
+      step_name: `Custom Event: ${event_type}`,
+      url_visited: currentUrl,
+    });
+    
+    console.log(`✅ Custom event step ${step_number} (${event_type}) completed in sequence`);
   }
 }
 

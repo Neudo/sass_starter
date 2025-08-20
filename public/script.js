@@ -4,6 +4,8 @@
   
   let heartbeatInterval = null;
   let lastActivityTime = Date.now();
+  let trackedScrollEvents = new Set(); // Track scroll events per page to avoid duplicates
+  let funnelSteps = []; // Cache for funnel steps to avoid repeated API calls
   
   function sendHeartbeat() {
     // Ne pas envoyer si l'onglet n'est pas visible
@@ -42,16 +44,249 @@
   }
 
   function trackFunnels(sessionId) {
-    // Extract site ID from the domain - this should match the logic in /api/track
-    const domain = window.location.hostname;
+    // Use hectoranalytics.com domain for testing in both dev and prod
+    const domain = window.location.hostname === 'localhost' 
+      ? 'hectoranalytics.com' 
+      : window.location.hostname;
     
-    fetch("https://www.hectoranalytics.com/api/track-funnel", {
+    // Determine the API URL based on current environment
+    const apiUrl = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3000/api/track-funnel'
+      : 'https://www.hectoranalytics.com/api/track-funnel';
+    
+    // Track page view first
+    fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        siteId: domain, // The API will resolve domain to siteId
+        siteId: domain,
         sessionId,
         currentUrl: window.location.href,
+        eventType: 'page_view'
+      }),
+      keepalive: true,
+    }).catch(() => {
+      // silent fail
+    });
+
+    // Get funnel steps for custom event tracking if not already cached
+    if (funnelSteps.length === 0) {
+      loadFunnelSteps(domain, sessionId);
+    } else {
+      // Setup custom event listeners for cached steps
+      setupCustomEventListeners(domain, sessionId);
+    }
+  }
+
+  function loadFunnelSteps(domain, sessionId) {
+    const apiUrl = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3000/api/funnel-steps'
+      : 'https://www.hectoranalytics.com/api/funnel-steps';
+    
+    fetch(`${apiUrl}?siteId=${domain}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    }).then(response => {
+      if (response.ok) {
+        return response.json();
+      }
+      throw new Error('Failed to load funnel steps');
+    }).then(steps => {
+      funnelSteps = steps || [];
+      setupCustomEventListeners(domain, sessionId);
+    }).catch(() => {
+      // silent fail
+    });
+  }
+
+  function setupCustomEventListeners(domain, sessionId) {
+    // Clear previous scroll events for this page
+    const currentPage = window.location.pathname;
+    trackedScrollEvents = new Set();
+
+    // Setup event listeners
+    funnelSteps.forEach(step => {
+      if (step.step_type === 'custom_event' && step.event_type === 'click' && step.event_config?.selector) {
+        // Check if this event should trigger on this page
+        const shouldTrackOnThisPage = !step.event_config.page_pattern || 
+          currentPage.includes(step.event_config.page_pattern);
+        
+        if (shouldTrackOnThisPage) {
+          setupClickListener(step, domain, sessionId);
+        }
+      }
+      
+      if (step.step_type === 'custom_event' && step.event_type === 'scroll') {
+        // Check if this event should trigger on this page
+        const shouldTrackOnThisPage = !step.event_config?.page_pattern || 
+          currentPage.includes(step.event_config.page_pattern);
+        
+        if (shouldTrackOnThisPage) {
+          setupScrollListener(step, domain, sessionId);
+        }
+      }
+
+      if (step.step_type === 'custom_event' && step.event_type === 'click_link' && step.event_config?.url_pattern) {
+        // Check if this event should trigger on this page
+        const shouldTrackOnThisPage = !step.event_config.page_pattern || 
+          currentPage.includes(step.event_config.page_pattern);
+        
+        if (shouldTrackOnThisPage) {
+          setupClickLinkListener(step, domain, sessionId);
+        }
+      }
+    });
+  }
+
+  function setupClickListener(step, domain, sessionId) {
+    const selector = step.event_config.selector;
+    
+    // Use event delegation to handle dynamically added elements
+    document.addEventListener('click', function(event) {
+      try {
+        if (event.target.matches && event.target.matches(selector)) {
+          trackCustomEvent(step, domain, sessionId, 'click', {
+            selector: selector,
+            element: event.target.tagName.toLowerCase(),
+            text: event.target.textContent?.trim().substring(0, 100) || ''
+          });
+        } else if (event.target.closest && event.target.closest(selector)) {
+          // Also check if the clicked element is inside the target selector
+          const targetElement = event.target.closest(selector);
+          trackCustomEvent(step, domain, sessionId, 'click', {
+            selector: selector,
+            element: targetElement.tagName.toLowerCase(),
+            text: targetElement.textContent?.trim().substring(0, 100) || ''
+          });
+        }
+      } catch (error) {
+        // Invalid selector or other error - silent fail
+        console.warn('Hector Analytics: Invalid selector for click tracking:', selector, error);
+      }
+    });
+  }
+
+  function setupScrollListener(step, domain, sessionId) {
+    const scrollPercentage = step.event_config?.scroll_percentage;
+    const eventKey = `scroll_${step.id}_${scrollPercentage || 'any'}`;
+    
+    // Avoid duplicate listeners for the same scroll event
+    if (trackedScrollEvents.has(eventKey)) {
+      return;
+    }
+    
+    trackedScrollEvents.add(eventKey);
+    
+    let scrollTriggered = false;
+    
+    function handleScroll() {
+      if (scrollTriggered) return;
+      
+      if (scrollPercentage) {
+        // Calculate scroll percentage
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const currentScrollPercentage = (scrollTop / scrollHeight) * 100;
+        
+        if (currentScrollPercentage >= scrollPercentage) {
+          scrollTriggered = true;
+          trackCustomEvent(step, domain, sessionId, 'scroll', {
+            scroll_percentage: Math.round(currentScrollPercentage),
+            target_percentage: scrollPercentage
+          });
+          
+          // Remove listener after triggering
+          window.removeEventListener('scroll', handleScroll);
+        }
+      } else {
+        // Track any scroll
+        scrollTriggered = true;
+        trackCustomEvent(step, domain, sessionId, 'scroll', {
+          scroll_percentage: 'any'
+        });
+        
+        // Remove listener after triggering
+        window.removeEventListener('scroll', handleScroll);
+      }
+    }
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+  }
+
+  function setupClickLinkListener(step, domain, sessionId) {
+    const { url_pattern, link_text, exact_match } = step.event_config;
+    
+    // Use event delegation to handle dynamically added links
+    document.addEventListener('click', function(event) {
+      try {
+        // Check if the clicked element is a link
+        let linkElement = null;
+        if (event.target.tagName === 'A') {
+          linkElement = event.target;
+        } else {
+          // Check if clicked inside a link
+          linkElement = event.target.closest('a');
+        }
+        
+        if (!linkElement || !linkElement.href) return;
+        
+        // Extract the pathname from the link's href
+        let linkPath;
+        try {
+          linkPath = new URL(linkElement.href).pathname;
+        } catch (e) {
+          // If it's a relative URL, use it as is
+          linkPath = linkElement.href;
+        }
+        
+        // Check if URL pattern matches
+        const urlMatches = exact_match 
+          ? linkPath === url_pattern 
+          : linkPath.includes(url_pattern);
+        
+        if (!urlMatches) return;
+        
+        // Check if link text matches (if specified)
+        if (link_text && link_text.trim() !== '') {
+          const linkTextContent = linkElement.textContent?.trim() || '';
+          if (!linkTextContent.includes(link_text)) return;
+        }
+        
+        // Track the event
+        trackCustomEvent(step, domain, sessionId, 'click_link', {
+          url_pattern: url_pattern,
+          link_href: linkElement.href,
+          link_text: linkElement.textContent?.trim() || '',
+          exact_match: exact_match
+        });
+        
+      } catch (error) {
+        // Invalid configuration or other error - silent fail
+        console.warn('Hector Analytics: Error in click_link tracking:', error);
+      }
+    });
+  }
+
+  function trackCustomEvent(step, domain, sessionId, eventType, eventData) {
+    const apiUrl = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3000/api/track-funnel'
+      : 'https://www.hectoranalytics.com/api/track-funnel';
+    
+    fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        siteId: domain,
+        sessionId,
+        currentUrl: window.location.href,
+        eventType: 'custom_event',
+        customEvent: {
+          step_id: step.id,
+          funnel_id: step.funnel_id,
+          step_number: step.step_number,
+          event_type: eventType,
+          event_data: eventData
+        }
       }),
       keepalive: true,
     }).catch(() => {
@@ -110,6 +345,27 @@
   document.addEventListener("scroll", resetActivityTimer);
   document.addEventListener("click", resetActivityTimer);
   document.addEventListener("touchstart", resetActivityTimer);
+
+  // Handle page navigation for single-page applications
+  let currentPath = window.location.pathname;
+  function checkForPathChange() {
+    if (currentPath !== window.location.pathname) {
+      currentPath = window.location.pathname;
+      // Clear funnel steps cache to reload for new page
+      funnelSteps = [];
+      // Restart tracking for the new page
+      const sessionId = localStorage.getItem("user_session_id");
+      if (sessionId) {
+        trackFunnels(sessionId);
+      }
+    }
+  }
+
+  // Check for path changes periodically (for SPA navigation)
+  setInterval(checkForPathChange, 1000);
+
+  // Also listen for popstate events (back/forward navigation)
+  window.addEventListener('popstate', checkForPathChange);
 
   // Exécute de suite ou si load déjà passé
   if (document.readyState === "complete") {
