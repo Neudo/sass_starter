@@ -5,18 +5,39 @@ import { createAdminClient } from "@/lib/supabase/admin";
 interface FunnelStep {
   step_number: number;
   name: string;
-  url_pattern: string;
-  total_sessions: number;
-  conversion_rate: number;
+  step_type: string;
+  unique_visitors: number;
+  total_conversions: number;
+  conversion_rate_from_previous: number;
+  drop_off_rate_to_next: number;
+  overall_conversion_rate: number;
 }
 
 interface FunnelAnalytics {
   funnel_id: string;
   funnel_name: string;
-  total_sessions_entered: number;
-  completed_sessions: number;
-  overall_conversion_rate: number;
+  summary: {
+    total_entered: number;
+    total_completed: number;
+    overall_conversion_rate: number;
+    total_steps: number;
+    highest_drop_off_step: {
+      step_number: number;
+      step_name: string;
+      drop_off_rate: number;
+    } | null;
+  };
   steps: FunnelStep[];
+  time_series: {
+    period: string;
+    daily_conversions: Array<{
+      date: string;
+      steps: Array<{
+        step_number: number;
+        unique_visitors: number;
+      }>;
+    }>;
+  };
 }
 
 export async function GET(
@@ -30,137 +51,170 @@ export async function GET(
 
     const {
       data: { user },
+      error: authError,
     } = await supabase.auth.getUser();
 
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
     }
 
-    // Get funnel details and verify ownership
-    const { data: funnel, error: funnelError } = await adminClient
-      .from("funnels")
-      .select(
-        `
-        id,
-        name,
+    // Refresh analytics before querying (ensure up-to-date data)
+    const { error: refreshError } = await adminClient.rpc('refresh_funnel_analytics');
+    if (refreshError) {
+      console.warn("Failed to refresh funnel analytics:", refreshError);
+      // Continue anyway - use existing data
+    }
+
+    // Get comprehensive funnel analytics using our materialized view
+    const { data: funnelOverview, error: overviewError } = await adminClient
+      .from("funnel_overview")
+      .select(`
+        funnel_id,
+        funnel_name,
         site_id,
+        step_number,
+        step_name,
+        step_type,
+        unique_visitors,
+        total_conversions,
+        conversion_rate_from_previous,
+        drop_off_rate_to_next,
+        overall_conversion_rate
+      `)
+      .eq("funnel_id", funnelId)
+      .order("step_number");
+
+    if (overviewError) {
+      console.error("Error fetching funnel overview:", overviewError);
+      return NextResponse.json(
+        { error: "Failed to fetch funnel analytics" },
+        { status: 500 }
+      );
+    }
+
+    if (!funnelOverview || funnelOverview.length === 0) {
+      return NextResponse.json(
+        { error: "Funnel not found or no data available" },
+        { status: 404 }
+      );
+    }
+
+    // Verify user owns the funnel (security check since materialized view doesn't have RLS)
+    const { data: funnelOwnership, error: ownershipError } = await adminClient
+      .from("funnels")
+      .select(`
+        user_id,
         sites!inner (
           user_id
-        ),
-        funnel_steps (
-          step_number,
-          name,
-          url_pattern,
-          match_type
         )
-      `
-      )
+      `)
       .eq("id", funnelId)
       .single();
 
-    if (funnelError || !funnel || funnel.sites[0]?.user_id !== user.id) {
-      return NextResponse.json({ error: "Funnel not found" }, { status: 404 });
+    if (ownershipError || !funnelOwnership || funnelOwnership.user_id !== user.id) {
+      return NextResponse.json(
+        { error: "Funnel not found or unauthorized" },
+        { status: 404 }
+      );
     }
 
-    // Get date range from query params (default to last 30 days)
+    // Get time-based analytics (last 30 days by default)
     const url = new URL(request.url);
     const days = parseInt(url.searchParams.get("days") || "30");
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    // Get conversion data for this funnel
-    const { data: conversions, error: conversionsError } = await adminClient
+    const { data: timeSeriesData, error: timeSeriesError } = await adminClient
       .from("funnel_conversions")
-      .select("session_id, step_number, completed_at")
+      .select(`
+        step_number,
+        completed_at,
+        session_id
+      `)
       .eq("funnel_id", funnelId)
-      .gte("completed_at", startDate.toISOString());
+      .gte("completed_at", startDate.toISOString())
+      .order("completed_at");
 
-    if (conversionsError) {
-      console.error("Error fetching conversions:", conversionsError);
-      return NextResponse.json(
-        { error: "Failed to fetch analytics data" },
-        { status: 500 }
-      );
+    if (timeSeriesError) {
+      console.error("Time series data error:", timeSeriesError);
     }
 
-    // Process the conversion data
-    const sessionSteps = new Map<string, Set<number>>();
-
-    // Group conversions by session
-    conversions?.forEach((conversion) => {
-      if (!sessionSteps.has(conversion.session_id)) {
-        sessionSteps.set(conversion.session_id, new Set());
-      }
-      sessionSteps.get(conversion.session_id)?.add(conversion.step_number);
-    });
-
-    // Calculate analytics for each step
-    const steps: FunnelStep[] = funnel.funnel_steps
-      .sort((a, b) => a.step_number - b.step_number)
-      .map((step, index) => {
-        // Count sessions that reached this step
-        let sessionsReachedThisStep = 0;
-        sessionSteps.forEach((stepNumbers) => {
-          if (stepNumbers.has(step.step_number)) {
-            sessionsReachedThisStep++;
-          }
-        });
-
-        // Calculate conversion rate (vs previous step, or vs total for first step)
-        let conversionRate = 0;
-        if (index === 0) {
-          // First step - conversion rate is 100% of sessions that entered
-          conversionRate = sessionsReachedThisStep > 0 ? 100 : 0;
-        } else {
-          // Subsequent steps - conversion rate vs previous step
-          const previousStep = funnel.funnel_steps.find(
-            (s) => s.step_number === step.step_number - 1
-          );
-          if (previousStep) {
-            let sessionsReachedPreviousStep = 0;
-            sessionSteps.forEach((stepNumbers) => {
-              if (stepNumbers.has(previousStep.step_number)) {
-                sessionsReachedPreviousStep++;
-              }
-            });
-
-            conversionRate =
-              sessionsReachedPreviousStep > 0
-                ? (sessionsReachedThisStep / sessionsReachedPreviousStep) * 100
-                : 0;
-          }
+    // Process time series data into daily buckets
+    const dailyStats: Record<string, Record<number, Set<string>>> = {};
+    if (timeSeriesData) {
+      timeSeriesData.forEach(conversion => {
+        const date = new Date(conversion.completed_at).toISOString().split('T')[0];
+        if (!dailyStats[date]) {
+          dailyStats[date] = {};
         }
-
-        return {
-          step_number: step.step_number,
-          name: step.name,
-          url_pattern: step.url_pattern,
-          total_sessions: sessionsReachedThisStep,
-          conversion_rate: Math.round(conversionRate * 100) / 100, // Round to 2 decimal places
-        };
+        if (!dailyStats[date][conversion.step_number]) {
+          dailyStats[date][conversion.step_number] = new Set();
+        }
+        dailyStats[date][conversion.step_number].add(conversion.session_id);
       });
+    }
 
-    // Calculate overall metrics
-    const totalSessionsEntered = steps.length > 0 ? steps[0].total_sessions : 0;
-    const lastStep = steps[steps.length - 1];
-    const completedSessions = lastStep ? lastStep.total_sessions : 0;
-    const overallConversionRate =
-      totalSessionsEntered > 0
-        ? (completedSessions / totalSessionsEntered) * 100
-        : 0;
+    // Convert Sets to counts
+    const dailyConversions = Object.keys(dailyStats).map(date => ({
+      date,
+      steps: Object.keys(dailyStats[date]).map(stepNumber => ({
+        step_number: parseInt(stepNumber),
+        unique_visitors: dailyStats[date][parseInt(stepNumber)].size
+      }))
+    }));
+
+    // Calculate overall funnel performance metrics
+    const totalEntered = funnelOverview[0]?.unique_visitors || 0;
+    const totalCompleted = funnelOverview[funnelOverview.length - 1]?.unique_visitors || 0;
+    const overallConversionRate = totalEntered > 0 ? (totalCompleted / totalEntered) * 100 : 0;
+
+    // Find the step with highest drop-off
+    const highestDropOffStep = funnelOverview.reduce((max, step) => {
+      const stepDropOff = step.drop_off_rate_to_next || 0;
+      const maxDropOff = max?.drop_off_rate_to_next || 0;
+      return stepDropOff > maxDropOff ? step : max;
+    }, funnelOverview[0] || null);
 
     const analytics: FunnelAnalytics = {
-      funnel_id: funnel.id,
-      funnel_name: funnel.name,
-      total_sessions_entered: totalSessionsEntered,
-      completed_sessions: completedSessions,
-      overall_conversion_rate: Math.round(overallConversionRate * 100) / 100,
-      steps,
+      funnel_id: funnelId,
+      funnel_name: funnelOverview[0].funnel_name,
+      summary: {
+        total_entered: totalEntered,
+        total_completed: totalCompleted,
+        overall_conversion_rate: Math.round(overallConversionRate * 100) / 100,
+        total_steps: funnelOverview.length,
+        highest_drop_off_step: highestDropOffStep?.drop_off_rate_to_next ? {
+          step_number: highestDropOffStep.step_number,
+          step_name: highestDropOffStep.step_name,
+          drop_off_rate: Math.round(highestDropOffStep.drop_off_rate_to_next * 100) / 100
+        } : null
+      },
+      steps: funnelOverview.map(step => ({
+        step_number: step.step_number,
+        name: step.step_name,
+        step_type: step.step_type,
+        unique_visitors: step.unique_visitors,
+        total_conversions: step.total_conversions,
+        conversion_rate_from_previous: step.conversion_rate_from_previous ? 
+          Math.round(step.conversion_rate_from_previous * 100) / 100 : 100,
+        drop_off_rate_to_next: step.drop_off_rate_to_next ? 
+          Math.round(step.drop_off_rate_to_next * 100) / 100 : 0,
+        overall_conversion_rate: step.overall_conversion_rate ? 
+          Math.round(step.overall_conversion_rate * 100) / 100 : 0
+      })),
+      time_series: {
+        period: `${days}_days`,
+        daily_conversions: dailyConversions.sort((a, b) => a.date.localeCompare(b.date))
+      }
     };
 
     return NextResponse.json(analytics);
+
   } catch (error) {
-    console.error("Funnel analytics error:", error);
+    console.error("Error fetching funnel analytics:", error);
     return NextResponse.json(
       { error: "Failed to fetch funnel analytics" },
       { status: 500 }
