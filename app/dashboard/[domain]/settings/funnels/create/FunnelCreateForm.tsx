@@ -6,15 +6,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Plus, Trash2, GripVertical, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 interface FunnelStep {
   name: string;
   url_pattern: string;
-  match_type: 'exact' | 'contains' | 'starts_with' | 'regex';
+  match_type: "exact" | "contains" | "starts_with" | "regex";
 }
 
 interface FunnelCreateFormProps {
@@ -23,7 +35,11 @@ interface FunnelCreateFormProps {
   userId: string;
 }
 
-export function FunnelCreateForm({ siteId, domain, userId }: FunnelCreateFormProps) {
+export function FunnelCreateForm({
+  siteId,
+  domain,
+  userId,
+}: FunnelCreateFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
@@ -43,30 +59,37 @@ export function FunnelCreateForm({ siteId, domain, userId }: FunnelCreateFormPro
     }
   };
 
-  const updateStep = (index: number, field: keyof FunnelStep, value: string) => {
+  const updateStep = (
+    index: number,
+    field: keyof FunnelStep,
+    value: string
+  ) => {
     const newSteps = [...steps];
     newSteps[index] = { ...newSteps[index], [field]: value };
     setSteps(newSteps);
   };
 
-  const moveStep = (index: number, direction: 'up' | 'down') => {
+  const moveStep = (index: number, direction: "up" | "down") => {
     if (
-      (direction === 'up' && index === 0) ||
-      (direction === 'down' && index === steps.length - 1)
+      (direction === "up" && index === 0) ||
+      (direction === "down" && index === steps.length - 1)
     ) {
       return;
     }
 
     const newSteps = [...steps];
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
-    [newSteps[index], newSteps[newIndex]] = [newSteps[newIndex], newSteps[index]];
+    const newIndex = direction === "up" ? index - 1 : index + 1;
+    [newSteps[index], newSteps[newIndex]] = [
+      newSteps[newIndex],
+      newSteps[index],
+    ];
     setSteps(newSteps);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!name || steps.some(s => !s.name || !s.url_pattern)) {
+
+    if (!name || steps.some((s) => !s.name || !s.url_pattern)) {
       alert("Please fill in all required fields");
       return;
     }
@@ -75,7 +98,7 @@ export function FunnelCreateForm({ siteId, domain, userId }: FunnelCreateFormPro
 
     try {
       const supabase = createClient();
-      
+
       // Create the funnel
       const { data: funnel, error: funnelError } = await supabase
         .from("funnels")
@@ -152,7 +175,8 @@ export function FunnelCreateForm({ siteId, domain, userId }: FunnelCreateFormPro
         <CardHeader>
           <CardTitle>Funnel Steps</CardTitle>
           <CardDescription>
-            Define the pages visitors should navigate through. Minimum 2 steps required.
+            Define the pages visitors should navigate through. Minimum 2 steps
+            required.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -163,7 +187,7 @@ export function FunnelCreateForm({ siteId, domain, userId }: FunnelCreateFormPro
                   <ArrowRight className="h-4 w-4 text-muted-foreground rotate-90" />
                 </div>
               )}
-              
+
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-4">
@@ -173,7 +197,7 @@ export function FunnelCreateForm({ siteId, domain, userId }: FunnelCreateFormPro
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6"
-                        onClick={() => moveStep(index, 'up')}
+                        onClick={() => moveStep(index, "up")}
                         disabled={index === 0}
                       >
                         <GripVertical className="h-4 w-4" />
@@ -185,7 +209,9 @@ export function FunnelCreateForm({ siteId, domain, userId }: FunnelCreateFormPro
                         <Label>Step {index + 1} Name *</Label>
                         <Input
                           value={step.name}
-                          onChange={(e) => updateStep(index, 'name', e.target.value)}
+                          onChange={(e) =>
+                            updateStep(index, "name", e.target.value)
+                          }
                           placeholder="e.g., View Pricing"
                           required
                         />
@@ -195,7 +221,9 @@ export function FunnelCreateForm({ siteId, domain, userId }: FunnelCreateFormPro
                         <Label>URL Pattern *</Label>
                         <Input
                           value={step.url_pattern}
-                          onChange={(e) => updateStep(index, 'url_pattern', e.target.value)}
+                          onChange={(e) =>
+                            updateStep(index, "url_pattern", e.target.value)
+                          }
                           placeholder="/pricing"
                           required
                         />
@@ -205,7 +233,10 @@ export function FunnelCreateForm({ siteId, domain, userId }: FunnelCreateFormPro
                         <Label>Match Type</Label>
                         <Select
                           value={step.match_type}
-                          onValueChange={(value) => updateStep(index, 'match_type', value as any)}
+                          onValueChange={(value) =>
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            updateStep(index, "match_type", value as any)
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -213,7 +244,9 @@ export function FunnelCreateForm({ siteId, domain, userId }: FunnelCreateFormPro
                           <SelectContent>
                             <SelectItem value="exact">Exact Match</SelectItem>
                             <SelectItem value="contains">Contains</SelectItem>
-                            <SelectItem value="starts_with">Starts With</SelectItem>
+                            <SelectItem value="starts_with">
+                              Starts With
+                            </SelectItem>
                             <SelectItem value="regex">Regex</SelectItem>
                           </SelectContent>
                         </Select>
@@ -233,10 +266,13 @@ export function FunnelCreateForm({ siteId, domain, userId }: FunnelCreateFormPro
                   </div>
 
                   <div className="mt-2 text-xs text-muted-foreground">
-                    {step.match_type === 'exact' && "URL must match exactly"}
-                    {step.match_type === 'contains' && "URL must contain this text"}
-                    {step.match_type === 'starts_with' && "URL must start with this text"}
-                    {step.match_type === 'regex' && "URL must match this regex pattern"}
+                    {step.match_type === "exact" && "URL must match exactly"}
+                    {step.match_type === "contains" &&
+                      "URL must contain this text"}
+                    {step.match_type === "starts_with" &&
+                      "URL must start with this text"}
+                    {step.match_type === "regex" &&
+                      "URL must match this regex pattern"}
                   </div>
                 </CardContent>
               </Card>
