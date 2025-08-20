@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PLAN_LIMITS } from "@/lib/stripe-config";
 import { BillingHistory } from "@/components/billing-history";
+import { isWithinFreePeriod, getFreeDaysLeft } from "@/lib/subscription-utils";
 import Link from "next/link";
 
 export default async function BillingPage() {
@@ -54,29 +55,32 @@ export default async function BillingPage() {
   // Récupérer les données de subscription réelles
   const { data: subscription } = await adminClient
     .from("subscriptions")
-    .select("plan_tier, events_limit, status, trial_end, stripe_subscription_id, billing_period")
+    .select("plan_tier, events_limit, status, created_at, stripe_subscription_id, billing_period")
     .eq("user_id", user?.id || "")
     .single();
 
-  // Déterminer le plan actuel
+  // Déterminer le plan actuel avec la nouvelle logique simplifiée
   let currentPlan = "free";
   let currentTier = "10k";
-  let isTrialing = false;
+  let isInFreePeriod = false;
+  let daysLeft = 0;
 
   if (subscription) {
-    if (subscription.status === "trialing" && subscription.trial_end) {
-      const trialEndDate = new Date(subscription.trial_end);
-      isTrialing = trialEndDate > new Date();
-      
-      if (isTrialing) {
-        currentPlan = "trial";
-      } else if (subscription.stripe_subscription_id && subscription.stripe_subscription_id !== "") {
-        currentPlan = subscription.plan_tier;
-        currentTier = subscription.events_limit;
-      }
-    } else if (subscription.status === "active" && subscription.stripe_subscription_id) {
+    // Check if user has paid subscription
+    const hasPaidPlan = subscription.plan_tier !== "free" && 
+                       subscription.stripe_subscription_id && 
+                       subscription.stripe_subscription_id !== "";
+
+    if (hasPaidPlan) {
+      // User has paid plan
       currentPlan = subscription.plan_tier;
       currentTier = subscription.events_limit;
+    } else {
+      // User is on free plan - use helper functions
+      isInFreePeriod = isWithinFreePeriod(subscription);
+      daysLeft = getFreeDaysLeft(subscription);
+      currentPlan = "free";
+      currentTier = "10k"; // Free plan limit
     }
   }
 
@@ -99,16 +103,10 @@ export default async function BillingPage() {
             <div>
               <CardTitle>Current Plan</CardTitle>
               <CardDescription>
-                {currentPlan === "trial" ? (
+                {currentPlan === "free" && isInFreePeriod ? (
                   <>
-                    You are currently on a <strong>30-day free trial</strong>
-                    {subscription?.trial_end && (
-                      <span>
-                        {" "}
-                        (expires{" "}
-                        {new Date(subscription.trial_end).toLocaleDateString()})
-                      </span>
-                    )}
+                    You are currently on the <strong>free plan</strong>
+                    <span> ({daysLeft} days remaining)</span>
                   </>
                 ) : (
                   <>
@@ -124,13 +122,13 @@ export default async function BillingPage() {
             <Badge
               variant={
                 currentPlan === "free"
-                  ? "secondary"
-                  : currentPlan === "trial"
-                  ? "outline"
+                  ? isInFreePeriod ? "outline" : "secondary"
                   : "default"
               }
             >
-              {currentPlan === "trial" ? "Free Trial" : currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}
+              {currentPlan === "free" && isInFreePeriod 
+                ? `Free (${daysLeft} days left)` 
+                : currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}
             </Badge>
           </div>
         </CardHeader>
@@ -173,9 +171,7 @@ export default async function BillingPage() {
             <Button asChild className="w-full md:w-auto">
               <Link href="/settings/billing/plans">
                 {currentPlan === "free"
-                  ? "Upgrade Plan"
-                  : currentPlan === "trial"
-                  ? "Choose Your Plan"
+                  ? isInFreePeriod ? "Choose Your Plan" : "Upgrade Plan"
                   : "Change Plan"}
               </Link>
             </Button>

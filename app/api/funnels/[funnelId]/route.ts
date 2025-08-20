@@ -11,8 +11,11 @@ export async function DELETE(
     const supabase = await createClient();
     const adminClient = createAdminClient();
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -64,8 +67,11 @@ export async function PUT(
     const supabase = await createClient();
     const adminClient = createAdminClient();
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -97,7 +103,7 @@ export async function PUT(
       .update({
         name,
         description,
-        is_active
+        is_active,
       })
       .eq("id", funnelId);
 
@@ -108,18 +114,16 @@ export async function PUT(
     // If steps are provided, update them
     if (steps && Array.isArray(steps)) {
       // Delete existing steps
-      await adminClient
-        .from("funnel_steps")
-        .delete()
-        .eq("funnel_id", funnelId);
+      await adminClient.from("funnel_steps").delete().eq("funnel_id", funnelId);
 
       // Insert new steps
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const stepsToInsert = steps.map((step: any, index: number) => ({
         funnel_id: funnelId,
         step_number: index + 1,
         name: step.name,
         url_pattern: step.url_pattern,
-        match_type: step.match_type || "exact"
+        match_type: step.match_type || "exact",
       }));
 
       const { error: stepsError } = await adminClient

@@ -47,25 +47,29 @@ export default function ProtectedLayout({
 
       const { data: subscription } = await supabase
         .from("subscriptions")
-        .select("trial_end, status, stripe_subscription_id")
+        .select("created_at, status, stripe_subscription_id, plan_tier")
         .eq("user_id", user.id)
         .single();
 
       if (subscription) {
-        const hasActiveSubscription = subscription.status === "active" && 
-                                    subscription.stripe_subscription_id && 
-                                    subscription.stripe_subscription_id !== "";
+        // Check if user has a paid subscription (not free plan)
+        const hasPaidSubscription = subscription.plan_tier !== "free" && 
+                                   subscription.stripe_subscription_id && 
+                                   subscription.stripe_subscription_id !== "";
         
-        if (hasActiveSubscription) {
+        if (hasPaidSubscription) {
+          // User has paid subscription - no limitations
           setTrialInfo({
             daysLeft: 0,
             isActive: false,
             hasActiveSubscription: true
           });
-        } else if (subscription.trial_end) {
-          const trialEndDate = new Date(subscription.trial_end);
+        } else {
+          // User is on free plan - calculate days left from created_at + 30 days
+          const freeEndDate = new Date(subscription.created_at);
+          freeEndDate.setDate(freeEndDate.getDate() + 30);
           const now = new Date();
-          const diffTime = trialEndDate.getTime() - now.getTime();
+          const diffTime = freeEndDate.getTime() - now.getTime();
           const daysLeft = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
           
           setTrialInfo({
@@ -106,7 +110,7 @@ export default function ProtectedLayout({
                       >
                         <Clock className="w-3 h-3 mr-1" />
                         <Link href="/pricing">
-                          {trialInfo.daysLeft} trial day{trialInfo.daysLeft !== 1 ? 's' : ''} left
+                          {trialInfo.daysLeft} free day{trialInfo.daysLeft !== 1 ? 's' : ''} left
                         </Link>
                       </Badge>
                     )}

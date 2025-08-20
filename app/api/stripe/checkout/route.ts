@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
     // Check user's subscription and trial status
     const { data: subscription, error: subError } = await supabase
       .from("subscriptions")
-      .select("trial_end, stripe_customer_id, status, stripe_subscription_id")
+      .select("created_at, stripe_customer_id, status, stripe_subscription_id, plan_tier")
       .eq("user_id", user.id)
       .single();
 
@@ -76,9 +76,7 @@ export async function GET(request: NextRequest) {
 
     console.log("👤 User subscription:", subscription);
 
-    // Check if user is still in trial period
-    const isInTrial = subscription?.trial_end && new Date(subscription.trial_end) > new Date();
-    console.log("🎯 User in trial:", isInTrial);
+    console.log("🎯 User subscription status:", subscription?.plan_tier || 'No subscription');
 
     console.log("🛒 Creating Stripe checkout session...");
 
@@ -111,11 +109,7 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    // If user is still in trial, add trial end date to subscription
-    if (isInTrial && subscription?.trial_end) {
-      const trialEndTimestamp = Math.floor(new Date(subscription.trial_end).getTime() / 1000);
-      sessionConfig.subscription_data!.trial_end = trialEndTimestamp;
-    }
+    // No trial period to preserve - user pays immediately regardless of remaining free days
 
     // If user already has a Stripe customer ID, use it
     if (subscription?.stripe_customer_id && subscription.stripe_customer_id !== '') {

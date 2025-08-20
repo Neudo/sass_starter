@@ -43,9 +43,12 @@ export async function POST(request: NextRequest) {
         console.log("🛒 Processing checkout.session.completed");
         const session = event.data.object as Stripe.Checkout.Session;
 
-        // Get the subscription details
+        // Get the subscription details with full expansion
         const subscription = (await stripe.subscriptions.retrieve(
-          session.subscription as string
+          session.subscription as string,
+          {
+            expand: ['latest_invoice', 'customer']
+          }
         )) as any; // Cast to any to access all properties
 
         console.log("📋 Checkout session details:", {
@@ -70,41 +73,108 @@ export async function POST(request: NextRequest) {
         const priceId = subscription.items.data[0].price.id;
         const planInfo = extractPlanFromPriceId(priceId);
 
+        // Convert events string to number (e.g., "250k" -> 250000, "1m" -> 1000000)
+        const parseEventsLimit = (eventsStr: string): number => {
+          const num = parseFloat(eventsStr);
+          if (eventsStr.includes('k')) return num * 1000;
+          if (eventsStr.includes('m')) return num * 1000000;
+          return num;
+        };
+
+        const eventsLimit = parseEventsLimit(planInfo.events);
+        
+        // Map "professional" to "pro" for database constraint
+        const mapPlanTier = (tier: string): string => {
+          if (tier === 'professional') return 'pro';
+          return tier;
+        };
+        
+        const planTier = mapPlanTier(planInfo.tier);
+
         console.log("🎯 Extracted plan info:", planInfo);
+        console.log("📊 Events limit:", eventsLimit);
+        console.log("🎭 Plan tier for DB:", planTier);
+        console.log("💳 User upgrading from free to paid plan:", planTier);
+        
+        // Debug subscription data from Stripe
+        console.log("🔍 Checking subscription structure:");
+        console.log("  - Has current_period_start?", 'current_period_start' in subscription);
+        console.log("  - Has current_period_end?", 'current_period_end' in subscription); 
+        console.log("  - Actual values:", {
+            current_period_start: subscription.current_period_start,
+            current_period_end: subscription.current_period_end,
+            status: subscription.status
+        });
+        
+        // If the periods are missing, use created timestamp as fallback
+        const periodStart = subscription.current_period_start || subscription.created || Math.floor(Date.now() / 1000);
+        const periodEnd = subscription.current_period_end || (periodStart + 2592000); // +30 days
+        
+        console.log("📅 Using periods for DB:", {
+          start: new Date(periodStart * 1000).toISOString(),
+          end: new Date(periodEnd * 1000).toISOString()
+        });
 
-        // Update the existing subscription in the database
-        const { error } = await supabase
+        // Check if subscription exists first
+        const { data: existingSub } = await supabase
           .from("subscriptions")
-          .update({
-            stripe_customer_id: session.customer as string,
-            stripe_subscription_id: subscription.id,
-            stripe_price_id: priceId,
-            plan_tier: planInfo.tier,
-            events_limit: planInfo.events,
-            billing_period: planInfo.period,
-            status: subscription.status,
-            current_period_start: subscription.current_period_start
-              ? new Date(subscription.current_period_start * 1000).toISOString()
-              : null,
-            current_period_end: subscription.current_period_end
-              ? new Date(subscription.current_period_end * 1000).toISOString()
-              : null,
-            trial_start: subscription.trial_start
-              ? new Date(subscription.trial_start * 1000).toISOString()
-              : null,
-            trial_end: subscription.trial_end
-              ? new Date(subscription.trial_end * 1000).toISOString()
-              : null,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("user_id", session.metadata.user_id);
+          .select("id")
+          .eq("user_id", session.metadata.user_id)
+          .single();
 
-        if (error) {
-          console.log("❌ Error updating subscription:", error);
-          return NextResponse.json(
-            { error: "Database update failed" },
-            { status: 500 }
-          );
+        if (!existingSub) {
+          console.log("⚠️ No existing subscription found for user, creating new one");
+          // Create new subscription if none exists
+          const { error } = await supabase
+            .from("subscriptions")
+            .insert({
+              user_id: session.metadata.user_id,
+              stripe_customer_id: session.customer as string,
+              stripe_subscription_id: subscription.id,
+              stripe_price_id: priceId,
+              plan_tier: planTier,
+              events_limit: eventsLimit,
+              billing_period: planInfo.period,
+              status: 'active',
+              current_period_start: new Date(periodStart * 1000).toISOString(),
+              current_period_end: new Date(periodEnd * 1000).toISOString(),
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            });
+          
+          if (error) {
+            console.log("❌ Error creating subscription:", error);
+            return NextResponse.json(
+              { error: "Database insert failed", details: error },
+              { status: 500 }
+            );
+          }
+        } else {
+          console.log("✅ Existing subscription found, updating...");
+          // Update existing subscription
+          const { error } = await supabase
+            .from("subscriptions")
+            .update({
+              stripe_customer_id: session.customer as string,
+              stripe_subscription_id: subscription.id,
+              stripe_price_id: priceId,
+              plan_tier: planTier,
+              events_limit: eventsLimit,
+              billing_period: planInfo.period,
+              status: 'active',
+              current_period_start: new Date(periodStart * 1000).toISOString(),
+              current_period_end: new Date(periodEnd * 1000).toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", session.metadata.user_id);
+          
+          if (error) {
+            console.log("❌ Error updating subscription:", error);
+            return NextResponse.json(
+              { error: "Database update failed", details: error },
+              { status: 500 }
+            );
+          }
         }
 
         console.log("✅ Subscription updated successfully");
@@ -114,6 +184,13 @@ export async function POST(request: NextRequest) {
       case "customer.subscription.updated": {
         console.log("🔄 Processing subscription update");
         const subscription = event.data.object as any; // Cast to any to access all properties
+        
+        console.log("📅 Update event - Subscription periods:", {
+          current_period_start: subscription.current_period_start,
+          current_period_end: subscription.current_period_end,
+          canceled_at: subscription.canceled_at,
+          status: subscription.status
+        });
 
         // Find the user by stripe_subscription_id
         const { data: existingSub, error: findError } = await supabase
@@ -123,11 +200,10 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (findError || !existingSub) {
-          console.log("❌ Subscription not found in database");
-          return NextResponse.json(
-            { error: "Subscription not found" },
-            { status: 404 }
-          );
+          console.log("⚠️ Subscription not found in database for update event, skipping...");
+          // This can happen if the update event arrives before checkout.session.completed
+          // Just log and skip - the checkout.session.completed will handle creation
+          return NextResponse.json({ received: true, skipped: true });
         }
 
         // Update subscription status
