@@ -18,6 +18,8 @@ import { QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider } from "@tanstack/react-query";
 import Link from "next/link";
 import { useShowUserInfos } from "@/hooks/useLoggedUser";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function ProtectedLayout({
   children,
@@ -29,6 +31,54 @@ export default function ProtectedLayout({
   const { userInfo: userEmail, loading: emailLoading } =
     useShowUserInfos("email");
   const { userInfo: userName, loading: nameLoading } = useShowUserInfos("name");
+  
+  const [trialInfo, setTrialInfo] = useState<{
+    daysLeft: number;
+    isActive: boolean;
+    hasActiveSubscription: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    const fetchTrialStatus = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) return;
+
+      const { data: subscription } = await supabase
+        .from("subscriptions")
+        .select("trial_end, status, stripe_subscription_id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (subscription) {
+        const hasActiveSubscription = subscription.status === "active" && 
+                                    subscription.stripe_subscription_id && 
+                                    subscription.stripe_subscription_id !== "";
+        
+        if (hasActiveSubscription) {
+          setTrialInfo({
+            daysLeft: 0,
+            isActive: false,
+            hasActiveSubscription: true
+          });
+        } else if (subscription.trial_end) {
+          const trialEndDate = new Date(subscription.trial_end);
+          const now = new Date();
+          const diffTime = trialEndDate.getTime() - now.getTime();
+          const daysLeft = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+          
+          setTrialInfo({
+            daysLeft,
+            isActive: daysLeft > 0,
+            hasActiveSubscription: false
+          });
+        }
+      }
+    };
+
+    fetchTrialStatus();
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <main className="min-h-screen flex flex-col items-center">
@@ -46,13 +96,20 @@ export default function ProtectedLayout({
                       <Logo size="md" showText={true} />
                     </button>
 
-                    <Badge
-                      variant="outline"
-                      className="border-ring/30 text-ring bg-ring/5 px-3 py-1 hidden sm:block"
-                    >
-                      <Clock className="w-3 h-3 mr-1" />
-                      <Link href="/dashboard/pricing">29 trial days left</Link>
-                    </Badge>
+                    {/* Show trial badge only if user is in trial and doesn't have active subscription */}
+                    {trialInfo && trialInfo.isActive && !trialInfo.hasActiveSubscription && (
+                      <Badge
+                        variant="outline"
+                        className={`border-ring/30 text-ring bg-ring/5 px-3 py-1 hidden sm:block ${
+                          trialInfo.daysLeft <= 3 ? 'border-destructive/30 text-destructive bg-destructive/5' : ''
+                        }`}
+                      >
+                        <Clock className="w-3 h-3 mr-1" />
+                        <Link href="/pricing">
+                          {trialInfo.daysLeft} trial day{trialInfo.daysLeft !== 1 ? 's' : ''} left
+                        </Link>
+                      </Badge>
+                    )}
                   </div>
 
                   {/* User section + Theme toggle */}

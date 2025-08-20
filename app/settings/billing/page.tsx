@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PLAN_LIMITS } from "@/lib/stripe-config";
+import { BillingHistory } from "@/components/billing-history";
 import Link from "next/link";
 
 export default async function BillingPage() {
@@ -79,9 +80,6 @@ export default async function BillingPage() {
     }
   }
 
-  // TODO: Fetch actual goals and custom events count from database
-  const goalsCount = 0; // This should come from your database
-  const customEventsCount = 0; // This should come from your database
 
 
   const limits =
@@ -137,7 +135,7 @@ export default async function BillingPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Monthly Events</p>
               <p className="text-2xl font-bold">
@@ -165,45 +163,6 @@ export default async function BillingPage() {
               )}
             </div>
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Goals</p>
-              <p className="text-2xl font-bold">
-                {goalsCount} / {limits.goals === -1 ? "∞" : limits.goals}
-              </p>
-              {limits.goals !== -1 && limits.goals > 0 && (
-                <Progress
-                  value={(goalsCount / limits.goals) * 100}
-                  className="h-2"
-                />
-              )}
-              {(limits.goals === -1 || limits.goals === 0) && (
-                <div
-                  className={`h-2 rounded ${
-                    limits.goals === 0 ? "bg-gray-200" : "bg-primary"
-                  }`}
-                />
-              )}
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Custom Events</p>
-              <p className="text-2xl font-bold">
-                {customEventsCount} /{" "}
-                {limits.customEvents === -1 ? "∞" : limits.customEvents}
-              </p>
-              {limits.customEvents !== -1 && limits.customEvents > 0 && (
-                <Progress
-                  value={(customEventsCount / limits.customEvents) * 100}
-                  className="h-2"
-                />
-              )}
-              {(limits.customEvents === -1 || limits.customEvents === 0) && (
-                <div
-                  className={`h-2 rounded ${
-                    limits.customEvents === 0 ? "bg-gray-200" : "bg-primary"
-                  }`}
-                />
-              )}
-            </div>
-            <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Data Retention</p>
               <p className="text-2xl font-bold">{limits.retention}</p>
               <div className="h-2 bg-primary rounded" />
@@ -224,22 +183,7 @@ export default async function BillingPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Billing History</CardTitle>
-          <CardDescription>
-            View and download your past invoices
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            <p>No billing history available</p>
-            <p className="text-sm mt-1">
-              Invoices will appear here once you upgrade
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <BillingHistory />
     </div>
   );
 }
