@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Funnel, Activity, MousePointer, ScrollText, Eye, FileText, Send } from "lucide-react";
+import { FunnelChart } from "./FunnelChart";
 
 interface Funnel {
   id: string;
@@ -147,23 +148,25 @@ export function FunnelsAndEventsCard({ siteId }: FunnelsAndEventsCardProps) {
                   </div>
 
                   {selectedFunnel && (
-                    <div className="p-4 bg-muted/50 rounded-md">
-                      <p className="text-sm text-muted-foreground">
-                        Funnel analysis will be displayed here for:{" "}
-                        <span className="font-medium">
+                    <div className="space-y-4">
+                      <div className="p-3 bg-muted/30 rounded-md">
+                        <h4 className="font-medium text-sm">
                           {funnels.find((f) => f.id === selectedFunnel)?.name}
-                        </span>
-                      </p>
-                      {funnels.find((f) => f.id === selectedFunnel)
-                        ?.description && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {
-                            funnels.find((f) => f.id === selectedFunnel)
-                              ?.description
-                          }
-                        </p>
-                      )}
-                      {/* Ici on ajoutera le composant d'analyse des funnels */}
+                        </h4>
+                        {funnels.find((f) => f.id === selectedFunnel)
+                          ?.description && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {
+                              funnels.find((f) => f.id === selectedFunnel)
+                                ?.description
+                            }
+                          </p>
+                        )}
+                      </div>
+                      <FunnelChart 
+                        funnelId={selectedFunnel}
+                        siteId={siteId}
+                      />
                     </div>
                   )}
                 </>

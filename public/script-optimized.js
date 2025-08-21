@@ -54,27 +54,28 @@
     lastActivityTime = Date.now();
   }
   
-  // Track funnels
+  // Track funnels - simplified approach
   function trackFunnels(sessionId) {
-    const domain = window.location.hostname === 'localhost' ? 'hectoranalytics.com' : window.location.hostname;
-    
-    fetchApi(getApiUrl('track-funnel'), {
-      siteId: domain,
-      sessionId,
-      currentUrl: window.location.href,
-      eventType: 'page_view'
-    });
+    const domain = window.location.hostname;
     
     if (!funnelSteps.length) {
-      fetchApi(getApiUrl('funnel-steps') + `?siteId=${domain}`)
+      console.log('[Hector Debug] Loading funnel steps for domain:', domain);
+      fetchApi(getApiUrl('public-funnel-steps') + `?siteId=${domain}`)
         .then(r => r?.ok ? r.json() : null)
         .then(steps => {
-          if (steps) {
+          console.log('[Hector Debug] Received funnel steps:', steps);
+          if (steps && steps.length > 0) {
             funnelSteps = steps;
             setupFunnelListeners(domain, sessionId);
+          } else {
+            console.log('[Hector Debug] No funnel steps found for domain:', domain);
           }
+        })
+        .catch(error => {
+          console.error('[Hector Debug] Error loading funnel steps:', error);
         });
     } else {
+      console.log('[Hector Debug] Using cached funnel steps:', funnelSteps.length);
       setupFunnelListeners(domain, sessionId);
     }
   }
@@ -280,20 +281,23 @@
     });
   }
   
-  // Track funnel event
+  // Track funnel event - simplified to just increment step count
   function trackFunnelEvent(step, domain, sessionId, eventType, eventData) {
-    fetchApi(getApiUrl('track-funnel'), {
-      siteId: domain,
-      sessionId,
-      currentUrl: window.location.href,
-      eventType: 'custom_event',
-      customEvent: {
-        step_id: step.id,
-        funnel_id: step.funnel_id,
-        step_number: step.step_number,
-        event_type: eventType,
-        event_data: eventData
-      }
+    console.log('[Hector Debug] Tracking funnel step:', {
+      step_name: step.name,
+      step_id: step.id,
+      domain,
+      eventType
+    });
+    
+    fetchApi(getApiUrl('track-funnel-step'), {
+      step_id: step.id,
+      session_id: sessionId,
+      site_domain: domain
+    }).then(response => {
+      console.log('[Hector Debug] Funnel step response:', response);
+    }).catch(error => {
+      console.error('[Hector Debug] Funnel step error:', error);
     });
   }
   

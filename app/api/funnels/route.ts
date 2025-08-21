@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get funnels with their steps
+    // Get funnels with their steps including step_count
     const { data: funnels, error: funnelsError } = await adminClient
       .from("funnels")
       .select(
@@ -59,7 +59,8 @@ export async function GET(request: NextRequest) {
           step_number,
           name,
           url_pattern,
-          match_type
+          match_type,
+          step_count
         )
       `
       )
@@ -71,68 +72,42 @@ export async function GET(request: NextRequest) {
       throw funnelsError;
     }
 
-    // Calculate funnel analytics for each funnel
-    const funnelsWithAnalytics = await Promise.all(
-      (funnels || []).map(async (funnel) => {
-        const steps = (funnel.funnel_steps || []).sort(
-          (a, b) => a.step_number - b.step_number
-        );
+    // Calculate funnel analytics for each funnel using step_count
+    const funnelsWithAnalytics = (funnels || []).map((funnel) => {
+      const steps = (funnel.funnel_steps || []).sort(
+        (a, b) => a.step_number - b.step_number
+      );
 
-        // Get conversion data for this funnel
-        const { data: conversions } = await adminClient
-          .from("funnel_conversions")
-          .select("step_number, session_id")
-          .eq("funnel_id", funnel.id)
-          .gte(
-            "created_at",
-            new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-          ); // Last 30 days
-
-        // Calculate visitors per step
-        const stepsWithData = steps.map((step) => {
-          const stepConversions =
-            conversions?.filter((c) => c.step_number === step.step_number) ||
-            [];
-          const uniqueVisitors = new Set(
-            stepConversions.map((c) => c.session_id)
-          ).size;
-
-          // Calculate conversion rate relative to first step
-          const firstStepVisitors =
-            steps.length > 0
-              ? new Set(
-                  conversions
-                    ?.filter((c) => c.step_number === steps[0].step_number)
-                    .map((c) => c.session_id)
-                ).size
-              : 0;
-          const conversionRate =
-            firstStepVisitors > 0
-              ? (uniqueVisitors / firstStepVisitors) * 100
-              : 0;
-
-          return {
-            ...step,
-            visitors: uniqueVisitors,
-            conversion_rate: conversionRate,
-          };
-        });
-
-        // Calculate overall funnel conversion rate
-        const totalVisitors = stepsWithData[0]?.visitors || 0;
-        const completedVisitors =
-          stepsWithData[stepsWithData.length - 1]?.visitors || 0;
-        const overallConversionRate =
-          totalVisitors > 0 ? (completedVisitors / totalVisitors) * 100 : 0;
+      // Calculate visitors and conversion rates using step_count
+      const stepsWithData = steps.map((step, index) => {
+        const visitors = step.step_count || 0;
+        
+        // Calculate conversion rate relative to first step
+        const firstStepVisitors = steps.length > 0 ? (steps[0].step_count || 0) : 0;
+        const conversionRate =
+          firstStepVisitors > 0 ? (visitors / firstStepVisitors) * 100 : 0;
 
         return {
-          ...funnel,
-          steps: stepsWithData,
-          total_visitors: totalVisitors,
-          conversion_rate: overallConversionRate,
+          ...step,
+          visitors,
+          conversion_rate: conversionRate,
         };
-      })
-    );
+      });
+
+      // Calculate overall funnel conversion rate
+      const totalVisitors = stepsWithData[0]?.visitors || 0;
+      const completedVisitors =
+        stepsWithData[stepsWithData.length - 1]?.visitors || 0;
+      const overallConversionRate =
+        totalVisitors > 0 ? (completedVisitors / totalVisitors) * 100 : 0;
+
+      return {
+        ...funnel,
+        steps: stepsWithData,
+        total_visitors: totalVisitors,
+        conversion_rate: overallConversionRate,
+      };
+    });
 
     return NextResponse.json(funnelsWithAnalytics);
   } catch (error) {
