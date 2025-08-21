@@ -111,6 +111,11 @@ const referrerMappings: Record<string, ReferrerInfo> = {
     displayName: "Hacker News",
     category: "news",
   },
+  "hn.algolia.com": {
+    name: "hackernews",
+    displayName: "Hacker News",
+    category: "news",
+  },
   "producthunt.com": {
     name: "producthunt",
     displayName: "Product Hunt",

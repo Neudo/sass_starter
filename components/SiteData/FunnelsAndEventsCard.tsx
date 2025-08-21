@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Funnel, Activity } from "lucide-react";
+import { Funnel, Activity, MousePointer, ScrollText, Eye, FileText, Send } from "lucide-react";
 
 interface Funnel {
   id: string;
@@ -52,7 +52,13 @@ export function FunnelsAndEventsCard({ siteId }: FunnelsAndEventsCardProps) {
   }, [siteId]);
 
   const [customEvents, setCustomEvents] = useState<
-    Array<{ name: string; count: number }>
+    Array<{ 
+      id: string;
+      name: string; 
+      count: number;
+      event_type: string;
+      is_active: boolean;
+    }>
   >([]);
   const [loadingCustomEvents, setLoadingCustomEvents] = useState(true);
 
@@ -64,8 +70,11 @@ export function FunnelsAndEventsCard({ siteId }: FunnelsAndEventsCardProps) {
           const events = await response.json();
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const customEventsData = events.map((event: any) => ({
+            id: event.id,
             name: event.name,
             count: event.total_triggers || 0,
+            event_type: event.event_type,
+            is_active: event.is_active,
           }));
           setCustomEvents(customEventsData);
         }
@@ -165,7 +174,7 @@ export function FunnelsAndEventsCard({ siteId }: FunnelsAndEventsCardProps) {
           <TabsContent value="events" className="space-y-4">
             <div className="space-y-3">
               <div className="text-sm text-muted-foreground mb-3">
-                Custom events tracked on your site
+                Active custom events on your site
               </div>
 
               {loadingCustomEvents ? (
@@ -175,26 +184,54 @@ export function FunnelsAndEventsCard({ siteId }: FunnelsAndEventsCardProps) {
               ) : (
                 <>
                   <div className="space-y-2">
-                    {customEvents.map((event, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 bg-muted/50 rounded-md"
-                      >
-                        <span className="font-mono text-sm">{event.name}</span>
-                        <span className="text-sm font-medium">
-                          {event.count.toLocaleString()}
-                        </span>
-                      </div>
-                    ))}
+                    {customEvents
+                      .filter(event => event.is_active)
+                      .map((event) => {
+                        const getEventIcon = () => {
+                          switch(event.event_type) {
+                            case 'click': return <MousePointer className="h-4 w-4" />;
+                            case 'scroll': return <ScrollText className="h-4 w-4" />;
+                            case 'page_view': return <Eye className="h-4 w-4" />;
+                            case 'form_submit': return <Send className="h-4 w-4" />;
+                            default: return <Activity className="h-4 w-4" />;
+                          }
+                        };
+                        
+                        return (
+                          <div
+                            key={event.id}
+                            className="flex items-center justify-between p-3 bg-muted/50 rounded-md hover:bg-muted/70 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="text-muted-foreground">
+                                {getEventIcon()}
+                              </div>
+                              <div>
+                                <div className="font-medium text-sm">{event.name}</div>
+                                <div className="text-xs text-muted-foreground capitalize">
+                                  {event.event_type.replace('_', ' ')}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-semibold">
+                                {event.count.toLocaleString()}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                triggers
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                   </div>
 
-                  {customEvents.length === 0 && (
+                  {customEvents.filter(e => e.is_active).length === 0 && (
                     <div className="p-4 text-center text-muted-foreground">
                       <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No custom events found</p>
+                      <p className="text-sm">No active custom events</p>
                       <p className="text-xs mt-1">
-                        Custom events will appear here once you start tracking
-                        them
+                        Create and activate custom events in Settings to track user interactions
                       </p>
                     </div>
                   )}

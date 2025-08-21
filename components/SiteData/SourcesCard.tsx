@@ -39,47 +39,52 @@ const UTM_OPTIONS = [
   { value: "utm_content", label: "UTM Contents" },
 ];
 
-// Map source names to their icon files
-const SOURCE_ICONS: Record<string, string> = {
-  chrome: "/images/brands/chrome.png",
-  "google chrome": "/images/brands/chrome.png",
-  "hacker news": "/images/brands/hacker-news.png",
-  hackernews: "/images/brands/hacker-news.png",
-  hn: "/images/brands/hacker-news.png",
-  "product hunt": "/images/brands/product-hunt.avif",
-  producthunt: "/images/brands/product-hunt.avif",
-  twitter: "/images/brands/twitter.png",
-  "twitter.com": "/images/brands/twitter.png",
-  x: "/images/brands/twitter.png",
-  "x.com": "/images/brands/twitter.png",
-  "x (twitter)": "/images/brands/twitter.png", // Ce que retourne normalizeReferrer
-  "twitter / x": "/images/brands/twitter.png",
-  "x (formerly twitter)": "/images/brands/twitter.png",
-};
-
 const getSourceIcon = (sourceName: string) => {
   const lowerName = sourceName.toLowerCase();
 
-  // Direct match first
-  if (SOURCE_ICONS[lowerName]) {
-    return SOURCE_ICONS[lowerName];
+  // Check if it's "direct" traffic (no favicon needed)
+  if (lowerName === "direct" || lowerName === "direct traffic") {
+    return null;
   }
 
-  // Fuzzy matching for common variations
-  if (lowerName.includes("twitter") || lowerName.includes("x (")) {
-    return "/images/brands/twitter.png";
+  // Extract domain for Google Favicon API
+  let domain = sourceName;
+  
+  // Clean up the source name to extract domain
+  if (sourceName.includes('.')) {
+    // It's likely a domain - clean it up
+    domain = sourceName.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+    
+    // Special handling for Twitter/X domains
+    if (domain === 't.co') {
+      domain = 'x.com'; // Use X.com for Twitter's URL shortener
+    }
+  } else {
+    // Map common source names to their domains
+    const domainMappings: Record<string, string> = {
+      'google': 'google.com',
+      'facebook': 'facebook.com',
+      'instagram': 'instagram.com',
+      'youtube': 'youtube.com',
+      'linkedin': 'linkedin.com',
+      'reddit': 'reddit.com',
+      'github': 'github.com',
+      'stackoverflow': 'stackoverflow.com',
+      'twitter': 'x.com',
+      'x': 'x.com',
+      'x (twitter)': 'x.com',
+      'hacker news': 'news.ycombinator.com',
+      'hackernews': 'news.ycombinator.com',
+      'product hunt': 'producthunt.com',
+      'producthunt': 'producthunt.com'
+    };
+
+    domain = domainMappings[lowerName] || `${sourceName.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
   }
 
-  if (lowerName.includes("hacker") && lowerName.includes("news")) {
-    return "/images/brands/hacker-news.png";
-  }
-
-  if (lowerName.includes("product") && lowerName.includes("hunt")) {
-    return "/images/brands/product-hunt.avif";
-  }
-
-  if (lowerName.includes("chrome")) {
-    return "/images/brands/chrome.png";
+  // Return Google Favicon API URL if we have a valid domain
+  if (domain && domain.includes('.')) {
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=16`;
   }
 
   return null;
@@ -100,6 +105,7 @@ export function SourcesCard({
   const [allCampaigns, setAllCampaigns] = useState<SourceData[]>([]);
   const [selectedUTM, setSelectedUTM] = useState<UTMType>("utm_medium");
   const [loading, setLoading] = useState(true);
+  const [failedIcons, setFailedIcons] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchSourceData = async () => {
@@ -113,7 +119,7 @@ export function SourcesCard({
 
       let sourcesQuery = supabase
         .from("sessions")
-        .select("utm_source, referrer")
+        .select("utm_source, referrer, referrer_domain")
         .eq("site_id", siteId);
 
       // Apply date filters if provided
@@ -181,7 +187,8 @@ export function SourcesCard({
       if (sourcesData) {
         const sourceCounts = sourcesData.reduce(
           (acc: Record<string, number>, item) => {
-            const rawSource = item.utm_source || item.referrer || "direct";
+            // Prefer referrer_domain over referrer for cleaner display
+            let rawSource = item.utm_source || item.referrer_domain || item.referrer || "direct";
 
             // Skip self-referrals (from own domain)
             if (
@@ -189,6 +196,12 @@ export function SourcesCard({
               rawSource.toLowerCase().includes("hectoranalytics")
             ) {
               return acc;
+            }
+
+            // For specific cases like Algolia URLs, prefer referrer_domain for cleaner display
+            if (item.referrer_domain && item.referrer && 
+                item.referrer.includes('algolia.com')) {
+              rawSource = item.referrer_domain;
             }
 
             // Get the display name for the source
@@ -273,13 +286,16 @@ export function SourcesCard({
                 />
                 <div className="flex items-center gap-2 truncate max-w-[200px] p-2">
                   {showIcons &&
-                    (icon ? (
+                    (icon && !failedIcons.has(icon) ? (
                       <Image
                         src={icon}
                         alt={item.name}
                         width={16}
                         height={16}
                         className="flex-shrink-0"
+                        onError={() => {
+                          setFailedIcons(prev => new Set([...prev, icon]));
+                        }}
                       />
                     ) : (
                       <Globe className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
