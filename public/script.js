@@ -8,9 +8,17 @@
   
   // API URL helper
   const getApiUrl = (path) => {
-    const isLocal = window.location.hostname === 'localhost';
-    const base = isLocal ? 'http://localhost:3000' : 'https://www.hectoranalytics.com';
-    return `${base}/api/${path}`;
+    const hostname = window.location.hostname;
+    const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
+    
+    if (isLocal) {
+      return `http://localhost:3000/api/${path}`;
+    }
+    
+    // Use the same origin to avoid CORS issues
+    const protocol = window.location.protocol;
+    const port = window.location.port ? `:${window.location.port}` : '';
+    return `${protocol}//${hostname}${port}/api/${path}`;
   };
   
   // Fetch helper with silent fail
