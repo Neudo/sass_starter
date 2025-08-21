@@ -19,7 +19,7 @@ interface LocationStats {
   countries: Record<string, number>;
   regions: Record<string, { count: number; country?: string }>;
   cities: Record<string, { count: number; country?: string }>;
-  languages: Record<string, number>;
+  languages: Record<string, { count: number }>;
 }
 
 export function LocationCard({
@@ -109,8 +109,9 @@ export function LocationCard({
 
         // Count languages
         if (session.language) {
-          stats.languages[session.language] =
-            (stats.languages[session.language] || 0) + 1;
+          stats.languages[session.language] = {
+            count: (stats.languages[session.language]?.count || 0) + 1,
+          };
         }
       });
 
@@ -212,7 +213,7 @@ export function LocationCard({
           // Get flag based on type
           let flag = null;
           let displayName = name;
-          
+
           if (type === "country") {
             flag = getCountryFlag(name);
           } else if (type === "region" || type === "city") {
@@ -285,7 +286,7 @@ export function LocationCard({
 
                   let flag = null;
                   let displayName = name;
-                  
+
                   if (type === "country") {
                     flag = getCountryFlag(name);
                   } else if (type === "region" || type === "city") {
@@ -316,7 +317,9 @@ export function LocationCard({
                           ) : (
                             <Languages className="h-4 w-4 text-muted-foreground" />
                           )}
-                          <span className="truncate text-sm">{displayName}</span>
+                          <span className="truncate text-sm">
+                            {displayName}
+                          </span>
                         </div>
                         <span className="text-muted-foreground pr-4 font-medium">
                           {showPercentage

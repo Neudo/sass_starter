@@ -121,6 +121,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  console.log("POST request received");
   try {
     const supabase = await createClient();
     const adminClient = createAdminClient();
@@ -182,6 +183,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (funnelError) {
+      console.error("Funnel creation error:", funnelError);
       throw funnelError;
     }
 
@@ -191,8 +193,11 @@ export async function POST(request: NextRequest) {
       funnel_id: funnel.id,
       step_number: index + 1,
       name: step.name,
+      step_type: step.step_type || "page_view",
       url_pattern: step.url_pattern,
       match_type: step.match_type || "exact",
+      event_type: step.event_type,
+      event_config: step.event_config,
     }));
 
     const { error: stepsError } = await adminClient
@@ -216,6 +221,116 @@ export async function POST(request: NextRequest) {
     console.error("Error creating funnel:", error);
     return NextResponse.json(
       { error: "Failed to create funnel" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  console.log("PUT request received");
+  try {
+    const supabase = await createClient();
+    const adminClient = createAdminClient();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    const { funnelId, name, description, isActive, steps } = body;
+
+    if (
+      !funnelId ||
+      !name ||
+      !steps ||
+      !Array.isArray(steps) ||
+      steps.length === 0
+    ) {
+      return NextResponse.json(
+        { error: "funnelId, name, and steps are required" },
+        { status: 400 }
+      );
+    }
+
+    // Verify funnel ownership
+    const { data: funnel, error: funnelError } = await adminClient
+      .from("funnels")
+      .select("id")
+      .eq("id", funnelId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (funnelError || !funnel) {
+      return NextResponse.json(
+        { error: "Funnel not found or unauthorized" },
+        { status: 404 }
+      );
+    }
+
+    // Update the funnel
+    const { error: updateError } = await adminClient
+      .from("funnels")
+      .update({
+        name,
+        description,
+        is_active: isActive,
+      })
+      .eq("id", funnelId);
+
+    if (updateError) {
+      console.error("Funnel update error:", updateError);
+      throw updateError;
+    }
+
+    // Delete existing steps
+    const { error: deleteError } = await adminClient
+      .from("funnel_steps")
+      .delete()
+      .eq("funnel_id", funnelId);
+
+    if (deleteError) {
+      console.error("Steps delete error:", deleteError);
+      throw deleteError;
+    }
+
+    // Insert new steps
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stepsToInsert = steps.map((step: any, index: number) => ({
+      funnel_id: funnelId,
+      step_number: index + 1,
+      name: step.name,
+      step_type: step.step_type || "page_view",
+      url_pattern: step.url_pattern,
+      match_type: step.match_type || "exact",
+      event_type: step.event_type,
+      event_config: step.event_config,
+    }));
+
+    const { error: stepsError } = await adminClient
+      .from("funnel_steps")
+      .insert(stepsToInsert);
+
+    if (stepsError) {
+      console.error("Steps insert error:", stepsError);
+      throw stepsError;
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Funnel updated successfully",
+    });
+  } catch (error) {
+    console.error("Error updating funnel:", error);
+    return NextResponse.json(
+      { error: "Failed to update funnel" },
       { status: 500 }
     );
   }

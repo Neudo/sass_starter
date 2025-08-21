@@ -21,7 +21,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Trash2, GripVertical, ArrowRight } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 
 interface FunnelStep {
   name: string;
@@ -47,11 +46,7 @@ interface FunnelCreateFormProps {
   userId: string;
 }
 
-export function FunnelCreateForm({
-  siteId,
-  domain,
-  userId,
-}: FunnelCreateFormProps) {
+export function FunnelCreateForm({ siteId, domain }: FunnelCreateFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
@@ -155,43 +150,38 @@ export function FunnelCreateForm({
     setLoading(true);
 
     try {
-      const supabase = createClient();
-
-      // Create the funnel
-      const { data: funnel, error: funnelError } = await supabase
-        .from("funnels")
-        .insert({
-          user_id: userId,
-          site_id: siteId,
+      console.log("Sending request to /api/funnels with data:", { siteId, name, description, steps });
+      const response = await fetch(`/api/funnels`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          siteId,
           name,
           description,
-          is_active: true,
-        })
-        .select()
-        .single();
+          steps: steps.map((step) => ({
+            name: step.name,
+            step_type: step.step_type,
+            url_pattern:
+              step.step_type === "page_view" ? step.url_pattern : null,
+            match_type: step.step_type === "page_view" ? step.match_type : null,
+            event_type:
+              step.step_type === "custom_event" ? step.event_type : null,
+            event_config:
+              step.step_type === "custom_event" ? step.event_config : null,
+          })),
+        }),
+      });
 
-      if (funnelError) throw funnelError;
+      console.log("Response status:", response.status);
+      console.log("Response ok:", response.ok);
 
-      // Create the funnel steps
-      const stepsToInsert = steps.map((step, index) => ({
-        funnel_id: funnel.id,
-        step_number: index + 1,
-        name: step.name,
-        step_type: step.step_type,
-        // Page view fields
-        url_pattern: step.step_type === "page_view" ? step.url_pattern : null,
-        match_type: step.step_type === "page_view" ? step.match_type : null,
-        // Custom event fields
-        event_type: step.step_type === "custom_event" ? step.event_type : null,
-        event_config:
-          step.step_type === "custom_event" ? step.event_config : null,
-      }));
-
-      const { error: stepsError } = await supabase
-        .from("funnel_steps")
-        .insert(stepsToInsert);
-
-      if (stepsError) throw stepsError;
+      if (!response.ok) {
+        const error = await response.json();
+        console.log("Error response:", error);
+        throw new Error(error.error || "Failed to create funnel");
+      }
 
       router.push(`/dashboard/${domain}/settings/funnels`);
     } catch (error) {
@@ -378,7 +368,9 @@ export function FunnelCreateForm({
                             <Label>Event Type</Label>
                             <Select
                               value={step.event_type || "click"}
-                              onValueChange={(value: "click" | "scroll" | "click_link") => {
+                              onValueChange={(
+                                value: "click" | "scroll" | "click_link"
+                              ) => {
                                 const newSteps = [...steps];
                                 newSteps[index] = {
                                   ...newSteps[index],
@@ -387,8 +379,12 @@ export function FunnelCreateForm({
                                     value === "click"
                                       ? { selector: "" }
                                       : value === "scroll"
-                                        ? { page_pattern: "" }
-                                        : { url_pattern: "", link_text: "", exact_match: false },
+                                      ? { page_pattern: "" }
+                                      : {
+                                          url_pattern: "",
+                                          link_text: "",
+                                          exact_match: false,
+                                        },
                                 };
                                 setSteps(newSteps);
                               }}
@@ -401,7 +397,9 @@ export function FunnelCreateForm({
                                   Click Element
                                 </SelectItem>
                                 <SelectItem value="scroll">Scroll</SelectItem>
-                                <SelectItem value="click_link">Click Link</SelectItem>
+                                <SelectItem value="click_link">
+                                  Click Link
+                                </SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -462,7 +460,9 @@ export function FunnelCreateForm({
                                     <SelectValue placeholder="Any scroll (leave empty)" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="any">Any scroll</SelectItem>
+                                    <SelectItem value="any">
+                                      Any scroll
+                                    </SelectItem>
                                     <SelectItem value="25">25%</SelectItem>
                                     <SelectItem value="50">50%</SelectItem>
                                     <SelectItem value="75">75%</SelectItem>
@@ -507,8 +507,8 @@ export function FunnelCreateForm({
                                       ...newSteps[index],
                                       event_config: {
                                         ...newSteps[index].event_config,
-                                        url_pattern: e.target.value
-                                      }
+                                        url_pattern: e.target.value,
+                                      },
                                     };
                                     setSteps(newSteps);
                                   }}
@@ -529,30 +529,33 @@ export function FunnelCreateForm({
                                       ...newSteps[index],
                                       event_config: {
                                         ...newSteps[index].event_config,
-                                        link_text: e.target.value
-                                      }
+                                        link_text: e.target.value,
+                                      },
                                     };
                                     setSteps(newSteps);
                                   }}
                                   placeholder="Buy Now, Get Started, Learn More"
                                 />
                                 <p className="text-xs text-muted-foreground mt-1">
-                                  Text content of the link (leave empty to match any text)
+                                  Text content of the link (leave empty to match
+                                  any text)
                                 </p>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <input
                                   type="checkbox"
                                   id={`exact-match-${index}`}
-                                  checked={step.event_config?.exact_match || false}
+                                  checked={
+                                    step.event_config?.exact_match || false
+                                  }
                                   onChange={(e) => {
                                     const newSteps = [...steps];
                                     newSteps[index] = {
                                       ...newSteps[index],
                                       event_config: {
                                         ...newSteps[index].event_config,
-                                        exact_match: e.target.checked
-                                      }
+                                        exact_match: e.target.checked,
+                                      },
                                     };
                                     setSteps(newSteps);
                                   }}
@@ -603,8 +606,12 @@ export function FunnelCreateForm({
                               : " (any amount)"
                           } of the page`}
                         {step.event_type === "click_link" &&
-                          `Triggers when user clicks on a link pointing to ${step.event_config?.url_pattern || 'specified URL'}${
-                            step.event_config?.link_text ? ` with text "${step.event_config.link_text}"` : ''
+                          `Triggers when user clicks on a link pointing to ${
+                            step.event_config?.url_pattern || "specified URL"
+                          }${
+                            step.event_config?.link_text
+                              ? ` with text "${step.event_config.link_text}"`
+                              : ""
                           }`}
                       </>
                     )}

@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -40,20 +40,28 @@ export function FunnelsAndEventsCard({ siteId }: FunnelsAndEventsCardProps) {
 
   useEffect(() => {
     const fetchFunnels = async () => {
-      const supabase = createClient();
-
-      const { data: funnelsData } = await supabase
-        .from("funnels")
-        .select("id, name, description, is_active")
-        .eq("site_id", siteId)
-        .eq("is_active", true)
-        .order("created_at", { ascending: false });
-
-      if (funnelsData) {
-        setFunnels(funnelsData);
+      try {
+        const response = await fetch(`/api/funnels?siteId=${siteId}`);
+        if (response.ok) {
+          const funnelsData = await response.json();
+          // Filter only active funnels and extract basic info
+          const activeFunnels = funnelsData
+            .filter((funnel: any) => funnel.is_active)
+            .map((funnel: any) => ({
+              id: funnel.id,
+              name: funnel.name,
+              description: funnel.description,
+              is_active: funnel.is_active,
+            }));
+          setFunnels(activeFunnels);
+        } else {
+          console.error("Failed to fetch funnels:", response.status);
+        }
+      } catch (error) {
+        console.error("Error fetching funnels:", error);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     fetchFunnels();

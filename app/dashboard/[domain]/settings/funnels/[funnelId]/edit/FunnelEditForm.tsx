@@ -22,7 +22,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Trash2, GripVertical, ArrowRight } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 
 interface FunnelStep {
   id?: string;
@@ -74,7 +73,7 @@ interface FunnelEditFormProps {
   funnel: FunnelData;
 }
 
-export function FunnelEditForm({ domain, userId, funnel }: FunnelEditFormProps) {
+export function FunnelEditForm({ domain, funnel }: FunnelEditFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState(funnel.name);
@@ -183,49 +182,39 @@ export function FunnelEditForm({ domain, userId, funnel }: FunnelEditFormProps) 
     setLoading(true);
 
     try {
-      const supabase = createClient();
-
-      // Update the funnel
-      const { error: funnelError } = await supabase
-        .from("funnels")
-        .update({
+      console.log("Sending PUT request to /api/funnels with data:", { 
+        funnelId: funnel.id, name, description, isActive, steps 
+      });
+      
+      const response = await fetch(`/api/funnels`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          funnelId: funnel.id,
           name,
           description,
-          is_active: isActive,
-        })
-        .eq("id", funnel.id)
-        .eq("user_id", userId);
+          isActive,
+          steps: steps.map((step) => ({
+            name: step.name,
+            step_type: step.step_type,
+            url_pattern: step.step_type === "page_view" ? step.url_pattern : null,
+            match_type: step.step_type === "page_view" ? step.match_type : null,
+            event_type: step.step_type === "custom_event" ? step.event_type : null,
+            event_config: step.step_type === "custom_event" ? step.event_config : null,
+          })),
+        }),
+      });
 
-      if (funnelError) throw funnelError;
+      console.log("Response status:", response.status);
+      console.log("Response ok:", response.ok);
 
-      // Delete existing steps
-      const { error: deleteError } = await supabase
-        .from("funnel_steps")
-        .delete()
-        .eq("funnel_id", funnel.id);
-
-      if (deleteError) throw deleteError;
-
-      // Insert new steps
-      const stepsToInsert = steps.map((step, index) => ({
-        funnel_id: funnel.id,
-        step_number: index + 1,
-        name: step.name,
-        step_type: step.step_type,
-        // Page view fields
-        url_pattern: step.step_type === "page_view" ? step.url_pattern : null,
-        match_type: step.step_type === "page_view" ? step.match_type : null,
-        // Custom event fields
-        event_type: step.step_type === "custom_event" ? step.event_type : null,
-        event_config:
-          step.step_type === "custom_event" ? step.event_config : null,
-      }));
-
-      const { error: stepsError } = await supabase
-        .from("funnel_steps")
-        .insert(stepsToInsert);
-
-      if (stepsError) throw stepsError;
+      if (!response.ok) {
+        const error = await response.json();
+        console.log("Error response:", error);
+        throw new Error(error.error || "Failed to update funnel");
+      }
 
       router.push(`/dashboard/${domain}/settings/funnels`);
     } catch (error) {
