@@ -40,6 +40,13 @@
     }
     return sessionId;
   };
+
+  // Get browser language
+  const getBrowserLanguage = () => {
+    // navigator.language est la langue active du navigateur
+    // navigator.languages[0] est la langue préférée
+    return navigator.language || navigator.languages?.[0] || 'en';
+  };
   
   // Main heartbeat function
   function sendHeartbeat() {
@@ -53,7 +60,8 @@
       page: location.pathname,
       domain,
       referrer: document.referrer || null,
-      urlParams: window.location.search
+      urlParams: window.location.search,
+      language: getBrowserLanguage()
     }).then(() => {
       trackFunnels(sessionId);
       trackCustomEvents(sessionId);

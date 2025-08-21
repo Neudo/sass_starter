@@ -8,7 +8,8 @@ import { calculatePageData } from "@/lib/analytics/pages";
 
 export async function POST(req: NextRequest) {
   try {
-    const { sessionId, page, domain, referrer, urlParams } = await req.json();
+    const { sessionId, page, domain, referrer, urlParams, language } =
+      await req.json();
 
     if (!sessionId || !domain) {
       return NextResponse.json(
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
         }
       );
     }
-    
+
     const siteId = site[0].id;
 
     // Check if this is a new session
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     const isNewSession = !existingSession;
-    
+
     // Calculate page data
     const pageData = calculatePageData(page, existingSession);
 
@@ -85,6 +86,8 @@ export async function POST(req: NextRequest) {
       os: deviceData.os,
       os_version: deviceData.osVersion,
       screen_size: deviceData.deviceCategory,
+      // Language data
+      language: language || "en",
       // Page tracking
       entry_page: pageData.entryPage,
       exit_page: pageData.exitPage,

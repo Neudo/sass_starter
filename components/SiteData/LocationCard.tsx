@@ -3,20 +3,23 @@
 import React, { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Building, Flag, Users, Percent } from "lucide-react";
+import { Globe, Building, Flag, Users, Percent, Languages } from "lucide-react";
 import { getCountryFlag } from "@/data/country-flags";
+import { getLanguageName, getLanguageFlag } from "@/lib/language-helper";
 import { DetailsModal } from "@/components/ui/details-modal";
 
 interface LocationData {
   country: string | null;
   region: string | null;
   city: string | null;
+  language: string | null;
 }
 
 interface LocationStats {
   countries: Record<string, number>;
   regions: Record<string, { count: number; country?: string }>;
   cities: Record<string, { count: number; country?: string }>;
+  languages: Record<string, number>;
 }
 
 export function LocationCard({
@@ -30,11 +33,13 @@ export function LocationCard({
     countries: {},
     regions: {},
     cities: {},
+    languages: {},
   });
   const [allLocationStats, setAllLocationStats] = useState<LocationStats>({
     countries: {},
     regions: {},
     cities: {},
+    languages: {},
   });
   const [loading, setLoading] = useState(true);
   const [showPercentage, setShowPercentage] = useState(false);
@@ -45,7 +50,7 @@ export function LocationCard({
 
       let query = supabase
         .from("sessions")
-        .select("country, region, city")
+        .select("country, region, city, language")
         .eq("site_id", siteId);
 
       if (dateRange) {
@@ -66,6 +71,7 @@ export function LocationCard({
         countries: {},
         regions: {},
         cities: {},
+        languages: {},
       };
 
       data?.forEach((session: LocationData) => {
@@ -100,6 +106,12 @@ export function LocationCard({
           }
           stats.cities[cityKey].count++;
         }
+
+        // Count languages
+        if (session.language) {
+          stats.languages[session.language] =
+            (stats.languages[session.language] || 0) + 1;
+        }
       });
 
       // Store all data
@@ -122,6 +134,11 @@ export function LocationCard({
             .sort(([, a], [, b]) => b.count - a.count)
             .slice(0, 7)
         ),
+        languages: Object.fromEntries(
+          Object.entries(stats.languages)
+            .sort(([, a], [, b]) => b.count - a.count)
+            .slice(0, 7)
+        ),
       };
 
       setLocationStats(limitedStats);
@@ -135,7 +152,7 @@ export function LocationCard({
     data:
       | Record<string, number>
       | Record<string, { count: number; country?: string }>,
-    type: "country" | "region" | "city" = "country",
+    type: "country" | "region" | "city" | "language" = "country",
     allData?:
       | Record<string, number>
       | Record<string, { count: number; country?: string }>,
@@ -166,7 +183,9 @@ export function LocationCard({
               ? "countries"
               : type === "region"
               ? "regions"
-              : "cities"}
+              : type === "city"
+              ? "cities"
+              : "languages"}
           </div>
           <button
             onClick={() => setShowPercentage(!showPercentage)}
@@ -192,6 +211,8 @@ export function LocationCard({
 
           // Get flag based on type
           let flag = null;
+          let displayName = name;
+          
           if (type === "country") {
             flag = getCountryFlag(name);
           } else if (type === "region" || type === "city") {
@@ -199,6 +220,9 @@ export function LocationCard({
             if (typeof item !== "number" && item.country) {
               flag = getCountryFlag(item.country);
             }
+          } else if (type === "language") {
+            flag = getLanguageFlag(name);
+            displayName = getLanguageName(name);
           }
 
           return (
@@ -215,10 +239,12 @@ export function LocationCard({
                     <Flag className="h-4 w-4 text-muted-foreground" />
                   ) : type === "region" ? (
                     <Globe className="h-4 w-4 text-muted-foreground" />
-                  ) : (
+                  ) : type === "city" ? (
                     <Building className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Languages className="h-4 w-4 text-muted-foreground" />
                   )}
-                  <span className="truncate text-sm">{name}</span>
+                  <span className="truncate text-sm">{displayName}</span>
                 </div>
                 <span className="text-muted-foreground pr-4 font-medium">
                   {showPercentage ? `${percentage}%` : count.toLocaleString()}
@@ -258,12 +284,17 @@ export function LocationCard({
                     allTotal > 0 ? ((count / allTotal) * 100).toFixed(1) : 0;
 
                   let flag = null;
+                  let displayName = name;
+                  
                   if (type === "country") {
                     flag = getCountryFlag(name);
                   } else if (type === "region" || type === "city") {
                     if (typeof item !== "number" && item.country) {
                       flag = getCountryFlag(item.country);
                     }
+                  } else if (type === "language") {
+                    flag = getLanguageFlag(name);
+                    displayName = getLanguageName(name);
                   }
 
                   return (
@@ -280,10 +311,12 @@ export function LocationCard({
                             <Flag className="h-4 w-4 text-muted-foreground" />
                           ) : type === "region" ? (
                             <Globe className="h-4 w-4 text-muted-foreground" />
-                          ) : (
+                          ) : type === "city" ? (
                             <Building className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <Languages className="h-4 w-4 text-muted-foreground" />
                           )}
-                          <span className="truncate text-sm">{name}</span>
+                          <span className="truncate text-sm">{displayName}</span>
                         </div>
                         <span className="text-muted-foreground pr-4 font-medium">
                           {showPercentage
@@ -309,10 +342,11 @@ export function LocationCard({
 
   return (
     <Tabs defaultValue="countries" className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
+      <TabsList className="grid w-full grid-cols-4">
         <TabsTrigger value="countries">Countries</TabsTrigger>
         <TabsTrigger value="regions">Regions</TabsTrigger>
         <TabsTrigger value="cities">Cities</TabsTrigger>
+        <TabsTrigger value="languages">Languages</TabsTrigger>
       </TabsList>
       <TabsContent value="countries" className="mt-4">
         {renderStats(
@@ -336,6 +370,14 @@ export function LocationCard({
           "city",
           allLocationStats.cities,
           "All cities"
+        )}
+      </TabsContent>
+      <TabsContent value="languages" className="mt-4">
+        {renderStats(
+          locationStats.languages,
+          "language",
+          allLocationStats.languages,
+          "Languages"
         )}
       </TabsContent>
     </Tabs>
