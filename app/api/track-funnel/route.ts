@@ -11,7 +11,6 @@ interface FunnelConversion {
 }
 
 export async function POST(request: NextRequest) {
-  console.log("🎯 Funnel tracking request received");
   try {
     const body = await request.json();
     const {
@@ -21,14 +20,6 @@ export async function POST(request: NextRequest) {
       eventType = "page_view",
       customEvent,
     } = body;
-
-    console.log("📊 Funnel tracking data:", {
-      siteId,
-      sessionId,
-      currentUrl,
-      eventType,
-      customEvent,
-    });
 
     if (!siteId || !sessionId || !currentUrl) {
       return NextResponse.json(
@@ -80,14 +71,8 @@ export async function POST(request: NextRequest) {
       .eq("is_active", true);
 
     if (funnelsError || !funnels) {
-      console.log(
-        "❌ Error fetching funnels or no funnels found:",
-        funnelsError
-      );
       return NextResponse.json({ tracked: false });
     }
-
-    console.log(`🎯 Found ${funnels?.length || 0} active funnels for site`);
 
     const conversionsToInsert: FunnelConversion[] = [];
 
@@ -169,7 +154,8 @@ async function handlePageViewTracking(
       .order("step_number");
 
     const completedSteps = new Set(
-      existingConversions?.map((c: { step_number: number }) => c.step_number) || []
+      existingConversions?.map((c: { step_number: number }) => c.step_number) ||
+        []
     );
 
     for (const step of funnel.funnel_steps) {
@@ -182,15 +168,6 @@ async function handlePageViewTracking(
         step.match_type
       );
 
-      console.log(`📊 Checking step ${step.step_number} (${step.name}):`, {
-        step_type: step.step_type,
-        url_pattern: step.url_pattern,
-        match_type: step.match_type,
-        currentUrl,
-        isMatch,
-        alreadyCompleted: completedSteps.has(step.step_number),
-      });
-
       if (isMatch && !completedSteps.has(step.step_number)) {
         // SEQUENTIAL VALIDATION: Check if previous steps are completed
         let canCompleteThisStep = true;
@@ -200,9 +177,6 @@ async function handlePageViewTracking(
           const previousStepNumber = step.step_number - 1;
           if (!completedSteps.has(previousStepNumber)) {
             canCompleteThisStep = false;
-            console.log(
-              `🚫 Step ${step.step_number} (${step.name}) skipped - previous step ${previousStepNumber} not completed`
-            );
           }
         }
 
@@ -218,10 +192,6 @@ async function handlePageViewTracking(
 
           // Add to completed steps for this session (in case there are multiple matching steps)
           completedSteps.add(step.step_number);
-
-          console.log(
-            `✅ Step ${step.step_number} (${step.name}) completed in sequence`
-          );
         }
       }
     }
@@ -257,16 +227,7 @@ async function handleCustomEvent(
   conversionsToInsert: FunnelConversion[],
   currentUrl: string
 ) {
-  const { step_id, funnel_id, step_number, event_type, event_data } =
-    customEvent;
-
-  console.log(`🎯 Processing custom event:`, {
-    step_id,
-    funnel_id,
-    step_number,
-    event_type,
-    event_data,
-  });
+  const { funnel_id, step_number, event_type } = customEvent;
 
   // Get all existing conversions for this session and funnel
   const { data: existingConversions } = await supabase
@@ -277,14 +238,9 @@ async function handleCustomEvent(
     .order("step_number");
 
   const completedSteps = new Set(
-    existingConversions?.map((c: { step_number: number }) => c.step_number) || []
+    existingConversions?.map((c: { step_number: number }) => c.step_number) ||
+      []
   );
-
-  // Check if this step is already completed
-  if (completedSteps.has(step_number)) {
-    console.log(`🚫 Custom event step ${step_number} already completed`);
-    return;
-  }
 
   // SEQUENTIAL VALIDATION: Check if previous steps are completed
   let canCompleteThisStep = true;
@@ -293,9 +249,6 @@ async function handleCustomEvent(
     const previousStepNumber = step_number - 1;
     if (!completedSteps.has(previousStepNumber)) {
       canCompleteThisStep = false;
-      console.log(
-        `🚫 Custom event step ${step_number} skipped - previous step ${previousStepNumber} not completed`
-      );
     }
   }
 
@@ -308,10 +261,6 @@ async function handleCustomEvent(
       step_name: `Custom Event: ${event_type}`,
       url_visited: currentUrl,
     });
-
-    console.log(
-      `✅ Custom event step ${step_number} (${event_type}) completed in sequence`
-    );
   }
 }
 

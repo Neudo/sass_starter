@@ -27,7 +27,7 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight mb-6"
+            className="sun text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight mb-6"
           >
             Ditch Google Analytics.{" "}
             <span className="bg-gradient-to-r from-primary via-ring to-secondary bg-clip-text text-transparent">
@@ -45,7 +45,7 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
           >
             The cookieless web analytics platform that respects visitor privacy
             while delivering powerful insights. No technical skills required -
-            GDPR compliant by design, 2-minute setup, and under 1KB tracking
+            GDPR compliant by design, 2-minute setup, and under 10KB tracking
             script. Perfect for beginners and pros alike.
           </motion.p>
 

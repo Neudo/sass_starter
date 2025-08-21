@@ -6,11 +6,11 @@ import { cn } from "@/lib/utils";
 import {
   Settings,
   Globe,
-  Target,
   TrendingUp,
   Download,
   AlertTriangle,
   ArrowLeft,
+  Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -27,8 +27,8 @@ const siteSettingsNavItems = [
   },
   {
     title: "Custom events",
-    href: "/dashboard/[domain]/settings/custom-events",
-    icon: Target,
+    href: "/dashboard/[domain]/settings/events",
+    icon: Activity,
   },
   {
     title: "Funnels",

@@ -6,6 +6,7 @@
   let lastActivityTime = Date.now();
   let trackedScrollEvents = new Set(); // Track scroll events per page to avoid duplicates
   let funnelSteps = []; // Cache for funnel steps to avoid repeated API calls
+  let customEvents = []; // Cache for custom events to avoid repeated API calls
   
   function sendHeartbeat() {
     // Ne pas envoyer si l'onglet n'est pas visible
@@ -35,9 +36,10 @@
       // silent fail en dev
     });
 
-    // Send funnel tracking (after getting site ID from main tracking)
+    // Send funnel tracking and custom events tracking (after getting site ID from main tracking)
     trackingPromise.then(() => {
       trackFunnels(sessionId);
+      trackCustomEvents(sessionId);
     });
     
     lastActivityTime = Date.now();
@@ -267,6 +269,270 @@
     });
   }
 
+  // Custom Events standalone tracking
+  function trackCustomEvents(sessionId) {
+    console.log('[Hector Debug] trackCustomEvents called with sessionId:', sessionId);
+    // Use actual hostname for custom events
+    const domain = window.location.hostname;
+    
+    console.log('[Hector Debug] Using domain for custom events:', domain);
+    
+    // Get custom events if not already cached
+    if (customEvents.length === 0) {
+      console.log('[Hector Debug] No cached custom events, loading from API...');
+      loadCustomEvents(domain, sessionId);
+    } else {
+      console.log('[Hector Debug] Using cached custom events:', customEvents.length);
+      // Setup custom event listeners for cached events
+      setupStandaloneCustomEventListeners(domain, sessionId);
+    }
+  }
+
+  function loadCustomEvents(domain, sessionId) {
+    const apiUrl = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3000/api/public-custom-events'
+      : 'https://www.hectoranalytics.com/api/public-custom-events';
+    
+    console.log('[Hector Debug] Loading custom events from:', `${apiUrl}?siteId=${domain}`);
+    
+    fetch(`${apiUrl}?siteId=${domain}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    }).then(response => {
+      console.log('[Hector Debug] Custom events API response status:', response.status);
+      if (response.ok) {
+        return response.json();
+      }
+      // Log the error response
+      return response.text().then(text => {
+        console.error('[Hector Debug] API Error Response:', text);
+        throw new Error(`Failed to load custom events: ${response.status} - ${text}`);
+      });
+    }).then(events => {
+      console.log('[Hector Debug] Received custom events:', events);
+      customEvents = (events || []).filter(event => event.is_active);
+      console.log('[Hector Debug] Filtered active custom events:', customEvents.length);
+      if (customEvents.length > 0) {
+        setupStandaloneCustomEventListeners(domain, sessionId);
+      } else {
+        console.log('[Hector Debug] No active custom events found for this site');
+      }
+    }).catch((error) => {
+      console.error('[Hector Debug] Error loading custom events:', error);
+      // silent fail
+    });
+  }
+
+  // Store click events configuration
+  let clickEventsConfig = [];
+  
+  function setupStandaloneCustomEventListeners(domain, sessionId) {
+    console.log('[Hector Debug] Setting up listeners for', customEvents.length, 'custom events');
+    
+    // Clear previous click events configuration
+    clickEventsConfig = [];
+    
+    // Collect all click events first
+    const clickEvents = customEvents.filter(event => event.event_type === 'click' && event.event_selector);
+    if (clickEvents.length > 0) {
+      clickEventsConfig = clickEvents.map(event => ({
+        event,
+        domain,
+        sessionId
+      }));
+      setupGlobalClickListener();
+    }
+    
+    // Setup other event types
+    customEvents.forEach(event => {
+      console.log('[Hector Debug] Setting up listener for event:', event.name, event.event_type);
+      
+      if (event.event_type === 'form_submit') {
+        setupStandaloneFormListener(event, domain, sessionId);
+      } else if (event.event_type === 'scroll' && event.trigger_config?.scroll_percentage) {
+        setupStandaloneScrollListener(event, domain, sessionId);
+      } else if (event.event_type === 'page_view') {
+        setupStandalonePageViewListener(event, domain, sessionId);
+      }
+    });
+  }
+
+  // Global click listener that handles all click events
+  let globalClickListenerAdded = false;
+  
+  function setupGlobalClickListener() {
+    // Only add the global listener once
+    if (globalClickListenerAdded) {
+      console.log('[Hector Debug] Global click listener already added, skipping');
+      return;
+    }
+    
+    globalClickListenerAdded = true;
+    console.log('[Hector Debug] Adding global click listener for', clickEventsConfig.length, 'click events');
+    
+    document.addEventListener('click', function(clickEvent) {
+      console.log('[Hector Debug] Global click detected on:', clickEvent.target);
+      
+      // Check each click event configuration
+      clickEventsConfig.forEach(config => {
+        const { event, domain, sessionId } = config;
+        const selector = event.event_selector;
+        
+        console.log('[Hector Debug] Checking selector:', selector, 'for event:', event.name);
+        
+        try {
+          let matched = false;
+          let targetElement = null;
+          
+          if (clickEvent.target.matches && clickEvent.target.matches(selector)) {
+            matched = true;
+            targetElement = clickEvent.target;
+            console.log('[Hector Debug] Direct match for selector:', selector);
+          } else if (clickEvent.target.closest && clickEvent.target.closest(selector)) {
+            matched = true;
+            targetElement = clickEvent.target.closest(selector);
+            console.log('[Hector Debug] Closest match for selector:', selector);
+          }
+          
+          if (matched && targetElement) {
+            console.log('[Hector Debug] Click matches selector:', selector, 'triggering event:', event.name);
+            triggerCustomEvent(event.name, domain, sessionId, {
+              selector: selector,
+              element: targetElement.tagName.toLowerCase(),
+              text: targetElement.textContent?.trim().substring(0, 100) || ''
+            });
+          }
+        } catch (error) {
+          console.warn('Hector Analytics: Invalid selector for custom event:', selector, error);
+        }
+      });
+    });
+  }
+
+  function setupCustomEventListener(event, domain, sessionId) {
+    // This function is no longer needed as click events are handled globally
+    // Keeping it for backward compatibility if called elsewhere
+    const eventType = event.event_type;
+    
+    if (eventType === 'form_submit') {
+      setupStandaloneFormListener(event, domain, sessionId);
+    } else if (eventType === 'scroll' && event.trigger_config?.scroll_percentage) {
+      setupStandaloneScrollListener(event, domain, sessionId);
+    } else if (eventType === 'page_view') {
+      setupStandalonePageViewListener(event, domain, sessionId);
+    }
+  }
+
+  function setupStandaloneFormListener(event, domain, sessionId) {
+    const selector = event.event_selector || 'form';
+    
+    document.addEventListener('submit', function(submitEvent) {
+      try {
+        if (submitEvent.target.matches && submitEvent.target.matches(selector)) {
+          triggerCustomEvent(event.name, domain, sessionId, {
+            form_id: submitEvent.target.id || 'no-id',
+            form_action: submitEvent.target.action || window.location.href
+          });
+        }
+      } catch (error) {
+        console.warn('Hector Analytics: Error in form submit tracking:', error);
+      }
+    });
+  }
+
+  function setupStandaloneScrollListener(event, domain, sessionId) {
+    const scrollPercentage = event.trigger_config.scroll_percentage;
+    const eventKey = `custom_scroll_${event.id}_${scrollPercentage}`;
+    
+    if (trackedScrollEvents.has(eventKey)) {
+      return;
+    }
+    
+    trackedScrollEvents.add(eventKey);
+    let scrollTriggered = false;
+    
+    function handleScroll() {
+      if (scrollTriggered) return;
+      
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const currentScrollPercentage = (scrollTop / scrollHeight) * 100;
+      
+      if (currentScrollPercentage >= scrollPercentage) {
+        scrollTriggered = true;
+        triggerCustomEvent(event.name, domain, sessionId, {
+          scroll_percentage: Math.round(currentScrollPercentage),
+          target_percentage: scrollPercentage
+        });
+        
+        window.removeEventListener('scroll', handleScroll);
+      }
+    }
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+  }
+
+  function setupStandalonePageViewListener(event, domain, sessionId) {
+    const pagePattern = event.trigger_config?.page_pattern;
+    const currentPath = window.location.pathname;
+    
+    // Check if current page matches the pattern
+    if (!pagePattern || currentPath.includes(pagePattern)) {
+      triggerCustomEvent(event.name, domain, sessionId, {
+        page_url: window.location.href,
+        page_pattern: pagePattern || 'all'
+      });
+    }
+  }
+
+  function triggerCustomEvent(eventName, domain, sessionId, metadata) {
+    const apiUrl = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3000/api/track-custom-event'
+      : 'https://www.hectoranalytics.com/api/track-custom-event';
+    
+    console.log('[Hector Debug] Triggering custom event:', eventName, 'to:', apiUrl);
+    console.log('[Hector Debug] Event data:', {
+      site_domain: domain,
+      event_name: eventName,
+      session_id: sessionId,
+      page_url: window.location.href,
+      metadata: metadata || {}
+    });
+    
+    fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        site_domain: domain,
+        event_name: eventName,
+        session_id: sessionId,
+        page_url: window.location.href,
+        metadata: metadata || {}
+      }),
+      keepalive: true,
+    }).then(response => {
+      console.log('[Hector Debug] Custom event API response status:', response.status);
+      return response.json();
+    }).then(data => {
+      console.log('[Hector Debug] Custom event API response:', data);
+    }).catch((error) => {
+      console.log('[Hector Debug] Custom event API error:', error);
+    });
+  }
+
+  // Global function to trigger custom events programmatically
+  window.hector = function(action, eventName, data) {
+    if (action === 'track' && eventName) {
+      const sessionId = localStorage.getItem("user_session_id");
+      // Use actual hostname for custom events
+      const domain = window.location.hostname;
+      
+      if (sessionId) {
+        triggerCustomEvent(eventName, domain, sessionId, data || {});
+      }
+    }
+  };
+
   function trackCustomEvent(step, domain, sessionId, eventType, eventData) {
     const apiUrl = window.location.hostname === 'localhost' 
       ? 'http://localhost:3000/api/track-funnel'
@@ -351,12 +617,17 @@
   function checkForPathChange() {
     if (currentPath !== window.location.pathname) {
       currentPath = window.location.pathname;
-      // Clear funnel steps cache to reload for new page
+      // Clear funnel steps and custom events cache to reload for new page
       funnelSteps = [];
+      customEvents = [];
+      // Reset click listener flag for new page
+      globalClickListenerAdded = false;
+      clickEventsConfig = [];
       // Restart tracking for the new page
       const sessionId = localStorage.getItem("user_session_id");
       if (sessionId) {
         trackFunnels(sessionId);
+        trackCustomEvents(sessionId);
       }
     }
   }
