@@ -59,23 +59,16 @@
     const domain = window.location.hostname;
     
     if (!funnelSteps.length) {
-      console.log('[Hector Debug] Loading funnel steps for domain:', domain);
       fetchApi(getApiUrl('public-funnel-steps') + `?siteId=${domain}`)
         .then(r => r?.ok ? r.json() : null)
         .then(steps => {
-          console.log('[Hector Debug] Received funnel steps:', steps);
           if (steps && steps.length > 0) {
             funnelSteps = steps;
             setupFunnelListeners(domain, sessionId);
-          } else {
-            console.log('[Hector Debug] No funnel steps found for domain:', domain);
           }
         })
-        .catch(error => {
-          console.error('[Hector Debug] Error loading funnel steps:', error);
-        });
+        .catch(() => {});
     } else {
-      console.log('[Hector Debug] Using cached funnel steps:', funnelSteps.length);
       setupFunnelListeners(domain, sessionId);
     }
   }
@@ -93,7 +86,6 @@
            currentPage.includes(step.url_pattern));
         
         if (shouldTrack) {
-          console.log('[Hector Debug] Triggering page_view funnel step:', step.name);
           trackFunnelEvent(step, domain, sessionId, 'page_view', {
             page_url: window.location.href,
             page_pattern: step.url_pattern || 'all'
@@ -284,8 +276,14 @@
           if (pattern === '/' && currentPage !== '/') return;
           // Handle wildcard patterns
           else if (pattern.includes('*')) {
-            const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
-            if (!regex.test(currentPage)) return;
+            try {
+              const escapedPattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/g, '.*');
+              const regex = new RegExp('^' + escapedPattern + '$');
+              if (!regex.test(currentPage)) return;
+            } catch {
+              // Fallback to simple includes if regex fails
+              if (!currentPage.includes(pattern.replace(/\*/g, ''))) return;
+            }
           }
           // Handle simple includes
           else if (!currentPage.includes(pattern)) return;
@@ -317,35 +315,11 @@
   
   // Track funnel event - simplified to just increment step count
   function trackFunnelEvent(step, domain, sessionId, eventType, eventData) {
-    console.log('[Hector Debug] Tracking funnel step:', {
-      step_name: step.name,
-      step_id: step.id,
-      domain,
-      eventType
-    });
-    
     fetchApi(getApiUrl('track-funnel-step'), {
       step_id: step.id,
       session_id: sessionId,
       site_domain: domain
-    }).then(response => response.json())
-    .then(data => {
-      if (data.already_completed) {
-        console.log('[Hector Debug] Step already completed by this session:', step.name);
-      } else if (data.success) {
-        console.log('[Hector Debug] Funnel step completed:', step.name);
-      } else if (data.error === 'Previous step not completed') {
-        console.warn('[Hector Debug] Step rejected - previous step not completed:', {
-          step: step.name,
-          step_number: data.step_number,
-          required_previous_step: data.required_previous_step
-        });
-      } else if (data.error) {
-        console.error('[Hector Debug] Step completion error:', data.error);
-      }
-    }).catch(error => {
-      console.error('[Hector Debug] Funnel step error:', error);
-    });
+    }).catch(() => {});
   }
   
   // Global API for programmatic tracking
