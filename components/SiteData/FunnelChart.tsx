@@ -1,7 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 interface FunnelStep {
   id: string;
@@ -44,8 +53,10 @@ export function FunnelChart({ funnelId, siteId }: FunnelChartProps) {
       setError(null);
 
       try {
-        const response = await fetch(`/api/funnel-analytics?funnelId=${funnelId}&siteId=${siteId}`);
-        
+        const response = await fetch(
+          `/api/funnel-analytics?funnelId=${funnelId}&siteId=${siteId}`
+        );
+
         if (!response.ok) {
           throw new Error("Failed to fetch funnel analytics");
         }
@@ -64,7 +75,11 @@ export function FunnelChart({ funnelId, siteId }: FunnelChartProps) {
   }, [funnelId, siteId]);
 
   if (loading) {
-    return <div className="text-sm text-muted-foreground">Loading funnel analytics...</div>;
+    return (
+      <div className="text-sm text-muted-foreground">
+        Loading funnel analytics...
+      </div>
+    );
   }
 
   if (error) {
@@ -75,50 +90,59 @@ export function FunnelChart({ funnelId, siteId }: FunnelChartProps) {
     return (
       <div className="text-center p-8 text-muted-foreground">
         <p className="text-sm">No analytics data available</p>
-        <p className="text-xs mt-1">Data will appear once users start interacting with your funnel</p>
+        <p className="text-xs mt-1">
+          Data will appear once users start interacting with your funnel
+        </p>
       </div>
     );
   }
 
   // Calculate proportional data based on first step (100%)
   const firstStepEntries = data.steps[0]?.entered_count || 1;
-  
-  const chartData = data.steps.map(step => {
+
+  const chartData = data.steps.map((step) => {
     const proportionalEntered = (step.entered_count / firstStepEntries) * 100;
-    const proportionalCompleted = (step.completed_count / firstStepEntries) * 100;
+    const proportionalCompleted =
+      (step.completed_count / firstStepEntries) * 100;
     const proportionalDropped = proportionalEntered - proportionalCompleted;
-    
+
     return {
       name: step.step_name,
       stepNumber: step.step_number,
       // Store both proportional (for display) and actual (for tooltip)
       entered: proportionalEntered,
-      completed: proportionalCompleted, 
+      completed: proportionalCompleted,
       dropped: proportionalDropped > 0 ? proportionalDropped : 0,
       // Keep actual numbers for tooltip
       actualEntered: step.entered_count,
       actualCompleted: step.completed_count,
       actualDropped: step.dropped_count,
-      conversionRate: step.conversion_rate
+      conversionRate: step.conversion_rate,
     };
   });
 
   // Custom tooltip component
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
         <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
-          <p className="font-medium text-sm">Step {data.stepNumber}: {data.name}</p>
+          <p className="font-medium text-sm">
+            Step {data.stepNumber}: {data.name}
+          </p>
           <div className="space-y-1 mt-2">
             <p className="text-sm">
-              <span className="text-blue-600">●</span> Entered: {data.actualEntered.toLocaleString()}
+              <span className="text-blue-600">●</span> Entered:{" "}
+              {data.actualEntered.toLocaleString()}
             </p>
             <p className="text-sm">
-              <span className="text-green-600">●</span> Completed: {data.actualCompleted.toLocaleString()}
+              <span className="text-green-600">●</span> Completed:{" "}
+              {data.actualCompleted.toLocaleString()}
             </p>
             <p className="text-sm">
-              <span className="text-red-600">●</span> Dropped: {data.actualDropped.toLocaleString()}
+              <span className="text-red-600">●</span> Dropped:{" "}
+              {data.actualDropped.toLocaleString()}
             </p>
             <p className="text-sm font-medium">
               Conversion: {data.conversionRate.toFixed(1)}%
@@ -138,16 +162,24 @@ export function FunnelChart({ funnelId, siteId }: FunnelChartProps) {
       {/* Summary Stats */}
       <div className="grid grid-cols-3 gap-4 p-4 bg-muted/30 rounded-lg">
         <div className="text-center">
-          <div className="text-2xl font-bold text-blue-600">{data.total_entered.toLocaleString()}</div>
+          <div className="text-2xl font-bold text-blue-600">
+            {data.total_entered.toLocaleString()}
+          </div>
           <div className="text-xs text-muted-foreground">Total Entered</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-green-600">{data.total_completed.toLocaleString()}</div>
+          <div className="text-2xl font-bold text-green-600">
+            {data.total_completed.toLocaleString()}
+          </div>
           <div className="text-xs text-muted-foreground">Total Completed</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold">{data.overall_conversion_rate.toFixed(1)}%</div>
-          <div className="text-xs text-muted-foreground">Overall Conversion</div>
+          <div className="text-2xl font-bold">
+            {data.overall_conversion_rate.toFixed(1)}%
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Overall Conversion
+          </div>
         </div>
       </div>
 
@@ -164,58 +196,37 @@ export function FunnelChart({ funnelId, siteId }: FunnelChartProps) {
             }}
           >
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-            <XAxis 
-              dataKey="name" 
+            <XAxis
+              dataKey="name"
               className="text-xs fill-muted-foreground"
               angle={-45}
               textAnchor="end"
               height={80}
               interval={0}
             />
-            <YAxis 
+            <YAxis
               domain={[0, 100]}
               tickFormatter={(value) => `${value}%`}
               className="text-xs fill-muted-foreground"
             />
             <Tooltip content={<CustomTooltip />} />
-            <Legend 
-              wrapperStyle={{ fontSize: '12px' }}
-            />
-            <Bar 
-              dataKey="completed" 
-              stackId="a" 
+            <Legend wrapperStyle={{ fontSize: "12px" }} />
+            <Bar
+              dataKey="completed"
+              stackId="a"
               fill="#16a34a"
               name="Completed"
               radius={[0, 0, 0, 0]}
             />
-            <Bar 
-              dataKey="dropped" 
-              stackId="a" 
+            <Bar
+              dataKey="dropped"
+              stackId="a"
               fill="#dc2626"
               name="Dropped"
               radius={[4, 4, 0, 0]}
             />
           </BarChart>
         </ResponsiveContainer>
-      </div>
-
-      {/* Step Details */}
-      <div className="space-y-2">
-        <h4 className="text-sm font-medium text-muted-foreground">Step Breakdown</h4>
-        {data.steps.map(step => (
-          <div key={step.id} className="flex items-center justify-between p-2 bg-muted/20 rounded">
-            <div>
-              <div className="text-sm font-medium">{step.step_name}</div>
-              <div className="text-xs text-muted-foreground capitalize">{step.step_type.replace('_', ' ')}</div>
-            </div>
-            <div className="text-right">
-              <div className="text-sm font-medium">{step.conversion_rate.toFixed(1)}%</div>
-              <div className="text-xs text-muted-foreground">
-                {step.completed_count}/{step.entered_count}
-              </div>
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );

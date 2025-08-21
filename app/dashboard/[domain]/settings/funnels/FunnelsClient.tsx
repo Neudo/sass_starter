@@ -1,10 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Plus, TrendingUp, Edit, Trash2, ArrowDown, Lock } from "lucide-react";
 import Link from "next/link";
 
@@ -83,48 +88,64 @@ export function FunnelsClient({
         throw new Error("Failed to delete funnel");
       }
 
-      setFunnels(funnels.filter(f => f.id !== funnelId));
+      setFunnels(funnels.filter((f) => f.id !== funnelId));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete funnel");
     }
   };
 
-  const renderFunnelStep = (step: FunnelStep, index: number, isLast: boolean) => {
+  const renderFunnelStep = (
+    step: FunnelStep,
+    index: number,
+    isLast: boolean
+  ) => {
     const isCompleted = step.visitors && step.visitors > 0;
-    const bgOpacity = 50 - (index * 10); // Decreasing opacity for each step
-    
+    const bgOpacity = 50 - index * 10; // Decreasing opacity for each step
+
     return (
       <div key={step.id}>
-        <div className={`flex items-center justify-between p-4 rounded-lg ${
-          index === 0 
-            ? "bg-muted/50" 
-            : isLast && isCompleted 
+        <div
+          className={`flex items-center justify-between p-4 rounded-lg ${
+            index === 0
+              ? "bg-muted/50"
+              : isLast && isCompleted
               ? "bg-green-50 border border-green-200"
               : `bg-muted/${Math.max(bgOpacity, 20)}`
-        }`}>
+          }`}
+        >
           <div className="flex items-center gap-3">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              isLast && isCompleted
-                ? "bg-green-600 text-white"
-                : index === 0
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                isLast && isCompleted
+                  ? "bg-green-600 text-white"
+                  : index === 0
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted-foreground text-white"
-            }`}>
+              }`}
+            >
               {step.step_number}
             </div>
             <div>
               <div className="font-medium">{step.name}</div>
-              <div className="text-sm text-muted-foreground">{step.url_pattern}</div>
+              <div className="text-sm text-muted-foreground">
+                {step.url_pattern}
+              </div>
             </div>
           </div>
           <div className="text-right">
             <div className="font-medium">
               {step.visitors?.toLocaleString() || "0"} visitors
             </div>
-            <div className={`text-sm ${
-              isLast && isCompleted ? "text-green-600" : "text-muted-foreground"
-            }`}>
-              {step.conversion_rate ? `${step.conversion_rate.toFixed(1)}%` : "0%"}
+            <div
+              className={`text-sm ${
+                isLast && isCompleted
+                  ? "text-green-600"
+                  : "text-muted-foreground"
+              }`}
+            >
+              {step.conversion_rate
+                ? `${step.conversion_rate.toFixed(1)}%`
+                : "0%"}
             </div>
           </div>
         </div>
@@ -148,7 +169,8 @@ export function FunnelsClient({
                 Funnels
               </CardTitle>
               <CardDescription>
-                Track user journeys through multi-step processes like checkouts or signups
+                Track user journeys through multi-step processes like checkouts
+                or signups
               </CardDescription>
             </div>
           </CardHeader>
@@ -157,14 +179,17 @@ export function FunnelsClient({
               <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
                 <Lock className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-medium mb-2">Funnels Not Available</h3>
+              <h3 className="text-lg font-medium mb-2">
+                Funnels Not Available
+              </h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Funnel tracking is available in Professional and Enterprise plans.
-                Upgrade to start analyzing your conversion funnels.
+                Funnel tracking is available in Professional and Enterprise
+                plans. Upgrade to start analyzing your conversion funnels.
               </p>
               <div className="space-y-2">
                 <div className="text-sm text-muted-foreground">
-                  Current plan: <span className="font-medium capitalize">{currentPlan}</span>
+                  Current plan:{" "}
+                  <span className="font-medium capitalize">{currentPlan}</span>
                 </div>
                 <Button asChild>
                   <Link href="/settings/billing/plans">
@@ -211,7 +236,8 @@ export function FunnelsClient({
           <div>
             <CardTitle>Funnels</CardTitle>
             <CardDescription>
-              Track user journeys through multi-step processes like checkouts or signups
+              Track user journeys through multi-step processes like checkouts or
+              signups
             </CardDescription>
           </div>
           <Button className="gap-2" asChild>
@@ -229,7 +255,8 @@ export function FunnelsClient({
               </div>
               <h3 className="text-lg font-medium mb-2">No Funnels Yet</h3>
               <p className="text-muted-foreground mb-6">
-                Create your first funnel to start tracking user conversion journeys.
+                Create your first funnel to start tracking user conversion
+                journeys.
               </p>
               <Button asChild>
                 <Link href={`/dashboard/${domain}/settings/funnels/create`}>
@@ -259,17 +286,15 @@ export function FunnelsClient({
                         {funnel.conversion_rate.toFixed(1)}% conversion rate
                       </Badge>
                     )}
-                    <Button 
-                      variant="outline" 
-                      size="icon"
-                      asChild
-                    >
-                      <Link href={`/dashboard/${domain}/settings/funnels/${funnel.id}/edit`}>
+                    <Button variant="outline" size="icon" asChild>
+                      <Link
+                        href={`/dashboard/${domain}/settings/funnels/${funnel.id}/edit`}
+                      >
                         <Edit className="h-4 w-4" />
                       </Link>
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="icon"
                       onClick={() => deleteFunnel(funnel.id)}
                     >
@@ -284,8 +309,12 @@ export function FunnelsClient({
                       No steps configured for this funnel
                     </div>
                   ) : (
-                    funnel.steps.map((step, index) => 
-                      renderFunnelStep(step, index, index === funnel.steps.length - 1)
+                    funnel.steps.map((step, index) =>
+                      renderFunnelStep(
+                        step,
+                        index,
+                        index === funnel.steps.length - 1
+                      )
                     )
                   )}
                 </div>
@@ -294,47 +323,6 @@ export function FunnelsClient({
           )}
         </CardContent>
       </Card>
-
-      {funnels.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Funnel Analytics</CardTitle>
-            <CardDescription>
-              Understand where visitors drop off in your conversion process
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {funnels.map((funnel) => (
-              <div key={funnel.id} className="space-y-3">
-                <h4 className="font-medium">{funnel.name}</h4>
-                {funnel.steps.map((step, index) => {
-                  if (index === funnel.steps.length - 1) return null;
-                  
-                  const currentStep = step;
-                  const nextStep = funnel.steps[index + 1];
-                  const dropOffRate = currentStep.visitors && nextStep.visitors 
-                    ? ((currentStep.visitors - nextStep.visitors) / currentStep.visitors) * 100
-                    : 0;
-
-                  return (
-                    <div key={`${step.id}-dropoff`}>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">
-                          {currentStep.name} → {nextStep.name} drop-off
-                        </span>
-                        <span className="text-sm font-medium">
-                          {dropOffRate.toFixed(1)}%
-                        </span>
-                      </div>
-                      <Progress value={dropOffRate} className="h-2" />
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

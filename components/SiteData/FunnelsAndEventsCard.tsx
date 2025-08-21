@@ -11,7 +11,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Funnel, Activity, MousePointer, ScrollText, Eye, FileText, Send } from "lucide-react";
+import {
+  Funnel,
+  Activity,
+  MousePointer,
+  ScrollText,
+  Eye,
+  Send,
+} from "lucide-react";
 import { FunnelChart } from "./FunnelChart";
 
 interface Funnel {
@@ -53,9 +60,9 @@ export function FunnelsAndEventsCard({ siteId }: FunnelsAndEventsCardProps) {
   }, [siteId]);
 
   const [customEvents, setCustomEvents] = useState<
-    Array<{ 
+    Array<{
       id: string;
-      name: string; 
+      name: string;
       count: number;
       event_type: string;
       is_active: boolean;
@@ -163,10 +170,7 @@ export function FunnelsAndEventsCard({ siteId }: FunnelsAndEventsCardProps) {
                           </p>
                         )}
                       </div>
-                      <FunnelChart 
-                        funnelId={selectedFunnel}
-                        siteId={siteId}
-                      />
+                      <FunnelChart funnelId={selectedFunnel} siteId={siteId} />
                     </div>
                   )}
                 </>
@@ -188,18 +192,23 @@ export function FunnelsAndEventsCard({ siteId }: FunnelsAndEventsCardProps) {
                 <>
                   <div className="space-y-2">
                     {customEvents
-                      .filter(event => event.is_active)
+                      .filter((event) => event.is_active)
                       .map((event) => {
                         const getEventIcon = () => {
-                          switch(event.event_type) {
-                            case 'click': return <MousePointer className="h-4 w-4" />;
-                            case 'scroll': return <ScrollText className="h-4 w-4" />;
-                            case 'page_view': return <Eye className="h-4 w-4" />;
-                            case 'form_submit': return <Send className="h-4 w-4" />;
-                            default: return <Activity className="h-4 w-4" />;
+                          switch (event.event_type) {
+                            case "click":
+                              return <MousePointer className="h-4 w-4" />;
+                            case "scroll":
+                              return <ScrollText className="h-4 w-4" />;
+                            case "page_view":
+                              return <Eye className="h-4 w-4" />;
+                            case "form_submit":
+                              return <Send className="h-4 w-4" />;
+                            default:
+                              return <Activity className="h-4 w-4" />;
                           }
                         };
-                        
+
                         return (
                           <div
                             key={event.id}
@@ -210,9 +219,11 @@ export function FunnelsAndEventsCard({ siteId }: FunnelsAndEventsCardProps) {
                                 {getEventIcon()}
                               </div>
                               <div>
-                                <div className="font-medium text-sm">{event.name}</div>
+                                <div className="font-medium text-sm">
+                                  {event.name}
+                                </div>
                                 <div className="text-xs text-muted-foreground capitalize">
-                                  {event.event_type.replace('_', ' ')}
+                                  {event.event_type.replace("_", " ")}
                                 </div>
                               </div>
                             </div>
@@ -229,12 +240,13 @@ export function FunnelsAndEventsCard({ siteId }: FunnelsAndEventsCardProps) {
                       })}
                   </div>
 
-                  {customEvents.filter(e => e.is_active).length === 0 && (
+                  {customEvents.filter((e) => e.is_active).length === 0 && (
                     <div className="p-4 text-center text-muted-foreground">
                       <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
                       <p className="text-sm">No active custom events</p>
                       <p className="text-xs mt-1">
-                        Create and activate custom events in Settings to track user interactions
+                        Create and activate custom events in Settings to track
+                        user interactions
                       </p>
                     </div>
                   )}

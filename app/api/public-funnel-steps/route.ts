@@ -8,13 +8,17 @@ export async function GET(request: NextRequest) {
     const siteId = searchParams.get("siteId");
 
     if (!siteId) {
-      return NextResponse.json({ error: "Site ID is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Site ID is required" },
+        { status: 400 }
+      );
     }
 
     // Get all active funnel steps for the site
     const { data: steps, error } = await adminClient
       .from("funnel_steps")
-      .select(`
+      .select(
+        `
         id,
         step_number,
         name,
@@ -31,7 +35,8 @@ export async function GET(request: NextRequest) {
             domain
           )
         )
-      `)
+      `
+      )
       .eq("funnels.sites.domain", siteId)
       .eq("funnels.is_active", true)
       .order("step_number", { ascending: true });
@@ -45,7 +50,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data for frontend consumption
-    const transformedSteps = (steps || []).map(step => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const transformedSteps = (steps || []).map((step: any) => ({
       id: step.id,
       funnel_id: step.funnels.id,
       funnel_name: step.funnels.name,
@@ -55,7 +61,7 @@ export async function GET(request: NextRequest) {
       event_type: step.event_type,
       event_config: step.event_config,
       url_pattern: step.url_pattern,
-      match_type: step.match_type
+      match_type: step.match_type,
     }));
 
     return NextResponse.json(transformedSteps);

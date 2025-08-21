@@ -317,6 +317,14 @@
         console.log('[Hector Debug] Step already completed by this session:', step.name);
       } else if (data.success) {
         console.log('[Hector Debug] Funnel step completed:', step.name);
+      } else if (data.error === 'Previous step not completed') {
+        console.warn('[Hector Debug] Step rejected - previous step not completed:', {
+          step: step.name,
+          step_number: data.step_number,
+          required_previous_step: data.required_previous_step
+        });
+      } else if (data.error) {
+        console.error('[Hector Debug] Step completion error:', data.error);
       }
     }).catch(error => {
       console.error('[Hector Debug] Funnel step error:', error);

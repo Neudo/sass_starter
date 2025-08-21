@@ -17,7 +17,8 @@ export async function POST(request: NextRequest) {
     // Verify the step exists and get site info
     const { data: stepData, error: stepError } = await adminClient
       .from("funnel_steps")
-      .select(`
+      .select(
+        `
         id,
         funnel_id,
         step_number,
@@ -28,7 +29,8 @@ export async function POST(request: NextRequest) {
             domain
           )
         )
-      `)
+      `
+      )
       .eq("id", step_id)
       .single();
 
@@ -39,13 +41,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Type assertion to fix TypeScript inference
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const typedStepData = stepData as any;
+
     // Verify domain matches
-    const actualDomain = stepData.funnels.sites.domain;
+    const actualDomain = typedStepData.funnels.sites.domain;
     if (actualDomain !== site_domain) {
-      return NextResponse.json(
-        { error: "Domain mismatch" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Domain mismatch" }, { status: 403 });
     }
 
     // Check if this session has already completed this step
@@ -56,7 +59,8 @@ export async function POST(request: NextRequest) {
       .eq("session_id", session_id)
       .single();
 
-    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = not found, which is expected
+    if (checkError && checkError.code !== "PGRST116") {
+      // PGRST116 = not found, which is expected
       console.error("Error checking existing completion:", checkError);
       return NextResponse.json(
         { error: "Failed to check completion status" },
@@ -66,12 +70,63 @@ export async function POST(request: NextRequest) {
 
     // If already completed, don't count again
     if (existingCompletion) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         success: true,
         already_completed: true,
-        step_name: stepData.name,
-        step_number: stepData.step_number 
+        step_name: typedStepData.name,
+        step_number: typedStepData.step_number,
       });
+    }
+
+    // Check if all previous steps have been completed by this session (sequential validation)
+    if (typedStepData.step_number > 1) {
+      // Get all steps for this funnel ordered by step_number
+      const { data: allSteps, error: allStepsError } = await adminClient
+        .from("funnel_steps")
+        .select("id, step_number")
+        .eq("funnel_id", typedStepData.funnel_id)
+        .order("step_number", { ascending: true });
+
+      if (allStepsError) {
+        console.error("Error fetching funnel steps:", allStepsError);
+        return NextResponse.json(
+          { error: "Failed to validate step sequence" },
+          { status: 500 }
+        );
+      }
+
+      // Check that all previous steps have been completed by this session
+      const previousSteps =
+        allSteps?.filter((s) => s.step_number < typedStepData.step_number) ||
+        [];
+
+      for (const prevStep of previousSteps) {
+        const { data: prevCompletion, error: prevError } = await adminClient
+          .from("funnel_step_completions")
+          .select("id")
+          .eq("step_id", prevStep.id)
+          .eq("session_id", session_id)
+          .single();
+
+        if (prevError && prevError.code !== "PGRST116") {
+          console.error("Error checking previous step completion:", prevError);
+          return NextResponse.json(
+            { error: "Failed to validate previous steps" },
+            { status: 500 }
+          );
+        }
+
+        // If any previous step is not completed, reject this step completion
+        if (!prevCompletion) {
+          return NextResponse.json({
+            success: false,
+            error: "Previous step not completed",
+            step_name: typedStepData.name,
+            step_number: typedStepData.step_number,
+            required_previous_step: prevStep.step_number,
+          });
+        }
+      }
     }
 
     // Record the completion (this will prevent future duplicates)
@@ -81,7 +136,7 @@ export async function POST(request: NextRequest) {
         step_id,
         session_id,
         site_domain,
-        metadata: {}
+        metadata: {},
       });
 
     if (insertCompletionError) {
@@ -123,12 +178,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      step_name: stepData.name,
-      step_number: stepData.step_number 
+      step_name: typedStepData.name,
+      step_number: typedStepData.step_number,
     });
-
   } catch (error) {
     console.error("Error tracking funnel step:", error);
     return NextResponse.json(

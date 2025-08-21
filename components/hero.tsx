@@ -59,14 +59,16 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12"
             >
-              <Button
-                size="lg"
-                className="text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
-              >
-                Start Free - No Credit Card
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-              <Link href="/demo">
+              <Link href="/auth/sign-up">
+                <Button
+                  size="lg"
+                  className="text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
+                >
+                  Start Free - No Credit Card
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+              <Link target="_blank" href="/hectoranalytics.com">
                 <Button
                   variant="outline"
                   size="lg"

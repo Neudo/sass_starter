@@ -79,11 +79,12 @@ export async function GET(request: NextRequest) {
       );
 
       // Calculate visitors and conversion rates using step_count
-      const stepsWithData = steps.map((step, index) => {
+      const stepsWithData = steps.map((step) => {
         const visitors = step.step_count || 0;
-        
+
         // Calculate conversion rate relative to first step
-        const firstStepVisitors = steps.length > 0 ? (steps[0].step_count || 0) : 0;
+        const firstStepVisitors =
+          steps.length > 0 ? steps[0].step_count || 0 : 0;
         const conversionRate =
           firstStepVisitors > 0 ? (visitors / firstStepVisitors) * 100 : 0;
 
