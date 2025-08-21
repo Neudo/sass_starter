@@ -208,7 +208,7 @@ export function CustomEventEditForm({
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="scroll_percentage">Scroll Percentage</Label>
+              <Label htmlFor="scroll_percentage">Scroll Percentage *</Label>
               <Input
                 id="scroll_percentage"
                 type="number"
@@ -225,9 +225,30 @@ export function CustomEventEditForm({
                     },
                   }))
                 }
+                required
               />
               <p className="text-sm text-muted-foreground mt-1">
                 Trigger when user scrolls to this percentage of the page (1-100)
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="page_pattern">Page URL Pattern</Label>
+              <Input
+                id="page_pattern"
+                placeholder="e.g., /, /products, /blog/*"
+                value={formData.trigger_config.page_pattern || ""}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    trigger_config: {
+                      ...prev.trigger_config,
+                      page_pattern: e.target.value,
+                    },
+                  }))
+                }
+              />
+              <p className="text-sm text-muted-foreground mt-1">
+                Track scroll only on specific pages. Use / for homepage, * as wildcard. Leave empty for all pages.
               </p>
             </div>
           </div>
@@ -347,10 +368,7 @@ export function CustomEventEditForm({
                       ...prev,
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       event_type: value as any,
-                      event_selector:
-                        value !== prev.event_type ? "" : prev.event_selector,
-                      trigger_config:
-                        value !== prev.event_type ? {} : prev.trigger_config,
+                      // Keep existing values when changing event type
                     }))
                   }
                   required

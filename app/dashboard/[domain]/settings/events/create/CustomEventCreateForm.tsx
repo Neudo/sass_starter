@@ -199,7 +199,7 @@ export function CustomEventCreateForm({
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="scroll_percentage">Scroll Percentage</Label>
+              <Label htmlFor="scroll_percentage">Scroll Percentage *</Label>
               <Input
                 id="scroll_percentage"
                 type="number"
@@ -216,9 +216,30 @@ export function CustomEventCreateForm({
                     },
                   }))
                 }
+                required
               />
               <p className="text-sm text-muted-foreground mt-1">
                 Trigger when user scrolls to this percentage of the page (1-100)
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="page_pattern">Page URL Pattern</Label>
+              <Input
+                id="page_pattern"
+                placeholder="e.g., /, /products, /blog/*"
+                value={formData.trigger_config.page_pattern || ""}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    trigger_config: {
+                      ...prev.trigger_config,
+                      page_pattern: e.target.value,
+                    },
+                  }))
+                }
+              />
+              <p className="text-sm text-muted-foreground mt-1">
+                Track scroll only on specific pages. Use / for homepage, * as wildcard. Leave empty for all pages.
               </p>
             </div>
           </div>

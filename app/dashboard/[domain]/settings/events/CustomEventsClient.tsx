@@ -227,7 +227,7 @@ export function CustomEventsClient({
             <div className="grid gap-4">
               {customEvents.map((event) => (
                 <div key={event.id} className="border rounded-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between">
                     <div>
                       <div className="font-semibold flex items-center gap-2">
                         {event.name}
@@ -275,63 +275,12 @@ export function CustomEventsClient({
                       </Button>
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    {event.event_selector && (
-                      <div className="text-sm">
-                        <span className="font-medium">Selector:</span>{" "}
-                        <code className="bg-muted px-1 rounded text-xs">
-                          {event.event_selector}
-                        </code>
-                      </div>
-                    )}
-
-                    {event.trigger_config &&
-                      Object.keys(event.trigger_config).length > 0 && (
-                        <div className="text-sm">
-                          <span className="font-medium">Configuration:</span>{" "}
-                          <span className="text-muted-foreground">
-                            {JSON.stringify(event.trigger_config)}
-                          </span>
-                        </div>
-                      )}
-                  </div>
                 </div>
               ))}
             </div>
           )}
         </CardContent>
       </Card>
-
-      {customEvents.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Event Analytics</CardTitle>
-            <CardDescription>
-              Overview of your custom event performance
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {customEvents
-                .filter((e) => e.is_active)
-                .map((event) => (
-                  <div key={event.id} className="p-4 border rounded-lg">
-                    <div className="font-medium truncate mb-2">
-                      {event.name}
-                    </div>
-                    <div className="text-2xl font-bold">
-                      {event.total_triggers?.toLocaleString() || 0}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Total triggers
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

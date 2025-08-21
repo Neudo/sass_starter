@@ -30,23 +30,23 @@ export default async function EditCustomEventPage({
     return notFound();
   }
 
-  // Get custom event data - for now we'll simulate the fetch
-  // Once the API is ready, this will fetch from /api/custom-events/[eventId]
-  const mockCustomEvent = {
-    id: eventId,
-    name: "Sample Click Event",
-    description: "Tracks clicks on purchase buttons",
-    event_type: "click" as const,
-    event_selector: ".buy-button",
-    trigger_config: {},
-    is_active: true,
-  };
+  // Get the actual custom event data from database
+  const { data: customEvent, error: eventError } = await adminClient
+    .from("custom_events")
+    .select("*")
+    .eq("id", eventId)
+    .eq("site_id", siteData.id)
+    .single();
+
+  if (eventError || !customEvent) {
+    return notFound();
+  }
 
   return (
     <CustomEventEditForm
       siteId={siteData.id}
       domain={siteData.domain}
-      customEvent={mockCustomEvent}
+      customEvent={customEvent}
     />
   );
 }

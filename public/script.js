@@ -274,6 +274,23 @@
           } catch {}
         });
       } else if (event_type === 'scroll' && trigger_config?.scroll_percentage) {
+        // Check if scroll should be tracked on this page
+        const pattern = trigger_config?.page_pattern;
+        const currentPage = window.location.pathname;
+        
+        // Skip if pattern is defined and doesn't match current page
+        if (pattern) {
+          // Handle exact match for homepage
+          if (pattern === '/' && currentPage !== '/') return;
+          // Handle wildcard patterns
+          else if (pattern.includes('*')) {
+            const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
+            if (!regex.test(currentPage)) return;
+          }
+          // Handle simple includes
+          else if (!currentPage.includes(pattern)) return;
+        }
+        
         setupScrollHandler(event, domain, sessionId, false);
       } else if (event_type === 'page_view') {
         const pattern = trigger_config?.page_pattern;
