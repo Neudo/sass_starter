@@ -1,10 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import Image from "next/image";
-import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { normalizeReferrer, getChannel } from "@/lib/referrer-helper";
 import { Globe } from "lucide-react";
 import {
   Select,
@@ -14,8 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DetailsModal } from "@/components/ui/details-modal";
-import { useFilters } from "@/lib/contexts/FilterContext";
-import { applyFiltersToQuery } from "@/lib/filter-utils";
+import { useAnalyticsStore } from "@/lib/stores/analytics";
 
 interface SourceData {
   name: string;
@@ -30,9 +27,6 @@ type UTMType =
   | "utm_medium"
   | "utm_term"
   | "utm_content";
-
-// Row shape containing any of the UTM fields; selecting all avoids a union type
-type UTMRow = Partial<Record<UTMType, string | null>>;
 
 const UTM_OPTIONS = [
   { value: "utm_medium", label: "UTM Mediums" },
@@ -52,245 +46,132 @@ const getSourceIcon = (sourceName: string) => {
 
   // Extract domain for Google Favicon API
   let domain = sourceName;
-  
+
   // Clean up the source name to extract domain
-  if (sourceName.includes('.')) {
+  if (sourceName.includes(".")) {
     // It's likely a domain - clean it up
-    domain = sourceName.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
-    
+    domain = sourceName
+      .replace(/^https?:\/\//, "")
+      .replace(/^www\./, "")
+      .split("/")[0];
+
     // Special handling for Twitter/X domains
-    if (domain === 't.co') {
-      domain = 'x.com'; // Use X.com for Twitter's URL shortener
+    if (domain === "t.co") {
+      domain = "x.com"; // Use X.com for Twitter's URL shortener
     }
   } else {
     // Map common source names to their domains
     const domainMappings: Record<string, string> = {
-      'google': 'google.com',
-      'facebook': 'facebook.com',
-      'instagram': 'instagram.com',
-      'youtube': 'youtube.com',
-      'linkedin': 'linkedin.com',
-      'reddit': 'reddit.com',
-      'github': 'github.com',
-      'stackoverflow': 'stackoverflow.com',
-      'twitter': 'x.com',
-      'x': 'x.com',
-      'x (twitter)': 'x.com',
-      'hacker news': 'news.ycombinator.com',
-      'hackernews': 'news.ycombinator.com',
-      'product hunt': 'producthunt.com',
-      'producthunt': 'producthunt.com'
+      google: "google.com",
+      facebook: "facebook.com",
+      instagram: "instagram.com",
+      youtube: "youtube.com",
+      linkedin: "linkedin.com",
+      reddit: "reddit.com",
+      github: "github.com",
+      stackoverflow: "stackoverflow.com",
+      twitter: "x.com",
+      x: "x.com",
+      "x (twitter)": "x.com",
+      "hacker news": "news.ycombinator.com",
+      hackernews: "news.ycombinator.com",
+      "product hunt": "producthunt.com",
+      producthunt: "producthunt.com",
     };
 
-    domain = domainMappings[lowerName] || `${sourceName.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
+    domain =
+      domainMappings[lowerName] ||
+      `${sourceName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`;
   }
 
   // Return Google Favicon API URL if we have a valid domain
-  if (domain && domain.includes('.')) {
+  if (domain && domain.includes(".")) {
     return `https://www.google.com/s2/favicons?domain=${domain}&sz=16`;
   }
 
   return null;
 };
 
-export function SourcesCard({
-  siteId,
-  dateRange,
-  dateRangeOption = "today",
-}: {
-  siteId: string;
-  dateRange?: { from: Date; to: Date } | null;
-  dateRangeOption?: string;
-}) {
-  const [channels, setChannels] = useState<SourceData[]>([]);
-  const [sources, setSources] = useState<SourceData[]>([]);
-  const [campaigns, setCampaigns] = useState<SourceData[]>([]);
-  const [allChannels, setAllChannels] = useState<SourceData[]>([]);
-  const [allSources, setAllSources] = useState<SourceData[]>([]);
-  const [allCampaigns, setAllCampaigns] = useState<SourceData[]>([]);
+export function SourcesCard() {
   const [selectedUTM, setSelectedUTM] = useState<UTMType>("utm_medium");
-  const [loading, setLoading] = useState(true);
   const [failedIcons, setFailedIcons] = useState<Set<string>>(new Set());
-  const { addFilter, hasFilter, removeFilter, filters } = useFilters();
+  const { addFilter, hasFilter, removeFilter, getAnalyticsData, loading } =
+    useAnalyticsStore();
+  const analyticsData = getAnalyticsData();
 
-  useEffect(() => {
-    const fetchSourceData = async () => {
-      const supabase = createClient();
+  // Convert analytics data to SourceData format using useMemo to prevent infinite loops
+  const {
+    channels,
+    sources,
+    campaigns,
+    allChannels,
+    allSources,
+    allCampaigns,
+  } = useMemo(() => {
+    const channels: SourceData[] = analyticsData.sources.channels
+      .slice(0, 7)
+      .map((item) => ({
+        name: item.name,
+        count: item.count,
+        percentage: item.percentage,
+      }));
 
-      // Build base query
-      let sessionsQuery = supabase
-        .from("sessions")
-        .select("utm_medium, utm_source, referrer_domain")
-        .eq("site_id", siteId);
+    const sources: SourceData[] = analyticsData.sources.sources
+      .slice(0, 7)
+      .map((item) => ({
+        name: item.name,
+        rawValue: item.rawValue,
+        count: item.count,
+        percentage: item.percentage,
+      }));
 
-      let sourcesQuery = supabase
-        .from("sessions")
-        .select("utm_source, referrer, referrer_domain")
-        .eq("site_id", siteId);
+    const campaigns: SourceData[] = analyticsData.sources.campaigns
+      .slice(0, 7)
+      .map((item) => ({
+        name: item.name,
+        count: item.count,
+        percentage: item.percentage,
+      }));
 
-      const isRealtimeMode = dateRangeOption === "realtime";
+    const allChannels: SourceData[] = analyticsData.sources.channels.map(
+      (item) => ({
+        name: item.name,
+        count: item.count,
+        percentage: item.percentage,
+      })
+    );
 
-      // Apply date filters if provided
-      if (isRealtimeMode) {
-        // For realtime: get sessions active in last 30 minutes (based on last_seen)
-        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-        sessionsQuery = sessionsQuery.gte("last_seen", thirtyMinutesAgo);
-        sourcesQuery = sourcesQuery.gte("last_seen", thirtyMinutesAgo);
-      } else if (dateRange) {
-        // For other modes: filter by creation date
-        sessionsQuery = sessionsQuery
-          .gte("created_at", dateRange.from.toISOString())
-          .lte("created_at", dateRange.to.toISOString());
+    const allSources: SourceData[] = analyticsData.sources.sources.map(
+      (item) => ({
+        name: item.name,
+        rawValue: item.rawValue,
+        count: item.count,
+        percentage: item.percentage,
+      })
+    );
 
-        sourcesQuery = sourcesQuery
-          .gte("created_at", dateRange.from.toISOString())
-          .lte("created_at", dateRange.to.toISOString());
-      }
+    const allCampaigns: SourceData[] = analyticsData.sources.campaigns.map(
+      (item) => ({
+        name: item.name,
+        count: item.count,
+        percentage: item.percentage,
+      })
+    );
 
-      // Apply active filters
-      sessionsQuery = applyFiltersToQuery(sessionsQuery, filters);
-      sourcesQuery = applyFiltersToQuery(sourcesQuery, filters);
-
-      // Fetch all session data to calculate channels dynamically
-      const { data: sessionsData } = await sessionsQuery;
-
-      // Fetch sources data
-      const { data: sourcesData } = await sourcesQuery;
-
-      // Fetch UTM data based on selected type
-      let utmQuery = supabase
-        .from("sessions")
-        .select("utm_campaign, utm_source, utm_medium, utm_term, utm_content")
-        .eq("site_id", siteId)
-        .not(selectedUTM, "is", null);
-
-      if (isRealtimeMode) {
-        // For realtime: get sessions active in last 30 minutes (based on last_seen)
-        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-        utmQuery = utmQuery.gte("last_seen", thirtyMinutesAgo);
-      } else if (dateRange) {
-        // For other modes: filter by creation date
-        utmQuery = utmQuery
-          .gte("created_at", dateRange.from.toISOString())
-          .lte("created_at", dateRange.to.toISOString());
-      }
-
-      // Apply active filters to UTM query
-      utmQuery = applyFiltersToQuery(utmQuery, filters);
-
-      const { data: utmData } = await utmQuery;
-
-      // Calculate channels dynamically from existing data
-      if (sessionsData) {
-        const channelCounts = sessionsData.reduce(
-          (acc: Record<string, number>, item) => {
-            // Use the same logic as the helper function
-            const channel = getChannel(
-              item.utm_medium,
-              item.utm_source,
-              item.referrer_domain
-            );
-            acc[channel] = (acc[channel] || 0) + 1;
-            return acc;
-          },
-          {}
-        );
-
-        const total = Object.values(channelCounts).reduce((a, b) => a + b, 0);
-        const processedChannels = Object.entries(channelCounts)
-          .map(([name, count]) => ({
-            name,
-            count,
-            percentage: (count / total) * 100,
-          }))
-          .sort((a, b) => b.count - a.count);
-
-        setAllChannels(processedChannels);
-        setChannels(processedChannels.slice(0, 7));
-      }
-
-      // Process sources
-      if (sourcesData) {
-        const sourceCounts = sourcesData.reduce(
-          (acc: Record<string, { count: number; displayName: string }>, item) => {
-            // Prefer referrer_domain over referrer for cleaner display
-            let rawSource = item.utm_source || item.referrer_domain || item.referrer || "direct";
-
-            // Skip self-referrals (from own domain)
-            if (
-              rawSource &&
-              rawSource.toLowerCase().includes("hectoranalytics")
-            ) {
-              return acc;
-            }
-
-            // For specific cases like Algolia URLs, prefer referrer_domain for cleaner display
-            if (item.referrer_domain && item.referrer && 
-                item.referrer.includes('algolia.com')) {
-              rawSource = item.referrer_domain;
-            }
-
-            // Get the display name for the source
-            const sourceInfo = normalizeReferrer(rawSource, !!item.utm_source);
-            const displayName = sourceInfo.displayName;
-            
-            // Use rawSource as key to keep the original DB value
-            if (!acc[rawSource]) {
-              acc[rawSource] = { count: 0, displayName };
-            }
-            acc[rawSource].count += 1;
-            return acc;
-          },
-          {}
-        );
-
-        const total = Object.values(sourceCounts).reduce((sum, item) => sum + item.count, 0);
-        const processedSources = Object.entries(sourceCounts)
-          .map(([rawValue, data]) => ({
-            name: data.displayName,
-            rawValue,
-            count: data.count,
-            percentage: (data.count / total) * 100,
-          }))
-          .sort((a, b) => b.count - a.count);
-
-        setAllSources(processedSources);
-        setSources(processedSources.slice(0, 7));
-      }
-
-      // Process UTM data for campaigns tab
-      if (utmData) {
-        const utmCounts = utmData.reduce(
-          (acc: Record<string, number>, item: UTMRow) => {
-            const value = item[selectedUTM];
-            if (value) {
-              acc[value] = (acc[value] || 0) + 1;
-            }
-            return acc;
-          },
-          {}
-        );
-
-        const total = Object.values(utmCounts).reduce((a, b) => a + b, 0);
-        const processedUTM = Object.entries(utmCounts)
-          .map(([name, count]) => ({
-            name,
-            count,
-            percentage: (count / total) * 100,
-          }))
-          .sort((a, b) => b.count - a.count);
-
-        setAllCampaigns(processedUTM);
-        setCampaigns(processedUTM.slice(0, 7));
-      }
-
-      setLoading(false);
+    return {
+      channels,
+      sources,
+      campaigns,
+      allChannels,
+      allSources,
+      allCampaigns,
     };
+  }, [analyticsData.sources]);
 
-    fetchSourceData();
-  }, [siteId, selectedUTM, dateRange, dateRangeOption, filters]);
-
-  const handleItemClick = (type: "referrer_domain" | "utm_source" | "utm_medium" | "utm_campaign", value: string) => {
+  const handleItemClick = (
+    type: "referrer_domain" | "utm_source" | "utm_medium" | "utm_campaign" | "utm_term" | "utm_content",
+    value: string
+  ) => {
     if (hasFilter(type, value)) {
       removeFilter(type, value);
     } else {
@@ -303,7 +184,7 @@ export function SourcesCard({
     showIcons = false,
     allData?: SourceData[],
     title?: string,
-    clickType?: "referrer_domain" | "utm_source" | "utm_medium" | "utm_campaign"
+    clickType?: "referrer_domain" | "utm_source" | "utm_medium" | "utm_campaign" | "utm_term" | "utm_content"
   ) => {
     if (loading) {
       return <div className="text-muted-foreground">Loading...</div>;
@@ -323,11 +204,15 @@ export function SourcesCard({
 
           return (
             <div key={index} className="space-y-1">
-              <div 
+              <div
                 className={`flex justify-between items-center text-sm relative ${
-                  clickType ? "cursor-pointer hover:bg-muted/50 rounded transition-all" : ""
+                  clickType
+                    ? "cursor-pointer hover:bg-muted/50 rounded transition-all"
+                    : ""
                 } ${isActive ? "ring-2 ring-primary" : ""}`}
-                onClick={() => clickType && handleItemClick(clickType, filterValue)}
+                onClick={() =>
+                  clickType && handleItemClick(clickType, filterValue)
+                }
               >
                 <div
                   className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-primary opacity-15 transition-all rounded-l"
@@ -343,7 +228,7 @@ export function SourcesCard({
                         height={16}
                         className="flex-shrink-0"
                         onError={() => {
-                          setFailedIcons(prev => new Set([...prev, icon]));
+                          setFailedIcons((prev) => new Set([...prev, icon]));
                         }}
                       />
                     ) : (
@@ -390,7 +275,13 @@ export function SourcesCard({
         {renderList(channels, false, allChannels, "All channels")}
       </TabsContent>
       <TabsContent value="sources" className="mt-4">
-        {renderList(sources, true, allSources, "All sources", "referrer_domain")}
+        {renderList(
+          sources,
+          true,
+          allSources,
+          "All sources",
+          "referrer_domain"
+        )}
       </TabsContent>
       <TabsContent value="campaigns" className="mt-4 space-y-4">
         <Select
@@ -408,7 +299,13 @@ export function SourcesCard({
             ))}
           </SelectContent>
         </Select>
-        {renderList(campaigns, false, allCampaigns, "All campaigns", selectedUTM)}
+        {renderList(
+          campaigns,
+          false,
+          allCampaigns,
+          "All campaigns",
+          selectedUTM
+        )}
       </TabsContent>
     </Tabs>
   );

@@ -1,21 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import React, { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Globe, Building, Flag, Users, Percent, Languages } from "lucide-react";
 import { getCountryFlag } from "@/data/country-flags";
 import { getLanguageName, getLanguageFlag } from "@/lib/language-helper";
 import { DetailsModal } from "@/components/ui/details-modal";
-import { useFilters } from "@/lib/contexts/FilterContext";
-import { applyFiltersToQuery } from "@/lib/filter-utils";
+import { useAnalyticsStore } from "@/lib/stores/analytics";
 
-interface LocationData {
-  country: string | null;
-  region: string | null;
-  city: string | null;
-  language: string | null;
-}
 
 interface LocationStats {
   countries: Record<string, number>;
@@ -24,145 +16,63 @@ interface LocationStats {
   languages: Record<string, { count: number }>;
 }
 
-export function LocationCard({
-  siteId,
-  dateRange,
-  dateRangeOption = "today",
-}: {
-  siteId: string;
-  dateRange?: { from: Date; to: Date } | null;
-  dateRangeOption?: string;
-}) {
-  const [locationStats, setLocationStats] = useState<LocationStats>({
-    countries: {},
-    regions: {},
-    cities: {},
-    languages: {},
-  });
-  const [allLocationStats, setAllLocationStats] = useState<LocationStats>({
-    countries: {},
-    regions: {},
-    cities: {},
-    languages: {},
-  });
-  const [loading, setLoading] = useState(true);
+export function LocationCard() {
   const [showPercentage, setShowPercentage] = useState(false);
-  const { addFilter, hasFilter, removeFilter, filters } = useFilters();
+  const { addFilter, hasFilter, removeFilter, getAnalyticsData, loading } = useAnalyticsStore();
+  const analyticsData = getAnalyticsData();
 
-  useEffect(() => {
-    const fetchLocationData = async () => {
-      const supabase = createClient();
-
-      const isRealtimeMode = dateRangeOption === "realtime";
-      
-      let query = supabase
-        .from("sessions")
-        .select("country, region, city, language")
-        .eq("site_id", siteId);
-
-      if (isRealtimeMode) {
-        // For realtime: get sessions active in last 30 minutes (based on last_seen)
-        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-        query = query.gte("last_seen", thirtyMinutesAgo);
-      } else if (dateRange) {
-        // For other modes: filter by creation date
-        query = query
-          .gte("created_at", dateRange.from.toISOString())
-          .lte("created_at", dateRange.to.toISOString());
-      }
-
-      // Apply active filters
-      query = applyFiltersToQuery(query, filters);
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error("Error fetching location data:", error);
-        setLoading(false);
-        return;
-      }
-
-      const stats: LocationStats = {
-        countries: {},
-        regions: {},
-        cities: {},
-        languages: {},
-      };
-
-      data?.forEach((session: LocationData) => {
-        // Count countries
-        if (session.country) {
-          stats.countries[session.country] =
-            (stats.countries[session.country] || 0) + 1;
-        }
-
-        // Count regions with country info (display only region name)
-        if (session.region) {
-          const regionKey = session.region;
-
-          if (!stats.regions[regionKey]) {
-            stats.regions[regionKey] = {
-              count: 0,
-              country: session.country || undefined,
-            };
-          }
-          stats.regions[regionKey].count++;
-        }
-
-        // Count cities with country info (display only city name)
-        if (session.city) {
-          const cityKey = session.city;
-
-          if (!stats.cities[cityKey]) {
-            stats.cities[cityKey] = {
-              count: 0,
-              country: session.country || undefined,
-            };
-          }
-          stats.cities[cityKey].count++;
-        }
-
-        // Count languages
-        if (session.language) {
-          stats.languages[session.language] = {
-            count: (stats.languages[session.language]?.count || 0) + 1,
-          };
-        }
-      });
-
-      // Store all data
-      setAllLocationStats(stats);
-
-      // Limit display data to top 10
-      const limitedStats: LocationStats = {
-        countries: Object.fromEntries(
-          Object.entries(stats.countries)
-            .sort(([, a], [, b]) => b - a)
-            .slice(0, 7)
-        ),
-        regions: Object.fromEntries(
-          Object.entries(stats.regions)
-            .sort(([, a], [, b]) => b.count - a.count)
-            .slice(0, 7)
-        ),
-        cities: Object.fromEntries(
-          Object.entries(stats.cities)
-            .sort(([, a], [, b]) => b.count - a.count)
-            .slice(0, 7)
-        ),
-        languages: Object.fromEntries(
-          Object.entries(stats.languages)
-            .sort(([, a], [, b]) => b.count - a.count)
-            .slice(0, 7)
-        ),
-      };
-
-      setLocationStats(limitedStats);
-      setLoading(false);
+  // Convert analytics data to LocationStats format using useMemo
+  const { locationStats, allLocationStats } = useMemo(() => {
+    const locationStats: LocationStats = {
+      countries: Object.fromEntries(
+        analyticsData.countries.slice(0, 7).map(item => [item.name, item.count])
+      ),
+      regions: Object.fromEntries(
+        analyticsData.regions.slice(0, 7).map(item => [
+          item.name, 
+          { count: item.count, country: item.country }
+        ])
+      ),
+      cities: Object.fromEntries(
+        analyticsData.cities.slice(0, 7).map(item => [
+          item.name, 
+          { count: item.count, country: item.country }
+        ])
+      ),
+      languages: Object.fromEntries(
+        analyticsData.languages.slice(0, 7).map(item => [
+          item.name, 
+          { count: item.count }
+        ])
+      ),
     };
-
-    fetchLocationData();
-  }, [siteId, dateRange, dateRangeOption, filters]);
+    
+    const allLocationStats: LocationStats = {
+      countries: Object.fromEntries(
+        analyticsData.countries.map(item => [item.name, item.count])
+      ),
+      regions: Object.fromEntries(
+        analyticsData.regions.map(item => [
+          item.name, 
+          { count: item.count, country: item.country }
+        ])
+      ),
+      cities: Object.fromEntries(
+        analyticsData.cities.map(item => [
+          item.name, 
+          { count: item.count, country: item.country }
+        ])
+      ),
+      languages: Object.fromEntries(
+        analyticsData.languages.map(item => [
+          item.name, 
+          { count: item.count }
+        ])
+      ),
+    };
+    
+    return { locationStats, allLocationStats };
+  }, [analyticsData.countries, analyticsData.regions, analyticsData.cities, analyticsData.languages]);
 
   const handleItemClick = (type: "country" | "region" | "city", value: string) => {
     if (hasFilter(type, value)) {

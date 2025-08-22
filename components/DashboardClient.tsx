@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeviceCard } from "@/components/SiteData/DeviceCard";
 import { LocationCard } from "@/components/SiteData/LocationCard";
@@ -17,7 +17,7 @@ import {
   getDateRange,
 } from "@/components/DateFilter";
 import { FunnelsAndEventsCard } from "./SiteData/FunnelsAndEventsCard";
-import { FilterProvider } from "@/lib/contexts/FilterContext";
+import { useAnalyticsStore } from "@/lib/stores/analytics";
 
 interface Site {
   id: string;
@@ -39,65 +39,70 @@ export function DashboardClient({
 }: DashboardClientProps) {
   const [selectedDateRange, setSelectedDateRange] =
     useState<DateRangeOption>("alltime");
-  const dateRange = getDateRange(selectedDateRange);
+  const dateRange = useMemo(() => getDateRange(selectedDateRange), [selectedDateRange]);
 
+  const { fetchAllData } = useAnalyticsStore();
+
+  // Load all data when component mounts or parameters change
+  useEffect(() => {
+    fetchAllData(siteId, dateRange, selectedDateRange);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [siteId, dateRange, selectedDateRange]);
 
   return (
-    <FilterProvider>
-      <div className="space-y-6">
-        <div className="flex gap-4 flex-wrap items-center justify-between">
-          {!isPublic && <SiteSelector sites={userSites} currentDomain={domain} />}
-          <ActiveVisitors siteId={siteId} />
-          <DateFilter
-            selectedRange={selectedDateRange}
-            onRangeChange={setSelectedDateRange}
-          />
-        </div>
-        <ActiveFilters />
-        <AnalyticsMetrics
-          siteId={siteId}
-          dateRange={dateRange}
-          dateRangeOption={selectedDateRange}
+    <div className="space-y-6">
+      <div className="flex gap-4 flex-wrap items-center justify-between">
+        {!isPublic && <SiteSelector sites={userSites} currentDomain={domain} />}
+        <ActiveVisitors siteId={siteId} />
+        <DateFilter
+          selectedRange={selectedDateRange}
+          onRangeChange={setSelectedDateRange}
         />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="sm:col-span-2">
-            <WorldMapCard siteId={siteId} dateRange={dateRange} dateRangeOption={selectedDateRange} />
-          </div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Locations</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <LocationCard siteId={siteId} dateRange={dateRange} dateRangeOption={selectedDateRange} />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Devices</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <DeviceCard siteId={siteId} dateRange={dateRange} dateRangeOption={selectedDateRange} />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Sources</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <SourcesCard siteId={siteId} dateRange={dateRange} dateRangeOption={selectedDateRange} />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Top Pages</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <TopPagesCard siteId={siteId} dateRange={dateRange} dateRangeOption={selectedDateRange} />
-            </CardContent>
-          </Card>
-        </div>
-        <FunnelsAndEventsCard siteId={siteId} dateRange={dateRange} isRealtimeMode={selectedDateRange === "realtime"} />
       </div>
-    </FilterProvider>
+      <ActiveFilters />
+      <AnalyticsMetrics siteId={siteId} dateRangeOption={selectedDateRange} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="sm:col-span-2">
+          <WorldMapCard />
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Locations</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <LocationCard />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Devices</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DeviceCard />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Sources</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SourcesCard />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Top Pages</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TopPagesCard />
+          </CardContent>
+        </Card>
+      </div>
+      <FunnelsAndEventsCard
+        siteId={siteId}
+        dateRange={dateRange}
+        isRealtimeMode={selectedDateRange === "realtime"}
+      />
+    </div>
   );
 }

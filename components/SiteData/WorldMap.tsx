@@ -1,11 +1,9 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Mercator } from "@visx/geo";
 import * as topojson from "topojson-client";
-import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "next-themes";
-import { useFilters } from "@/lib/contexts/FilterContext";
-import { applyFiltersToQuery, applyClientSideFilters } from "@/lib/filter-utils";
+import { useAnalyticsStore } from "@/lib/stores/analytics";
 
 export const background = "#0f172a";
 
@@ -17,9 +15,6 @@ export type GeoMercatorProps = {
   width: number;
   height: number;
   events?: boolean;
-  siteId: string;
-  dateRange?: { from: Date; to: Date } | null;
-  dateRangeOption?: string;
 };
 
 interface FeatureShape {
@@ -32,15 +27,11 @@ interface FeatureShape {
 export default function WorldMap({
   width,
   height,
-  siteId,
-  dateRange,
-  dateRangeOption = "today",
 }: GeoMercatorProps) {
   const [world, setWorld] = useState<{
     type: "FeatureCollection";
     features: FeatureShape[];
   } | null>(null);
-  const [countryData, setCountryData] = useState<CountryData>({});
   const [tooltip, setTooltip] = useState<{
     content: string;
     x: number;
@@ -48,7 +39,8 @@ export default function WorldMap({
   } | null>(null);
 
   const { theme } = useTheme();
-  const { addFilter, hasFilter, removeFilter, filters } = useFilters();
+  const { addFilter, hasFilter, removeFilter, getAnalyticsData } = useAnalyticsStore();
+  const analyticsData = getAnalyticsData();
   // Charger les données géographiques
 
   useEffect(() => {
@@ -71,61 +63,14 @@ export default function WorldMap({
       });
   }, []);
 
-  // Charger les données des visiteurs par pays
-  useEffect(() => {
-    const fetchCountryData = async () => {
-      const supabase = createClient();
-
-      const isRealtimeMode = dateRangeOption === "realtime";
-
-      let query = supabase
-        .from("sessions")
-        .select("country")
-        .eq("site_id", siteId)
-        .not("country", "is", null);
-
-      if (isRealtimeMode) {
-        // For realtime: get sessions active in last 30 minutes (based on last_seen)
-        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-        query = query.gte("last_seen", thirtyMinutesAgo);
-      } else if (dateRange) {
-        // For other modes: filter by creation date
-        query = query
-          .gte("created_at", dateRange.from.toISOString())
-          .lte("created_at", dateRange.to.toISOString());
-      }
-
-      // Apply active filters
-      query = applyFiltersToQuery(query, filters);
-
-      let { data, error } = await query;
-
-      if (error) {
-        console.error("Error fetching country data:", error);
-        return;
-      }
-
-      // Apply client-side filters for complex cases like exit pages
-      if (data) {
-        data = applyClientSideFilters(data, filters);
-      }
-
-      // Compter les visiteurs par pays
-      const countryStats: CountryData = {};
-      data?.forEach((session) => {
-        if (session.country) {
-          countryStats[session.country] =
-            (countryStats[session.country] || 0) + 1;
-        }
-      });
-
-      setCountryData(countryStats);
-    };
-
-    if (siteId) {
-      fetchCountryData();
-    }
-  }, [siteId, dateRange, dateRangeOption, filters]);
+  // Convert analytics data to country data format
+  const countryData = useMemo(() => {
+    const countryStats: CountryData = {};
+    analyticsData.countries.forEach((country) => {
+      countryStats[country.name] = country.count;
+    });
+    return countryStats;
+  }, [analyticsData.countries]);
 
   if (!world) {
     return (

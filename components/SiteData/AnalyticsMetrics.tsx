@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Eye,
@@ -14,8 +13,7 @@ import {
 } from "lucide-react";
 import { MetricsChart } from "./MetricsChart";
 import { DateRangeOption } from "@/components/DateFilter";
-import { useFilters } from "@/lib/contexts/FilterContext";
-import { applyFiltersToQuery, applyClientSideFilters } from "@/lib/filter-utils";
+import { useAnalyticsStore } from "@/lib/stores/analytics";
 interface AnalyticsMetricsProps {
   siteId: string;
   dateRange?: { from: Date; to: Date } | null;
@@ -39,124 +37,22 @@ interface Metrics {
 
 export function AnalyticsMetrics({
   siteId,
-  dateRange,
   dateRangeOption = "today",
 }: AnalyticsMetricsProps) {
-  const [metrics, setMetrics] = useState<Metrics>({
-    uniqueVisitors: 0,
-    totalVisits: 0,
-    totalPageviews: 0,
-    viewsPerVisit: 0,
-    bounceRate: 0,
-    avgDuration: 0,
-    realtimePageViews: 0,
-  });
-  const [loading, setLoading] = useState(true);
   const [selectedMetric, setSelectedMetric] =
     useState<string>("uniqueVisitors");
-  const { filters } = useFilters();
+  const { getAnalyticsData, loading } = useAnalyticsStore();
+  const analyticsData = getAnalyticsData();
 
-  useEffect(() => {
-    const fetchMetrics = async () => {
-      const supabase = createClient();
-
-      const isRealtimeMode = dateRangeOption === "realtime";
-      
-      // Build query based on mode
-      let query = supabase.from("sessions").select("*").eq("site_id", siteId);
-
-      if (isRealtimeMode) {
-        // For realtime: get sessions active in last 30 minutes (based on last_seen)
-        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-        query = query.gte("last_seen", thirtyMinutesAgo);
-      } else if (dateRange) {
-        // For other modes: filter by creation date
-        query = query
-          .gte("created_at", dateRange.from.toISOString())
-          .lte("created_at", dateRange.to.toISOString());
-      }
-
-      // Apply active filters
-      query = applyFiltersToQuery(query, filters);
-
-      let { data: sessions, error } = await query;
-
-      if (error) {
-        console.error("Error fetching metrics:", error);
-        setLoading(false);
-        return;
-      }
-
-      // Apply client-side filters for complex cases like exit pages
-      if (sessions) {
-        sessions = applyClientSideFilters(sessions, filters);
-      }
-
-      // Calculate metrics from sessions data
-      const uniqueVisitorsSet = new Set<string>();
-      let totalPageviews = 0;
-      let totalDuration = 0;
-      let bounces = 0;
-      let realtimePageViews = 0;
-
-      sessions?.forEach((session) => {
-        // Create visitor fingerprint for unique visitor identification
-        const visitorFingerprint = `${session.browser || "unknown"}-${
-          session.os || "unknown"
-        }-${session.screen_size || "unknown"}-${session.country || "unknown"}`;
-        uniqueVisitorsSet.add(visitorFingerprint);
-
-        // Calculate pageviews from the visited_pages array length
-        const visitedPagesCount = Array.isArray(session.visited_pages) 
-          ? session.visited_pages.length 
-          : 1;
-        const sessionPageviews = visitedPagesCount;
-        totalPageviews += sessionPageviews;
-
-        // For realtime mode, all pageviews are "realtime pageviews"
-        if (isRealtimeMode) {
-          realtimePageViews += sessionPageviews;
-        }
-
-        // Calculate duration (difference between created_at and last_seen)
-        if (session.created_at && session.last_seen) {
-          const created = new Date(session.created_at).getTime();
-          const lastSeen = new Date(session.last_seen).getTime();
-          const duration = Math.round((lastSeen - created) / 1000); // in seconds
-          totalDuration += duration;
-        }
-
-        // Count bounces (sessions with only 1 pageview)
-        if (sessionPageviews === 1) {
-          bounces++;
-        }
-      });
-
-      const totalVisits = sessions?.length || 0;
-      const uniqueVisitors = uniqueVisitorsSet.size;
-
-      setMetrics({
-        uniqueVisitors,
-        totalVisits,
-        totalPageviews,
-        viewsPerVisit:
-          totalVisits > 0
-            ? parseFloat((totalPageviews / totalVisits).toFixed(2))
-            : 0,
-        bounceRate:
-          totalVisits > 0
-            ? parseFloat(((bounces / totalVisits) * 100).toFixed(1))
-            : 0,
-        avgDuration:
-          totalVisits > 0 ? Math.round(totalDuration / totalVisits) : 0,
-        realtimePageViews,
-      });
-
-      setLoading(false);
-    };
-
-    fetchMetrics();
-  }, [siteId, dateRange, dateRangeOption, filters]);
+  const metrics: Metrics = {
+    uniqueVisitors: analyticsData.metrics.uniqueVisitors,
+    totalVisits: analyticsData.metrics.totalVisits,
+    totalPageviews: analyticsData.metrics.totalPageviews,
+    viewsPerVisit: analyticsData.metrics.viewsPerVisit,
+    bounceRate: analyticsData.metrics.bounceRate,
+    avgDuration: analyticsData.metrics.avgDuration,
+    realtimePageViews: analyticsData.metrics.totalPageviews, // For realtime mode
+  };
 
   const formatDuration = (seconds: number): string => {
     if (seconds < 60) return `${seconds}s`;

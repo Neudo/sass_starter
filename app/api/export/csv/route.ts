@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
 }
 
 // Generate all CSV files
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 async function generateAllCsvs(
   adminClient: any,
   siteId: string,

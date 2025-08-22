@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import React, { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Smartphone,
@@ -13,16 +12,8 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { DetailsModal } from "@/components/ui/details-modal";
-import { useFilters } from "@/lib/contexts/FilterContext";
-import { applyFiltersToQuery } from "@/lib/filter-utils";
+import { useAnalyticsStore } from "@/lib/stores/analytics";
 
-interface DeviceData {
-  browser: string | null;
-  browser_version: string | null;
-  os: string | null;
-  os_version: string | null;
-  screen_size: string | null;
-}
 
 interface DeviceStats {
   browsers: Record<string, number>;
@@ -30,118 +21,39 @@ interface DeviceStats {
   screenSizes: Record<string, number>;
 }
 
-export function DeviceCard({
-  siteId,
-  dateRange,
-  dateRangeOption = "today",
-}: {
-  siteId: string;
-  dateRange?: { from: Date; to: Date } | null;
-  dateRangeOption?: string;
-}) {
-  const [deviceStats, setDeviceStats] = useState<DeviceStats>({
-    browsers: {},
-    os: {},
-    screenSizes: {},
-  });
-  const [allDeviceStats, setAllDeviceStats] = useState<DeviceStats>({
-    browsers: {},
-    os: {},
-    screenSizes: {},
-  });
-  const [loading, setLoading] = useState(true);
+export function DeviceCard() {
   const [showPercentage, setShowPercentage] = useState(false);
-  const { addFilter, hasFilter, removeFilter, filters } = useFilters();
+  const { addFilter, hasFilter, removeFilter, getAnalyticsData, loading } = useAnalyticsStore();
+  const analyticsData = getAnalyticsData();
 
-  useEffect(() => {
-    const fetchDeviceData = async () => {
-      const supabase = createClient();
-
-      const isRealtimeMode = dateRangeOption === "realtime";
-      
-      let query = supabase
-        .from("sessions")
-        .select("browser, browser_version, os, os_version, screen_size")
-        .eq("site_id", siteId);
-
-      if (isRealtimeMode) {
-        // For realtime: get sessions active in last 30 minutes (based on last_seen)
-        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-        query = query.gte("last_seen", thirtyMinutesAgo);
-      } else if (dateRange) {
-        // For other modes: filter by creation date
-        query = query
-          .gte("created_at", dateRange.from.toISOString())
-          .lte("created_at", dateRange.to.toISOString());
-      }
-
-      // Apply active filters
-      query = applyFiltersToQuery(query, filters);
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error("Error fetching device data:", error);
-        setLoading(false);
-        return;
-      }
-
-      const stats: DeviceStats = {
-        browsers: {},
-        os: {},
-        screenSizes: {},
-      };
-
-      data?.forEach((session: DeviceData) => {
-        // Count browsers - group all versions together
-        if (session.browser) {
-          // Use only the browser name, ignore version
-          const browserKey = session.browser;
-          stats.browsers[browserKey] = (stats.browsers[browserKey] || 0) + 1;
-        }
-
-        // Count OS - group all versions together
-        if (session.os) {
-          // Use only the OS name, ignore version
-          const osKey = session.os;
-          stats.os[osKey] = (stats.os[osKey] || 0) + 1;
-        }
-
-        // Count screen sizes
-        if (session.screen_size) {
-          stats.screenSizes[session.screen_size] =
-            (stats.screenSizes[session.screen_size] || 0) + 1;
-        }
-      });
-
-      // Store all data
-      setAllDeviceStats(stats);
-
-      // Limit display data to top 10
-      const limitedStats: DeviceStats = {
-        browsers: Object.fromEntries(
-          Object.entries(stats.browsers)
-            .sort(([, a], [, b]) => b - a)
-            .slice(0, 7)
-        ),
-        os: Object.fromEntries(
-          Object.entries(stats.os)
-            .sort(([, a], [, b]) => b - a)
-            .slice(0, 7)
-        ),
-        screenSizes: Object.fromEntries(
-          Object.entries(stats.screenSizes)
-            .sort(([, a], [, b]) => b - a)
-            .slice(0, 7)
-        ),
-      };
-
-      setDeviceStats(limitedStats);
-      setLoading(false);
+  // Convert analytics data to device stats format using useMemo
+  const { deviceStats, allDeviceStats } = useMemo(() => {
+    const deviceStats: DeviceStats = {
+      browsers: Object.fromEntries(
+        analyticsData.devices.browsers.slice(0, 7).map(item => [item.name, item.count])
+      ),
+      os: Object.fromEntries(
+        analyticsData.devices.os.slice(0, 7).map(item => [item.name, item.count])
+      ),
+      screenSizes: Object.fromEntries(
+        analyticsData.devices.screenSizes.slice(0, 7).map(item => [item.name, item.count])
+      ),
     };
-
-    fetchDeviceData();
-  }, [siteId, dateRange, dateRangeOption, filters]);
+    
+    const allDeviceStats: DeviceStats = {
+      browsers: Object.fromEntries(
+        analyticsData.devices.browsers.map(item => [item.name, item.count])
+      ),
+      os: Object.fromEntries(
+        analyticsData.devices.os.map(item => [item.name, item.count])
+      ),
+      screenSizes: Object.fromEntries(
+        analyticsData.devices.screenSizes.map(item => [item.name, item.count])
+      ),
+    };
+    
+    return { deviceStats, allDeviceStats };
+  }, [analyticsData.devices]);
 
   const getBrowserIcon = (browserName: string) => {
     const name = browserName.toLowerCase();

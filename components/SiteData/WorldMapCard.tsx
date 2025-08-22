@@ -6,13 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Map, MapPin } from "lucide-react";
 import WorldMapWrapper from "./wordMapWrapper";
 
-interface WorldMapCardProps {
-  siteId: string;
-  dateRange?: { from: Date; to: Date } | null;
-  dateRangeOption?: string;
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface WorldMapCardProps {}
 
-export function WorldMapCard({ siteId, dateRange, dateRangeOption = "today" }: WorldMapCardProps) {
+export function WorldMapCard({}: WorldMapCardProps) {
   const [isMapVisible, setIsMapVisible] = useState(true);
 
   return (
@@ -35,7 +32,7 @@ export function WorldMapCard({ siteId, dateRange, dateRangeOption = "today" }: W
       {isMapVisible && (
         <CardContent className="pt-0">
           <div className="rounded-sm overflow-hidden">
-            <WorldMapWrapper siteId={siteId} dateRange={dateRange} dateRangeOption={dateRangeOption} />
+            <WorldMapWrapper />
           </div>
         </CardContent>
       )}

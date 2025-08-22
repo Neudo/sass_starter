@@ -1,11 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import React, { useMemo } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DetailsModal } from "@/components/ui/details-modal";
-import { useFilters } from "@/lib/contexts/FilterContext";
-import { applyFiltersToQuery, applyClientSideFilters } from "@/lib/filter-utils";
+import { useAnalyticsStore } from "@/lib/stores/analytics";
 
 interface PageData {
   page: string;
@@ -13,150 +11,21 @@ interface PageData {
   percentage: number;
 }
 
-export function TopPagesCard({
-  siteId,
-  dateRange,
-  dateRangeOption = "today",
-}: {
-  siteId: string;
-  dateRange?: { from: Date; to: Date } | null;
-  dateRangeOption?: string;
-}) {
-  const [topPages, setTopPages] = useState<PageData[]>([]);
-  const [entryPages, setEntryPages] = useState<PageData[]>([]);
-  const [exitPages, setExitPages] = useState<PageData[]>([]);
-  const [allTopPages, setAllTopPages] = useState<PageData[]>([]);
-  const [allEntryPages, setAllEntryPages] = useState<PageData[]>([]);
-  const [allExitPages, setAllExitPages] = useState<PageData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { filters, addFilter, hasFilter, removeFilter } = useFilters();
+export function TopPagesCard() {
+  const { addFilter, hasFilter, removeFilter, getAnalyticsData, loading } = useAnalyticsStore();
+  const analyticsData = getAnalyticsData();
 
-  useEffect(() => {
-    const fetchPageData = async () => {
-      const supabase = createClient();
-
-      const isRealtimeMode = dateRangeOption === "realtime";
-
-      // Fetch all sessions with visited_pages
-      let query = supabase
-        .from("sessions")
-        .select("visited_pages")
-        .eq("site_id", siteId);
-
-      if (isRealtimeMode) {
-        // For realtime: get sessions active in last 30 minutes (based on last_seen)
-        const thirtyMinutesAgo = new Date(
-          Date.now() - 30 * 60 * 1000
-        ).toISOString();
-        query = query.gte("last_seen", thirtyMinutesAgo);
-      } else if (dateRange) {
-        // For other modes: filter by creation date
-        query = query
-          .gte("created_at", dateRange.from.toISOString())
-          .lte("created_at", dateRange.to.toISOString());
-      }
-
-      // Apply active filters
-      query = applyFiltersToQuery(query, filters);
-
-      let { data: sessionsData } = await query;
-
-      // Apply client-side filters for complex cases like exit pages
-      if (sessionsData) {
-        sessionsData = applyClientSideFilters(sessionsData, filters);
-      }
-
-      // Process top pages by counting all pages
-      if (sessionsData) {
-        const pageCounts: Record<string, number> = {};
-
-        // Count each unique page visited per session using visited_pages array
-        sessionsData.forEach((session) => {
-          // Parse visited_pages array and count each page
-          const visitedPages = Array.isArray(session.visited_pages)
-            ? session.visited_pages
-            : [];
-
-          visitedPages.forEach((page: string) => {
-            pageCounts[page] = (pageCounts[page] || 0) + 1;
-          });
-        });
-
-        const total = Object.values(pageCounts).reduce((a, b) => a + b, 0);
-        const processedPages = Object.entries(pageCounts)
-          .map(([page, count]) => ({
-            page,
-            count,
-            percentage: (count / total) * 100,
-          }))
-          .sort((a, b) => b.count - a.count);
-
-        setAllTopPages(processedPages);
-        setTopPages(processedPages.slice(0, 7));
-
-        // Process entry pages (first page in visited_pages)
-        const entryCounts = sessionsData.reduce(
-          (acc: Record<string, number>, item) => {
-            const visitedPages = Array.isArray(item.visited_pages)
-              ? item.visited_pages
-              : [];
-            if (visitedPages.length > 0) {
-              const firstPage = visitedPages[0];
-              acc[firstPage] = (acc[firstPage] || 0) + 1;
-            }
-            return acc;
-          },
-          {}
-        );
-
-        const entryTotal = Object.values(entryCounts).reduce(
-          (a, b) => a + b,
-          0
-        );
-        const processedEntryPages = Object.entries(entryCounts)
-          .map(([page, count]) => ({
-            page,
-            count,
-            percentage: (count / entryTotal) * 100,
-          }))
-          .sort((a, b) => b.count - a.count);
-
-        setAllEntryPages(processedEntryPages);
-        setEntryPages(processedEntryPages.slice(0, 7));
-
-        // Process exit pages (last page in visited_pages)
-        const exitCounts = sessionsData.reduce(
-          (acc: Record<string, number>, item) => {
-            const visitedPages = Array.isArray(item.visited_pages)
-              ? item.visited_pages
-              : [];
-            if (visitedPages.length > 0) {
-              const lastPage = visitedPages[visitedPages.length - 1];
-              acc[lastPage] = (acc[lastPage] || 0) + 1;
-            }
-            return acc;
-          },
-          {}
-        );
-
-        const exitTotal = Object.values(exitCounts).reduce((a, b) => a + b, 0);
-        const processedExitPages = Object.entries(exitCounts)
-          .map(([page, count]) => ({
-            page,
-            count,
-            percentage: (count / exitTotal) * 100,
-          }))
-          .sort((a, b) => b.count - a.count);
-
-        setAllExitPages(processedExitPages);
-        setExitPages(processedExitPages.slice(0, 7));
-      }
-
-      setLoading(false);
+  // Convert analytics data to PageData format using useMemo
+  const { topPages, entryPages, exitPages, allTopPages, allEntryPages, allExitPages } = useMemo(() => {
+    return {
+      topPages: analyticsData.pages.topPages.slice(0, 7),
+      entryPages: analyticsData.pages.entryPages.slice(0, 7),
+      exitPages: analyticsData.pages.exitPages.slice(0, 7),
+      allTopPages: analyticsData.pages.topPages,
+      allEntryPages: analyticsData.pages.entryPages,
+      allExitPages: analyticsData.pages.exitPages,
     };
-
-    fetchPageData();
-  }, [siteId, dateRange, dateRangeOption, filters]);
+  }, [analyticsData.pages]);
 
   const handlePageClick = (type: "visited_page" | "entry_page" | "exit_page", value: string) => {
     if (hasFilter(type, value)) {

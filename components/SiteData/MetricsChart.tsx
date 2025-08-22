@@ -78,7 +78,10 @@ export function MetricsChart({
   // Get the display title for the selected metric
   const getMetricTitle = (metric: string): string => {
     const titles: Record<string, string> = {
-      uniqueVisitors: dateRange === "realtime" ? "Unique Visitors (last 30 min)" : "Unique Visitors",
+      uniqueVisitors:
+        dateRange === "realtime"
+          ? "Unique Visitors (last 30 min)"
+          : "Unique Visitors",
       totalVisits: "Total Visits",
       totalPageviews: "Total Pageviews",
       bounceRate: "Bounce Rate",
@@ -173,17 +176,25 @@ export function MetricsChart({
     };
 
     const fetchChartData = async () => {
+      if (!siteId) {
+        console.warn("MetricsChart: No siteId available, skipping fetch");
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       const supabase = createClient();
       const range = getDateRange(dateRange);
 
       // Special handling for realtime metrics (uniqueVisitors in realtime, realtimePageViews)
-      if ((selectedMetrics[0] === "uniqueVisitors" && dateRange === "realtime") ||
-          selectedMetrics[0] === "realtimePageViews") {
+      if (
+        (selectedMetrics[0] === "uniqueVisitors" && dateRange === "realtime") ||
+        selectedMetrics[0] === "realtimePageViews"
+      ) {
         // Generate last 30 minutes with 4-minute intervals
         const now = new Date();
         const realtimeData: ChartDataPoint[] = [];
-        
+
         // Fetch all sessions from last 30 minutes
         const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
         const { data: recentSessions, error } = await supabase
@@ -203,30 +214,35 @@ export function MetricsChart({
         for (let i = 7; i >= 0; i--) {
           const intervalEnd = new Date(now.getTime() - i * 4 * 60 * 1000);
           const intervalStart = new Date(intervalEnd.getTime() - 4 * 60 * 1000);
-          
+
           // Count unique visitors in this interval
-          const intervalSessions = recentSessions?.filter(session => {
-            const lastSeen = new Date(session.last_seen || session.created_at);
-            return lastSeen >= intervalStart && lastSeen <= intervalEnd;
-          }) || [];
+          const intervalSessions =
+            recentSessions?.filter((session) => {
+              const lastSeen = new Date(
+                session.last_seen || session.created_at
+              );
+              return lastSeen >= intervalStart && lastSeen <= intervalEnd;
+            }) || [];
 
           const uniqueVisitorsSet = new Set<string>();
           let intervalPageViews = 0;
 
-          intervalSessions.forEach(session => {
+          intervalSessions.forEach((session) => {
             const visitorFingerprint = `${session.browser || "unknown"}-${
               session.os || "unknown"
-            }-${session.screen_size || "unknown"}-${session.country || "unknown"}`;
+            }-${session.screen_size || "unknown"}-${
+              session.country || "unknown"
+            }`;
             uniqueVisitorsSet.add(visitorFingerprint);
-            const visitedPagesCount = Array.isArray(session.visited_pages) 
-              ? session.visited_pages.length 
+            const visitedPagesCount = Array.isArray(session.visited_pages)
+              ? session.visited_pages.length
               : 1;
             intervalPageViews += visitedPagesCount;
           });
 
           const minutesAgo = i * 4;
           const displayLabel = minutesAgo === 0 ? "Now" : `-${minutesAgo}min`;
-          
+
           realtimeData.push({
             date: intervalEnd.toISOString(),
             displayDate: displayLabel,
@@ -245,6 +261,12 @@ export function MetricsChart({
       }
 
       // Build query for other metrics
+      if (!siteId) {
+        console.error("No siteId available for MetricsChart");
+        setLoading(false);
+        return;
+      }
+
       let query = supabase
         .from("sessions")
         .select("*")
@@ -264,7 +286,7 @@ export function MetricsChart({
         const daysDiff = Math.ceil(
           (to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24)
         );
-        
+
         // Force daily intervals for last30days and last90days
         if (dateRange === "last30days" || dateRange === "last90days") {
           interval = "day";
@@ -350,8 +372,8 @@ export function MetricsChart({
             session.country || "unknown"
           }`;
           uniqueVisitorsSet.add(visitorFingerprint);
-          const visitedPagesCount = Array.isArray(session.visited_pages) 
-            ? session.visited_pages.length 
+          const visitedPagesCount = Array.isArray(session.visited_pages)
+            ? session.visited_pages.length
             : 1;
           const sessionPageviews = visitedPagesCount;
           totalPageviews += sessionPageviews;
@@ -461,17 +483,17 @@ export function MetricsChart({
               interval={(() => {
                 // For last 7 days or realtime: show all labels
                 if (chartData.length <= 8) return 0;
-                
+
                 // For last 30 days: show every 4th day (30/4 ≈ 7 labels)
                 if (dateRange === "last30days") {
                   return Math.floor(chartData.length / 7) - 1;
                 }
-                
+
                 // For last 90 days: show every 11th day (90/11 ≈ 8 labels)
                 if (dateRange === "last90days") {
                   return Math.floor(chartData.length / 8) - 1;
                 }
-                
+
                 // Default behavior for other periods
                 return "preserveStartEnd";
               })()}
