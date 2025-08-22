@@ -33,7 +33,23 @@ interface FunnelsAndEventsCardProps {
   dateRange?: { from: Date; to: Date } | null;
 }
 
-export function FunnelsAndEventsCard({ siteId }: FunnelsAndEventsCardProps) {
+// Helper function to get event icon
+const getEventIcon = (eventType: string) => {
+  switch (eventType) {
+    case "click":
+      return <MousePointer className="h-4 w-4" />;
+    case "scroll":
+      return <ScrollText className="h-4 w-4" />;
+    case "page_view":
+      return <Eye className="h-4 w-4" />;
+    case "form_submit":
+      return <Send className="h-4 w-4" />;
+    default:
+      return <Activity className="h-4 w-4" />;
+  }
+};
+
+export function FunnelsAndEventsCard({ siteId, dateRange }: FunnelsAndEventsCardProps) {
   const [selectedFunnel, setSelectedFunnel] = useState<string>("");
   const [funnels, setFunnels] = useState<Funnel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +57,14 @@ export function FunnelsAndEventsCard({ siteId }: FunnelsAndEventsCardProps) {
   useEffect(() => {
     const fetchFunnels = async () => {
       try {
-        const response = await fetch(`/api/funnels?siteId=${siteId}`);
+        let url = `/api/funnels?siteId=${siteId}`;
+        
+        // Add date filters if provided
+        if (dateRange?.from && dateRange?.to) {
+          url += `&from=${dateRange.from.toISOString()}&to=${dateRange.to.toISOString()}`;
+        }
+        
+        const response = await fetch(url);
         if (response.ok) {
           const funnelsData = await response.json();
           // Filter only active funnels and extract basic info
@@ -65,7 +88,7 @@ export function FunnelsAndEventsCard({ siteId }: FunnelsAndEventsCardProps) {
     };
 
     fetchFunnels();
-  }, [siteId]);
+  }, [siteId, dateRange]);
 
   const [customEvents, setCustomEvents] = useState<
     Array<{
@@ -74,6 +97,16 @@ export function FunnelsAndEventsCard({ siteId }: FunnelsAndEventsCardProps) {
       count: number;
       event_type: string;
       is_active: boolean;
+      source_breakdown: Array<{
+        source: string;
+        count: number;
+        percentage: number;
+      }>;
+      country_breakdown: Array<{
+        country: string;
+        count: number;
+        percentage: number;
+      }>;
     }>
   >([]);
   const [loadingCustomEvents, setLoadingCustomEvents] = useState(true);
@@ -81,7 +114,14 @@ export function FunnelsAndEventsCard({ siteId }: FunnelsAndEventsCardProps) {
   useEffect(() => {
     const fetchCustomEvents = async () => {
       try {
-        const response = await fetch(`/api/custom-events?siteId=${siteId}`);
+        let url = `/api/custom-events?siteId=${siteId}`;
+        
+        // Add date filters if provided
+        if (dateRange?.from && dateRange?.to) {
+          url += `&from=${dateRange.from.toISOString()}&to=${dateRange.to.toISOString()}`;
+        }
+        
+        const response = await fetch(url);
         if (response.ok) {
           const events = await response.json();
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -91,6 +131,8 @@ export function FunnelsAndEventsCard({ siteId }: FunnelsAndEventsCardProps) {
             count: event.total_triggers || 0,
             event_type: event.event_type,
             is_active: event.is_active,
+            source_breakdown: event.source_breakdown || [],
+            country_breakdown: event.country_breakdown || [],
           }));
           setCustomEvents(customEventsData);
         }
@@ -102,7 +144,7 @@ export function FunnelsAndEventsCard({ siteId }: FunnelsAndEventsCardProps) {
     };
 
     fetchCustomEvents();
-  }, [siteId]);
+  }, [siteId, dateRange]);
 
   return (
     <Card className="w-full">
@@ -178,7 +220,7 @@ export function FunnelsAndEventsCard({ siteId }: FunnelsAndEventsCardProps) {
                           </p>
                         )}
                       </div>
-                      <FunnelChart funnelId={selectedFunnel} siteId={siteId} />
+                      <FunnelChart funnelId={selectedFunnel} siteId={siteId} dateRange={dateRange} />
                     </div>
                   )}
                 </>
@@ -201,30 +243,16 @@ export function FunnelsAndEventsCard({ siteId }: FunnelsAndEventsCardProps) {
                   <div className="space-y-2">
                     {customEvents
                       .filter((event) => event.is_active)
-                      .map((event) => {
-                        const getEventIcon = () => {
-                          switch (event.event_type) {
-                            case "click":
-                              return <MousePointer className="h-4 w-4" />;
-                            case "scroll":
-                              return <ScrollText className="h-4 w-4" />;
-                            case "page_view":
-                              return <Eye className="h-4 w-4" />;
-                            case "form_submit":
-                              return <Send className="h-4 w-4" />;
-                            default:
-                              return <Activity className="h-4 w-4" />;
-                          }
-                        };
-
-                        return (
-                          <div
-                            key={event.id}
-                            className="flex items-center justify-between p-3 bg-muted/50 rounded-md hover:bg-muted/70 transition-colors"
-                          >
+                      .map((event) => (
+                        <div
+                          key={event.id}
+                          className="space-y-2 p-3 bg-muted/50 rounded-md hover:bg-muted/70 transition-colors"
+                        >
+                          {/* Event Header */}
+                          <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <div className="text-muted-foreground">
-                                {getEventIcon()}
+                                {getEventIcon(event.event_type)}
                               </div>
                               <div>
                                 <div className="font-medium text-sm">
@@ -244,8 +272,39 @@ export function FunnelsAndEventsCard({ siteId }: FunnelsAndEventsCardProps) {
                               </div>
                             </div>
                           </div>
-                        );
-                      })}
+
+                          {/* Breakdowns if data exists */}
+                          {event.count > 0 && (
+                            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/50">
+                              {/* Source Breakdown */}
+                              {event.source_breakdown.length > 0 && (
+                                <div className="space-y-1">
+                                  <p className="text-xs font-medium text-muted-foreground">Top Sources</p>
+                                  {event.source_breakdown.slice(0, 3).map((source) => (
+                                    <div key={source.source} className="flex justify-between text-xs">
+                                      <span className="truncate">{source.source}</span>
+                                      <span className="text-muted-foreground">{source.percentage}%</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Country Breakdown */}
+                              {event.country_breakdown.length > 0 && (
+                                <div className="space-y-1">
+                                  <p className="text-xs font-medium text-muted-foreground">Top Countries</p>
+                                  {event.country_breakdown.slice(0, 3).map((country) => (
+                                    <div key={country.country} className="flex justify-between text-xs">
+                                      <span className="truncate">{country.country}</span>
+                                      <span className="text-muted-foreground">{country.percentage}%</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
                   </div>
 
                   {customEvents.filter((e) => e.is_active).length === 0 && (

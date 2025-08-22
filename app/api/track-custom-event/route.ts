@@ -7,11 +7,11 @@ export async function POST(request: NextRequest) {
 
     // Get request data
     const body = await request.json();
-    const { site_domain, event_name, page_url } = body;
+    const { site_domain, event_name, session_id, page_url, metadata } = body;
 
-    if (!site_domain || !event_name || !page_url) {
+    if (!site_domain || !event_name || !session_id || !page_url) {
       return NextResponse.json(
-        { error: "site_domain, event_name, and page_url are required" },
+        { error: "site_domain, event_name, session_id, and page_url are required" },
         { status: 400 }
       );
     }
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     // Find the custom event by name and site
     const { data: customEventData, error: eventError } = await adminClient
       .from("custom_events")
-      .select("id, is_active, trigger_count")
+      .select("id, is_active")
       .eq("site_id", siteData.id)
       .eq("name", event_name)
       .eq("is_active", true)
@@ -43,27 +43,89 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Increment the trigger count
-    const { error: updateError } = await adminClient
-      .from("custom_events")
-      .update({
-        trigger_count: customEventData.trigger_count
-          ? customEventData.trigger_count + 1
-          : 1,
-      })
-      .eq("id", customEventData.id);
+    // Get session data for metadata (don't fail if session doesn't exist yet)
+    const { data: sessionData, error: sessionError } = await adminClient
+      .from("sessions")
+      .select("referrer_domain, country")
+      .eq("id", session_id)
+      .maybeSingle(); // Use maybeSingle instead of single to avoid errors if not found
 
-    if (updateError) {
-      console.error("Error updating custom event trigger count:", updateError);
-      return NextResponse.json(
-        { error: "Failed to update trigger count" },
-        { status: 500 }
-      );
+    if (sessionError) {
+      console.log("Session not found or error:", sessionError.message);
+    }
+
+    // Build metadata with session info (fallback if no session data)
+    const eventMetadata = {
+      ...metadata,
+      source: sessionData?.referrer_domain || 'direct',
+      country: sessionData?.country || 'unknown',
+    };
+
+    console.log("Attempting to insert custom event completion:", {
+      custom_event_id: customEventData.id,
+      session_id: session_id,
+      page_url: page_url,
+      metadata: eventMetadata,
+    });
+
+    // Insert completion record
+    const { error: insertError } = await adminClient
+      .from("custom_event_completions")
+      .insert({
+        custom_event_id: customEventData.id,
+        session_id: session_id,
+        page_url: page_url,
+        metadata: eventMetadata,
+      });
+
+    if (insertError) {
+      console.error("Error inserting custom event completion:", insertError);
+      
+      // Check if it's a foreign key constraint error
+      if (insertError.code === '23503') {
+        console.error("Foreign key violation - session might not exist:", session_id);
+        // Try to create a basic session first
+        const { error: sessionCreateError } = await adminClient
+          .from("sessions")
+          .upsert({
+            id: session_id,
+            site_id: siteData.id,
+            last_seen: new Date().toISOString(),
+            country: 'unknown',
+          });
+        
+        if (sessionCreateError) {
+          console.error("Failed to create session:", sessionCreateError);
+        } else {
+          // Retry the completion insert
+          const { error: retryError } = await adminClient
+            .from("custom_event_completions")
+            .insert({
+              custom_event_id: customEventData.id,
+              session_id: session_id,
+              page_url: page_url,
+              metadata: eventMetadata,
+            });
+          
+          if (retryError) {
+            console.error("Retry failed:", retryError);
+            return NextResponse.json(
+              { error: "Failed to record completion after retry" },
+              { status: 500 }
+            );
+          }
+        }
+      } else {
+        return NextResponse.json(
+          { error: "Failed to record completion" },
+          { status: 500 }
+        );
+      }
     }
 
     return NextResponse.json({
       success: true,
-      trigger_count: (customEventData.trigger_count || 0) + 1,
+      message: "Custom event recorded successfully",
     });
   } catch (error) {
     console.error("Error in track-custom-event:", error);

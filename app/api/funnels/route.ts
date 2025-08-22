@@ -21,6 +21,8 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const siteId = searchParams.get("siteId");
+    const fromDate = searchParams.get("from");
+    const toDate = searchParams.get("to");
 
     if (!siteId) {
       return NextResponse.json(
@@ -44,7 +46,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get funnels with their steps including step_count
+    // Get funnels with their steps and completion counts based on date filter
     const { data: funnels, error: funnelsError } = await adminClient
       .from("funnels")
       .select(
@@ -54,13 +56,12 @@ export async function GET(request: NextRequest) {
         description,
         is_active,
         created_at,
-        funnel_steps (
+        funnel_steps!inner (
           id,
           step_number,
           name,
           url_pattern,
-          match_type,
-          step_count
+          match_type
         )
       `
       )
@@ -72,43 +73,65 @@ export async function GET(request: NextRequest) {
       throw funnelsError;
     }
 
-    // Calculate funnel analytics for each funnel using step_count
-    const funnelsWithAnalytics = (funnels || []).map((funnel) => {
-      const steps = (funnel.funnel_steps || []).sort(
-        (a, b) => a.step_number - b.step_number
-      );
+    // For each funnel, get completion counts with date filtering
+    const funnelsWithAnalytics = await Promise.all(
+      (funnels || []).map(async (funnel) => {
+        const steps = (funnel.funnel_steps || []).sort(
+          (a, b) => a.step_number - b.step_number
+        );
 
-      // Calculate visitors and conversion rates using step_count
-      const stepsWithData = steps.map((step) => {
-        const visitors = step.step_count || 0;
+        // Get completion counts for each step with date filtering
+        const stepsWithData = await Promise.all(
+          steps.map(async (step) => {
+            let completionsQuery = adminClient
+              .from("funnel_step_completions")
+              .select("id")
+              .eq("step_id", step.id);
 
-        // Calculate conversion rate relative to first step
-        const firstStepVisitors =
-          steps.length > 0 ? steps[0].step_count || 0 : 0;
-        const conversionRate =
-          firstStepVisitors > 0 ? (visitors / firstStepVisitors) * 100 : 0;
+            // Apply date filters if provided
+            if (fromDate && toDate) {
+              completionsQuery = completionsQuery
+                .gte("completed_at", fromDate)
+                .lte("completed_at", toDate);
+            }
+
+            const { data: completions } = await completionsQuery;
+            const visitors = completions?.length || 0;
+
+            return {
+              ...step,
+              visitors,
+            };
+          })
+        );
+
+        // Calculate conversion rates after getting all visitor counts
+        const stepsWithRates = stepsWithData.map((step) => {
+          const firstStepVisitors = stepsWithData[0]?.visitors || 0;
+          const conversionRate =
+            firstStepVisitors > 0 ? (step.visitors / firstStepVisitors) * 100 : 0;
+
+          return {
+            ...step,
+            conversion_rate: conversionRate,
+          };
+        });
+
+        // Calculate overall funnel conversion rate
+        const totalVisitors = stepsWithRates[0]?.visitors || 0;
+        const completedVisitors =
+          stepsWithRates[stepsWithRates.length - 1]?.visitors || 0;
+        const overallConversionRate =
+          totalVisitors > 0 ? (completedVisitors / totalVisitors) * 100 : 0;
 
         return {
-          ...step,
-          visitors,
-          conversion_rate: conversionRate,
+          ...funnel,
+          steps: stepsWithRates,
+          total_visitors: totalVisitors,
+          conversion_rate: overallConversionRate,
         };
-      });
-
-      // Calculate overall funnel conversion rate
-      const totalVisitors = stepsWithData[0]?.visitors || 0;
-      const completedVisitors =
-        stepsWithData[stepsWithData.length - 1]?.visitors || 0;
-      const overallConversionRate =
-        totalVisitors > 0 ? (completedVisitors / totalVisitors) * 100 : 0;
-
-      return {
-        ...funnel,
-        steps: stepsWithData,
-        total_visitors: totalVisitors,
-        conversion_rate: overallConversionRate,
-      };
-    });
+      })
+    );
 
     return NextResponse.json(funnelsWithAnalytics);
   } catch (error) {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -38,9 +39,10 @@ interface FunnelAnalytics {
 interface FunnelChartProps {
   funnelId: string;
   siteId: string;
+  dateRange?: { from: Date; to: Date } | null;
 }
 
-export function FunnelChart({ funnelId, siteId }: FunnelChartProps) {
+export function FunnelChart({ funnelId, siteId, dateRange }: FunnelChartProps) {
   const [data, setData] = useState<FunnelAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,15 +55,53 @@ export function FunnelChart({ funnelId, siteId }: FunnelChartProps) {
       setError(null);
 
       try {
-        const response = await fetch(
-          `/api/funnel-analytics?funnelId=${funnelId}&siteId=${siteId}`
-        );
+        let url = `/api/funnels?siteId=${siteId}`;
+
+        // Add date filters if provided
+        if (dateRange?.from && dateRange?.to) {
+          url += `&from=${dateRange.from.toISOString()}&to=${dateRange.to.toISOString()}`;
+        }
+
+        const response = await fetch(url);
 
         if (!response.ok) {
           throw new Error("Failed to fetch funnel analytics");
         }
 
-        const analytics = await response.json();
+        const funnels = await response.json();
+        const selectedFunnel = funnels.find((f: any) => f.id === funnelId);
+
+        if (!selectedFunnel) {
+          throw new Error("Funnel not found");
+        }
+
+        // Transform the data to match the expected format
+        const analytics: FunnelAnalytics = {
+          funnel: {
+            id: selectedFunnel.id,
+            name: selectedFunnel.name,
+            description: selectedFunnel.description || "",
+          },
+          steps: selectedFunnel.steps.map((step: any, index: number) => ({
+            id: step.id,
+            step_number: step.step_number,
+            step_name: step.name,
+            step_type: step.step_type || "page_view",
+            entered_count: step.visitors,
+            completed_count: step.visitors,
+            dropped_count:
+              index > 0
+                ? selectedFunnel.steps[index - 1].visitors - step.visitors
+                : 0,
+            conversion_rate: step.conversion_rate,
+          })),
+          total_entered: selectedFunnel.total_visitors,
+          total_completed:
+            selectedFunnel.steps[selectedFunnel.steps.length - 1]?.visitors ||
+            0,
+          overall_conversion_rate: selectedFunnel.conversion_rate,
+        };
+
         setData(analytics);
       } catch (err) {
         console.error("Error fetching funnel analytics:", err);
@@ -72,7 +112,7 @@ export function FunnelChart({ funnelId, siteId }: FunnelChartProps) {
     };
 
     fetchData();
-  }, [funnelId, siteId]);
+  }, [funnelId, siteId, dateRange]);
 
   if (loading) {
     return (
