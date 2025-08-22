@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DetailsModal } from "@/components/ui/details-modal";
+import { useFilters } from "@/lib/contexts/FilterContext";
+import { applyFiltersToQuery, applyClientSideFilters } from "@/lib/filter-utils";
 
 interface PageData {
   page: string;
@@ -27,6 +29,7 @@ export function TopPagesCard({
   const [allEntryPages, setAllEntryPages] = useState<PageData[]>([]);
   const [allExitPages, setAllExitPages] = useState<PageData[]>([]);
   const [loading, setLoading] = useState(true);
+  const { filters, addFilter, hasFilter, removeFilter } = useFilters();
 
   useEffect(() => {
     const fetchPageData = async () => {
@@ -53,7 +56,15 @@ export function TopPagesCard({
           .lte("created_at", dateRange.to.toISOString());
       }
 
-      const { data: sessionsData } = await query;
+      // Apply active filters
+      query = applyFiltersToQuery(query, filters);
+
+      let { data: sessionsData } = await query;
+
+      // Apply client-side filters for complex cases like exit pages
+      if (sessionsData) {
+        sessionsData = applyClientSideFilters(sessionsData, filters);
+      }
 
       // Process top pages by counting all pages
       if (sessionsData) {
@@ -145,12 +156,21 @@ export function TopPagesCard({
     };
 
     fetchPageData();
-  }, [siteId, dateRange, dateRangeOption]);
+  }, [siteId, dateRange, dateRangeOption, filters]);
+
+  const handlePageClick = (type: "visited_page" | "entry_page" | "exit_page", value: string) => {
+    if (hasFilter(type, value)) {
+      removeFilter(type, value);
+    } else {
+      addFilter({ type, value, label: value });
+    }
+  };
 
   const renderList = (
     data: PageData[],
     allData?: PageData[],
-    title?: string
+    title?: string,
+    clickType?: "visited_page" | "entry_page" | "exit_page"
   ) => {
     if (loading) {
       return <div className="text-muted-foreground">Loading...</div>;
@@ -162,25 +182,34 @@ export function TopPagesCard({
 
     const renderItems = (items: PageData[]) => (
       <div className="space-y-1">
-        {items.map((item, index) => (
-          <div key={index} className="space-y-1">
-            <div className="flex justify-between items-center text-sm relative">
-              <div
-                className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-primary opacity-15 transition-all"
-                style={{ width: `${item.percentage}%` }}
-              />
-              <span
-                className="truncate max-w-[200px] p-2 text-sm"
-                title={item.page}
+        {items.map((item, index) => {
+          const isActive = clickType && hasFilter(clickType, item.page);
+          
+          return (
+            <div key={index} className="space-y-1">
+              <div 
+                className={`flex justify-between items-center text-sm relative ${
+                  clickType ? "cursor-pointer hover:bg-muted/50 rounded transition-all" : ""
+                } ${isActive ? "ring-2 ring-primary" : ""}`}
+                onClick={() => clickType && handlePageClick(clickType, item.page)}
               >
-                {item.page}
-              </span>
-              <span className="text-muted-foreground ml-2 pr-4">
-                {item.count} ({item.percentage.toFixed(1)}%)
-              </span>
+                <div
+                  className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-primary opacity-15 transition-all rounded-l"
+                  style={{ width: `${item.percentage}%` }}
+                />
+                <span
+                  className="truncate max-w-[200px] p-2 text-sm"
+                  title={item.page}
+                >
+                  {item.page}
+                </span>
+                <span className="text-muted-foreground ml-2 pr-4">
+                  {item.count} ({item.percentage.toFixed(1)}%)
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
 
@@ -208,13 +237,13 @@ export function TopPagesCard({
         <TabsTrigger value="exit-pages">Exit Pages</TabsTrigger>
       </TabsList>
       <TabsContent value="top-pages" className="mt-4">
-        {renderList(topPages, allTopPages, "All visited pages")}
+        {renderList(topPages, allTopPages, "All visited pages", "visited_page")}
       </TabsContent>
       <TabsContent value="entry-pages" className="mt-4">
-        {renderList(entryPages, allEntryPages, "All entry pages")}
+        {renderList(entryPages, allEntryPages, "All entry pages", "entry_page")}
       </TabsContent>
       <TabsContent value="exit-pages" className="mt-4">
-        {renderList(exitPages, allExitPages, "All exit pages")}
+        {renderList(exitPages, allExitPages, "All exit pages", "exit_page")}
       </TabsContent>
     </Tabs>
   );

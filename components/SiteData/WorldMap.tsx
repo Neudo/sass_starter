@@ -4,6 +4,8 @@ import { Mercator } from "@visx/geo";
 import * as topojson from "topojson-client";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "next-themes";
+import { useFilters } from "@/lib/contexts/FilterContext";
+import { applyFiltersToQuery, applyClientSideFilters } from "@/lib/filter-utils";
 
 export const background = "#0f172a";
 
@@ -46,6 +48,7 @@ export default function WorldMap({
   } | null>(null);
 
   const { theme } = useTheme();
+  const { addFilter, hasFilter, removeFilter, filters } = useFilters();
   // Charger les données géographiques
 
   useEffect(() => {
@@ -92,11 +95,19 @@ export default function WorldMap({
           .lte("created_at", dateRange.to.toISOString());
       }
 
-      const { data, error } = await query;
+      // Apply active filters
+      query = applyFiltersToQuery(query, filters);
+
+      let { data, error } = await query;
 
       if (error) {
         console.error("Error fetching country data:", error);
         return;
+      }
+
+      // Apply client-side filters for complex cases like exit pages
+      if (data) {
+        data = applyClientSideFilters(data, filters);
       }
 
       // Compter les visiteurs par pays
@@ -114,7 +125,7 @@ export default function WorldMap({
     if (siteId) {
       fetchCountryData();
     }
-  }, [siteId, dateRange, dateRangeOption]);
+  }, [siteId, dateRange, dateRangeOption, filters]);
 
   if (!world) {
     return (
@@ -172,6 +183,17 @@ export default function WorldMap({
     setTooltip(null);
   };
 
+  const handleCountryClick = (countryName: string) => {
+    const visitors = countryData[countryName] || 0;
+    if (visitors > 0) {
+      if (hasFilter("country", countryName)) {
+        removeFilter("country", countryName);
+      } else {
+        addFilter({ type: "country", value: countryName, label: countryName });
+      }
+    }
+  };
+
   return width < 10 ? null : (
     <div className="relative">
       <svg width={width} height={height}>
@@ -196,21 +218,25 @@ export default function WorldMap({
                 const countryName =
                   feature.properties.name || feature.id || "Unknown Country";
 
+                const isActive = hasFilter("country", countryName);
+                const visitors = countryData[countryName] || 0;
+
                 return (
                   <path
                     key={`map-feature-${i}`}
                     d={path || ""}
                     fill={getCountryFill(countryName)}
-                    stroke="#314158"
-                    strokeWidth={0.4}
+                    stroke={isActive ? "#3d9dbd" : "#314158"}
+                    strokeWidth={isActive ? 2 : 0.4}
                     style={{
-                      cursor: "pointer",
+                      cursor: visitors > 0 ? "pointer" : "default",
                       transition: "all 0.2s ease-in-out",
                     }}
                     onMouseEnter={(event) =>
                       handleMouseEnter(event, countryName)
                     }
                     onMouseLeave={handleMouseLeave}
+                    onClick={() => handleCountryClick(countryName)}
                   />
                 );
               })}

@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { MetricsChart } from "./MetricsChart";
 import { DateRangeOption } from "@/components/DateFilter";
+import { useFilters } from "@/lib/contexts/FilterContext";
+import { applyFiltersToQuery, applyClientSideFilters } from "@/lib/filter-utils";
 interface AnalyticsMetricsProps {
   siteId: string;
   dateRange?: { from: Date; to: Date } | null;
@@ -52,6 +54,7 @@ export function AnalyticsMetrics({
   const [loading, setLoading] = useState(true);
   const [selectedMetric, setSelectedMetric] =
     useState<string>("uniqueVisitors");
+  const { filters } = useFilters();
 
   useEffect(() => {
     const fetchMetrics = async () => {
@@ -73,12 +76,20 @@ export function AnalyticsMetrics({
           .lte("created_at", dateRange.to.toISOString());
       }
 
-      const { data: sessions, error } = await query;
+      // Apply active filters
+      query = applyFiltersToQuery(query, filters);
+
+      let { data: sessions, error } = await query;
 
       if (error) {
         console.error("Error fetching metrics:", error);
         setLoading(false);
         return;
+      }
+
+      // Apply client-side filters for complex cases like exit pages
+      if (sessions) {
+        sessions = applyClientSideFilters(sessions, filters);
       }
 
       // Calculate metrics from sessions data
@@ -145,7 +156,7 @@ export function AnalyticsMetrics({
     };
 
     fetchMetrics();
-  }, [siteId, dateRange, dateRangeOption]);
+  }, [siteId, dateRange, dateRangeOption, filters]);
 
   const formatDuration = (seconds: number): string => {
     if (seconds < 60) return `${seconds}s`;

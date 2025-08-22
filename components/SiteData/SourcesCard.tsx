@@ -14,9 +14,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DetailsModal } from "@/components/ui/details-modal";
+import { useFilters } from "@/lib/contexts/FilterContext";
+import { applyFiltersToQuery } from "@/lib/filter-utils";
 
 interface SourceData {
   name: string;
+  rawValue?: string; // The actual DB value for filtering
   count: number;
   percentage: number;
 }
@@ -108,6 +111,7 @@ export function SourcesCard({
   const [selectedUTM, setSelectedUTM] = useState<UTMType>("utm_medium");
   const [loading, setLoading] = useState(true);
   const [failedIcons, setFailedIcons] = useState<Set<string>>(new Set());
+  const { addFilter, hasFilter, removeFilter, filters } = useFilters();
 
   useEffect(() => {
     const fetchSourceData = async () => {
@@ -143,6 +147,10 @@ export function SourcesCard({
           .lte("created_at", dateRange.to.toISOString());
       }
 
+      // Apply active filters
+      sessionsQuery = applyFiltersToQuery(sessionsQuery, filters);
+      sourcesQuery = applyFiltersToQuery(sourcesQuery, filters);
+
       // Fetch all session data to calculate channels dynamically
       const { data: sessionsData } = await sessionsQuery;
 
@@ -166,6 +174,9 @@ export function SourcesCard({
           .gte("created_at", dateRange.from.toISOString())
           .lte("created_at", dateRange.to.toISOString());
       }
+
+      // Apply active filters to UTM query
+      utmQuery = applyFiltersToQuery(utmQuery, filters);
 
       const { data: utmData } = await utmQuery;
 
@@ -201,7 +212,7 @@ export function SourcesCard({
       // Process sources
       if (sourcesData) {
         const sourceCounts = sourcesData.reduce(
-          (acc: Record<string, number>, item) => {
+          (acc: Record<string, { count: number; displayName: string }>, item) => {
             // Prefer referrer_domain over referrer for cleaner display
             let rawSource = item.utm_source || item.referrer_domain || item.referrer || "direct";
 
@@ -222,18 +233,24 @@ export function SourcesCard({
             // Get the display name for the source
             const sourceInfo = normalizeReferrer(rawSource, !!item.utm_source);
             const displayName = sourceInfo.displayName;
-            acc[displayName] = (acc[displayName] || 0) + 1;
+            
+            // Use rawSource as key to keep the original DB value
+            if (!acc[rawSource]) {
+              acc[rawSource] = { count: 0, displayName };
+            }
+            acc[rawSource].count += 1;
             return acc;
           },
           {}
         );
 
-        const total = Object.values(sourceCounts).reduce((a, b) => a + b, 0);
+        const total = Object.values(sourceCounts).reduce((sum, item) => sum + item.count, 0);
         const processedSources = Object.entries(sourceCounts)
-          .map(([name, count]) => ({
-            name,
-            count,
-            percentage: (count / total) * 100,
+          .map(([rawValue, data]) => ({
+            name: data.displayName,
+            rawValue,
+            count: data.count,
+            percentage: (data.count / total) * 100,
           }))
           .sort((a, b) => b.count - a.count);
 
@@ -271,13 +288,22 @@ export function SourcesCard({
     };
 
     fetchSourceData();
-  }, [siteId, selectedUTM, dateRange, dateRangeOption]);
+  }, [siteId, selectedUTM, dateRange, dateRangeOption, filters]);
+
+  const handleItemClick = (type: "referrer_domain" | "utm_source" | "utm_medium" | "utm_campaign", value: string) => {
+    if (hasFilter(type, value)) {
+      removeFilter(type, value);
+    } else {
+      addFilter({ type, value, label: value });
+    }
+  };
 
   const renderList = (
     data: SourceData[],
     showIcons = false,
     allData?: SourceData[],
-    title?: string
+    title?: string,
+    clickType?: "referrer_domain" | "utm_source" | "utm_medium" | "utm_campaign"
   ) => {
     if (loading) {
       return <div className="text-muted-foreground">Loading...</div>;
@@ -291,12 +317,20 @@ export function SourcesCard({
       <div className="space-y-1">
         {items.map((item, index) => {
           const icon = showIcons ? getSourceIcon(item.name) : null;
+          // Use rawValue for filtering if available, otherwise use name
+          const filterValue = item.rawValue || item.name;
+          const isActive = clickType && hasFilter(clickType, filterValue);
 
           return (
             <div key={index} className="space-y-1">
-              <div className="flex justify-between items-center text-sm relative">
+              <div 
+                className={`flex justify-between items-center text-sm relative ${
+                  clickType ? "cursor-pointer hover:bg-muted/50 rounded transition-all" : ""
+                } ${isActive ? "ring-2 ring-primary" : ""}`}
+                onClick={() => clickType && handleItemClick(clickType, filterValue)}
+              >
                 <div
-                  className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-primary opacity-15 transition-all"
+                  className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-primary opacity-15 transition-all rounded-l"
                   style={{ width: `${item.percentage}%` }}
                 />
                 <div className="flex items-center gap-2 truncate max-w-[200px] p-2">
@@ -356,7 +390,7 @@ export function SourcesCard({
         {renderList(channels, false, allChannels, "All channels")}
       </TabsContent>
       <TabsContent value="sources" className="mt-4">
-        {renderList(sources, true, allSources, "All sources")}
+        {renderList(sources, true, allSources, "All sources", "referrer_domain")}
       </TabsContent>
       <TabsContent value="campaigns" className="mt-4 space-y-4">
         <Select
@@ -374,7 +408,7 @@ export function SourcesCard({
             ))}
           </SelectContent>
         </Select>
-        {renderList(campaigns, false, allCampaigns, "All campaigns")}
+        {renderList(campaigns, false, allCampaigns, "All campaigns", selectedUTM)}
       </TabsContent>
     </Tabs>
   );

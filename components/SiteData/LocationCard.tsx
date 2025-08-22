@@ -7,6 +7,8 @@ import { Globe, Building, Flag, Users, Percent, Languages } from "lucide-react";
 import { getCountryFlag } from "@/data/country-flags";
 import { getLanguageName, getLanguageFlag } from "@/lib/language-helper";
 import { DetailsModal } from "@/components/ui/details-modal";
+import { useFilters } from "@/lib/contexts/FilterContext";
+import { applyFiltersToQuery } from "@/lib/filter-utils";
 
 interface LocationData {
   country: string | null;
@@ -45,6 +47,7 @@ export function LocationCard({
   });
   const [loading, setLoading] = useState(true);
   const [showPercentage, setShowPercentage] = useState(false);
+  const { addFilter, hasFilter, removeFilter, filters } = useFilters();
 
   useEffect(() => {
     const fetchLocationData = async () => {
@@ -67,6 +70,9 @@ export function LocationCard({
           .gte("created_at", dateRange.from.toISOString())
           .lte("created_at", dateRange.to.toISOString());
       }
+
+      // Apply active filters
+      query = applyFiltersToQuery(query, filters);
 
       const { data, error } = await query;
 
@@ -156,7 +162,15 @@ export function LocationCard({
     };
 
     fetchLocationData();
-  }, [siteId, dateRange, dateRangeOption]);
+  }, [siteId, dateRange, dateRangeOption, filters]);
+
+  const handleItemClick = (type: "country" | "region" | "city", value: string) => {
+    if (hasFilter(type, value)) {
+      removeFilter(type, value);
+    } else {
+      addFilter({ type, value, label: value });
+    }
+  };
 
   const renderStats = (
     data:
@@ -235,11 +249,19 @@ export function LocationCard({
             displayName = getLanguageName(name);
           }
 
+          const isClickable = type !== "language";
+          const isActive = isClickable && hasFilter(type, name);
+          
           return (
             <div key={name} className="space-y-1">
-              <div className="flex justify-between items-center text-sm relative">
+              <div 
+                className={`flex justify-between items-center text-sm relative ${
+                  isClickable ? "cursor-pointer hover:bg-muted/50 rounded transition-all" : ""
+                } ${isActive ? "ring-2 ring-primary" : ""}`}
+                onClick={() => isClickable && handleItemClick(type, name)}
+              >
                 <div
-                  className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-primary opacity-15 transition-all"
+                  className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-primary opacity-15 transition-all rounded-l"
                   style={{ width: `${percentage}%` }}
                 />
                 <div className="flex items-center gap-2 truncate mr-2 p-2">
@@ -307,11 +329,19 @@ export function LocationCard({
                     displayName = getLanguageName(name);
                   }
 
+                  const isClickable = type !== "language";
+                  const isActive = isClickable && hasFilter(type, name);
+                  
                   return (
                     <div key={name} className="space-y-1">
-                      <div className="flex justify-between items-center text-sm relative">
+                      <div 
+                        className={`flex justify-between items-center text-sm relative ${
+                          isClickable ? "cursor-pointer hover:bg-muted/50 rounded transition-all" : ""
+                        } ${isActive ? "ring-2 ring-primary" : ""}`}
+                        onClick={() => isClickable && handleItemClick(type, name)}
+                      >
                         <div
-                          className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-primary opacity-15 transition-all"
+                          className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-primary opacity-15 transition-all rounded-l"
                           style={{ width: `${percentage}%` }}
                         />
                         <div className="flex items-center gap-2 truncate mr-2 p-2">

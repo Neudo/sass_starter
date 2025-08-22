@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { DetailsModal } from "@/components/ui/details-modal";
+import { useFilters } from "@/lib/contexts/FilterContext";
+import { applyFiltersToQuery } from "@/lib/filter-utils";
 
 interface DeviceData {
   browser: string | null;
@@ -49,6 +51,7 @@ export function DeviceCard({
   });
   const [loading, setLoading] = useState(true);
   const [showPercentage, setShowPercentage] = useState(false);
+  const { addFilter, hasFilter, removeFilter, filters } = useFilters();
 
   useEffect(() => {
     const fetchDeviceData = async () => {
@@ -71,6 +74,9 @@ export function DeviceCard({
           .gte("created_at", dateRange.from.toISOString())
           .lte("created_at", dateRange.to.toISOString());
       }
+
+      // Apply active filters
+      query = applyFiltersToQuery(query, filters);
 
       const { data, error } = await query;
 
@@ -135,7 +141,7 @@ export function DeviceCard({
     };
 
     fetchDeviceData();
-  }, [siteId, dateRange, dateRangeOption]);
+  }, [siteId, dateRange, dateRangeOption, filters]);
 
   const getBrowserIcon = (browserName: string) => {
     const name = browserName.toLowerCase();
@@ -244,6 +250,15 @@ export function DeviceCard({
     return <MonitorSmartphone className="h-4 w-4 text-muted-foreground" />;
   };
 
+  const handleItemClick = (type: "browser" | "os" | "screen_size", value: string) => {
+    const filterType = type === "screen_size" ? "screen_size" : type;
+    if (hasFilter(filterType, value)) {
+      removeFilter(filterType, value);
+    } else {
+      addFilter({ type: filterType, value, label: value });
+    }
+  };
+
   const renderStats = (
     data: Record<string, number>,
     type: "browser" | "os" | "screen" = "browser",
@@ -290,11 +305,19 @@ export function DeviceCard({
               : type === "os"
               ? getOSIcon(name)
               : getScreenIcon(name);
+          const filterType = type === "screen" ? "screen_size" : type;
+          const isActive = hasFilter(filterType, name);
+          
           return (
             <div key={name} className="space-y-1">
-              <div className="flex justify-between items-center text-sm relative">
+              <div 
+                className={`flex justify-between items-center text-sm relative cursor-pointer hover:bg-muted/50 rounded transition-all ${
+                  isActive ? "ring-2 ring-primary" : ""
+                }`}
+                onClick={() => handleItemClick(filterType, name)}
+              >
                 <div
-                  className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-primary opacity-15 transition-all"
+                  className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-primary opacity-15 transition-all rounded-l"
                   style={{ width: `${percentage}%` }}
                 />
                 <div className="flex items-center gap-2 truncate p-2">
@@ -333,11 +356,19 @@ export function DeviceCard({
                       ? getOSIcon(name)
                       : getScreenIcon(name);
 
+                  const filterType = type === "screen" ? "screen_size" : type;
+                  const isActive = hasFilter(filterType, name);
+                  
                   return (
                     <div key={name} className="space-y-1">
-                      <div className="flex justify-between items-center text-sm relative">
+                      <div 
+                        className={`flex justify-between items-center text-sm relative cursor-pointer hover:bg-muted/50 rounded transition-all ${
+                          isActive ? "ring-2 ring-primary" : ""
+                        }`}
+                        onClick={() => handleItemClick(filterType, name)}
+                      >
                         <div
-                          className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-primary opacity-15 transition-all"
+                          className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-primary opacity-15 transition-all rounded-l"
                           style={{ width: `${percentage}%` }}
                         />
                         <div className="flex items-center gap-2 truncate mr-2 p-2">
