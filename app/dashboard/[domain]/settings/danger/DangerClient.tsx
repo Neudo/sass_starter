@@ -49,8 +49,6 @@ export function DangerClient({ siteId, domain }: DangerClientProps) {
     setError("");
 
     try {
-      console.log("here");
-
       const response = await fetch(`/api/sites/${siteId}/reset`, {
         method: "DELETE",
       });
@@ -100,12 +98,10 @@ export function DangerClient({ siteId, domain }: DangerClientProps) {
   const handleDeleteAccount = async () => {
     if (accountDeleteConfirmation !== "DELETE ACCOUNT") return;
 
-    console.log("🔴 CLIENT: Starting account deletion process...");
     setIsDeletingAccount(true);
     setError("");
 
     try {
-      console.log("🔴 CLIENT: Sending DELETE request to /api/account/delete");
       const response = await fetch("/api/account/delete", {
         method: "DELETE",
         headers: {
@@ -113,29 +109,14 @@ export function DangerClient({ siteId, domain }: DangerClientProps) {
         },
       });
 
-      console.log("🔴 CLIENT: Received response:", {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        headers: Object.fromEntries(response.headers.entries()),
-      });
-
       if (!response.ok) {
-        console.log("🔴 CLIENT: Response not OK, parsing error...");
         const errorData = await response.json();
-        console.error("🔴 CLIENT: Error data received:", errorData);
         throw new Error(errorData.error || "Failed to delete account");
       }
 
-      console.log("🔴 CLIENT: Parsing success response...");
-      const successData = await response.json();
-      console.log("🔴 CLIENT: Success data:", successData);
-
-      console.log("🔴 CLIENT: Redirecting to home page...");
       // Redirect to home page after account deletion
       window.location.href = "/";
     } catch (error) {
-      console.error("🔴 CLIENT: Error during account deletion:", error);
       setError(
         error instanceof Error ? error.message : "Failed to delete account"
       );
@@ -168,7 +149,6 @@ export function DangerClient({ siteId, domain }: DangerClientProps) {
       setTransferEmail("");
       alert("Transfer request sent successfully!");
     } catch (error) {
-      console.error("Error transferring site:", error);
       setError(
         error instanceof Error ? error.message : "Failed to transfer site"
       );

@@ -185,8 +185,7 @@ async function generateFakeSessions() {
       utm_campaign: getRandomElement(utmCampaigns),
       utm_term: Math.random() < 0.1 ? getRandomElement(["analytics", "tracking", "metrics"]) : null,
       utm_content: Math.random() < 0.1 ? getRandomElement(["banner", "sidebar", "footer"]) : null,
-      entry_page: getRandomElement(pages),
-      exit_page: getRandomElement(pages),
+      visited_pages: [getRandomElement(pages)],
       page_views: generatePageviews(duration),
     };
     

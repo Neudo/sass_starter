@@ -11,8 +11,11 @@ export async function DELETE(
     const supabase = await createClient();
     const adminClient = createAdminClient();
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -34,18 +37,12 @@ export async function DELETE(
         { status: 404 }
       );
     }
-
-    console.log(`Deleting site: ${site.domain} (${siteId})`);
-
     // Delete site and all related data
     // The CASCADE constraints should handle most relationships,
     // but we'll be explicit for important data
 
     // 1. Delete funnel conversions
-    await adminClient
-      .from("funnel_conversions")
-      .delete()
-      .eq("site_id", siteId);
+    await adminClient.from("funnel_conversions").delete().eq("site_id", siteId);
 
     // 2. Delete funnel steps (via funnel deletion cascade)
     const { data: funnels } = await adminClient
@@ -54,8 +51,8 @@ export async function DELETE(
       .eq("site_id", siteId);
 
     if (funnels && funnels.length > 0) {
-      const funnelIds = funnels.map(f => f.id);
-      
+      const funnelIds = funnels.map((f) => f.id);
+
       await adminClient
         .from("funnel_steps")
         .delete()
@@ -63,34 +60,19 @@ export async function DELETE(
     }
 
     // 3. Delete funnels
-    await adminClient
-      .from("funnels")
-      .delete()
-      .eq("site_id", siteId);
+    await adminClient.from("funnels").delete().eq("site_id", siteId);
 
     // 4. Delete analytics events
-    await adminClient
-      .from("analytics_events")
-      .delete()
-      .eq("site_id", siteId);
+    await adminClient.from("analytics_events").delete().eq("site_id", siteId);
 
     // 5. Delete sessions
-    await adminClient
-      .from("sessions")
-      .delete()
-      .eq("site_id", siteId);
+    await adminClient.from("sessions").delete().eq("site_id", siteId);
 
     // 6. Delete GA import jobs
-    await adminClient
-      .from("ga_import_jobs")
-      .delete()
-      .eq("site_id", siteId);
+    await adminClient.from("ga_import_jobs").delete().eq("site_id", siteId);
 
     // 7. Delete usage events
-    await adminClient
-      .from("usage_events")
-      .delete()
-      .eq("site_id", siteId);
+    await adminClient.from("usage_events").delete().eq("site_id", siteId);
 
     // 8. Finally, delete the site itself
     const { error: deleteSiteError } = await adminClient
@@ -103,13 +85,10 @@ export async function DELETE(
       throw deleteSiteError;
     }
 
-    console.log(`Site deletion completed: ${site.domain}`);
-
-    return NextResponse.json({ 
-      success: true, 
-      message: "Site deleted successfully" 
+    return NextResponse.json({
+      success: true,
+      message: "Site deleted successfully",
     });
-
   } catch (error) {
     console.error("Error deleting site:", error);
     return NextResponse.json(

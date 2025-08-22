@@ -74,8 +74,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log("Successfully stored Google tokens for user:", user.id);
-
     // Parse state to get domain
     let redirectPath = "/dashboard/settings/imports?success=connected";
 

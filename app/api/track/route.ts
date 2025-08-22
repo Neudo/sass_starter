@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     // Check if this is a new session
     const { data: existingSession } = await supabase
       .from("sessions")
-      .select("id, entry_page, visited_pages")
+      .select("id, visited_pages")
       .eq("id", sessionId)
       .single();
 
@@ -89,8 +89,6 @@ export async function POST(req: NextRequest) {
       // Language data
       language: language || "en",
       // Page tracking
-      entry_page: pageData.entryPage,
-      exit_page: pageData.exitPage,
       visited_pages: pageData.visitedPages,
       // Source tracking - only set on new sessions
       ...(isNewSession && {

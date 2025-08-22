@@ -82,7 +82,6 @@ export async function POST(req: NextRequest) {
       const scriptInstalled = html.includes(
         "https://www.hectoranalytics.com/script.js"
       );
-      console.log("🔍 API: Script installed:", scriptInstalled);
 
       return NextResponse.json({
         installed: scriptInstalled,

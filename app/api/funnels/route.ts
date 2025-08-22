@@ -109,7 +109,9 @@ export async function GET(request: NextRequest) {
         const stepsWithRates = stepsWithData.map((step) => {
           const firstStepVisitors = stepsWithData[0]?.visitors || 0;
           const conversionRate =
-            firstStepVisitors > 0 ? (step.visitors / firstStepVisitors) * 100 : 0;
+            firstStepVisitors > 0
+              ? (step.visitors / firstStepVisitors) * 100
+              : 0;
 
           return {
             ...step,
@@ -144,7 +146,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  console.log("POST request received");
   try {
     const supabase = await createClient();
     const adminClient = createAdminClient();
@@ -250,7 +251,6 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  console.log("PUT request received");
   try {
     const supabase = await createClient();
     const adminClient = createAdminClient();

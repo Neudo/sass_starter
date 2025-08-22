@@ -37,11 +37,6 @@ export async function DELETE() {
       .eq("user_id", user.id)
       .in("status", ["pending", "running"]);
 
-    console.log(
-      "Successfully disconnected Google Analytics for user:",
-      user.id
-    );
-
     return NextResponse.json({
       success: true,
       message: "Google Analytics disconnected successfully",

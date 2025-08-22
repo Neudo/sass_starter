@@ -11,8 +11,11 @@ export async function POST(
     const supabase = await createClient();
     const adminClient = createAdminClient();
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -46,8 +49,9 @@ export async function POST(
     }
 
     // Check if the new owner email exists in the system
-    const { data: newOwnerUser, error: newOwnerError } = await adminClient.auth.admin.listUsers();
-    
+    const { data: newOwnerUser, error: newOwnerError } =
+      await adminClient.auth.admin.listUsers();
+
     if (newOwnerError) {
       return NextResponse.json(
         { error: "Failed to validate new owner email" },
@@ -55,11 +59,16 @@ export async function POST(
       );
     }
 
-    const targetUser = newOwnerUser.users.find(u => u.email === newOwnerEmail);
-    
+    const targetUser = newOwnerUser.users.find(
+      (u) => u.email === newOwnerEmail
+    );
+
     if (!targetUser) {
       return NextResponse.json(
-        { error: "The email address must belong to an existing Hector Analytics user" },
+        {
+          error:
+            "The email address must belong to an existing Hector Analytics user",
+        },
         { status: 400 }
       );
     }
@@ -81,9 +90,9 @@ export async function POST(
     // For this implementation, we'll do a direct transfer
     const { error: transferError } = await adminClient
       .from("sites")
-      .update({ 
+      .update({
         user_id: targetUser.id,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq("id", siteId);
 
@@ -101,13 +110,10 @@ export async function POST(
     // 3. Log the transfer for audit purposes
     // 4. Handle any plan/billing implications
 
-    console.log(`Site ${site.domain} transferred from ${user.email} to ${newOwnerEmail}`);
-
-    return NextResponse.json({ 
-      success: true, 
-      message: `Site ${site.domain} has been transferred to ${newOwnerEmail}` 
+    return NextResponse.json({
+      success: true,
+      message: `Site ${site.domain} has been transferred to ${newOwnerEmail}`,
     });
-
   } catch (error) {
     console.error("Error transferring site:", error);
     return NextResponse.json(

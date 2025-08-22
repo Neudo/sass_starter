@@ -81,9 +81,13 @@ export async function GET(request: NextRequest) {
       // Apply date filters if provided
       if (isRealtime) {
         // For realtime mode, get completions from the last 30 minutes
-        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-        completionsQuery = completionsQuery
-          .gte("custom_event_completions.created_at", thirtyMinutesAgo);
+        const thirtyMinutesAgo = new Date(
+          Date.now() - 30 * 60 * 1000
+        ).toISOString();
+        completionsQuery = completionsQuery.gte(
+          "custom_event_completions.created_at",
+          thirtyMinutesAgo
+        );
       } else if (fromDate && toDate) {
         completionsQuery = completionsQuery
           .gte("custom_event_completions.created_at", fromDate)

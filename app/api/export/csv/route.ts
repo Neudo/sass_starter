@@ -438,7 +438,7 @@ async function generatePagesCsv(
   // Since we don't have detailed page data, we'll create a simplified version
   const { data: sessions } = await adminClient
     .from("sessions")
-    .select("created_at, entry_page, exit_page, page_views, last_seen")
+    .select("created_at, visited_pages, page_views, last_seen")
     .eq("site_id", siteId)
     .gte("created_at", startDate)
     .lte("created_at", endDate + "T23:59:59")
@@ -449,7 +449,8 @@ async function generatePagesCsv(
   sessions?.forEach((session: any) => {
     const date = session.created_at.split("T")[0];
     const hostname = domain;
-    const page = session.entry_page || "/";
+    const visitedPages = session.visited_pages || ["/"];
+    const page = visitedPages[0] || "/";
 
     const key = `${date}_${hostname}_${page}`;
 
@@ -511,7 +512,7 @@ async function generateAllDataCsv(
     .order("created_at");
 
   let csv =
-    '"date","session_id","country","region","city","browser","os","screen_size","referrer","referrer_domain","entry_page","exit_page","page_views","visitors","visits","visit_duration","utm_source","utm_medium","utm_campaign","utm_term","utm_content","channel"\n';
+    '"date","session_id","country","region","city","browser","os","screen_size","referrer","referrer_domain","page_views","visitors","visits","visit_duration","utm_source","utm_medium","utm_campaign","utm_term","utm_content","channel"\n';
 
   sessions?.forEach((session: any) => {
     const date = session.created_at.split("T")[0];
@@ -527,7 +528,7 @@ async function generateAllDataCsv(
       session.os || ""
     }","${session.screen_size || ""}","${session.referrer || ""}","${
       session.referrer_domain || ""
-    }","${session.entry_page || "/"}","${session.exit_page || "/"}",${
+    }",${
       session.page_views || 1
     },1,1,${duration},"${session.utm_source || ""}","${
       session.utm_medium || ""

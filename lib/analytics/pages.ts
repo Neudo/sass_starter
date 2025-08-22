@@ -1,18 +1,11 @@
-export interface PageData {
-  entryPage: string;
-  exitPage: string;
-}
-
 export interface SessionPageData {
-  entry_page: string | null;
   visited_pages?: string[] | null;
 }
 
 export function calculatePageData(
   currentPage: string | null,
   existingSession: SessionPageData | null
-): PageData & { visitedPages: string[] } {
-  const isNewSession = !existingSession;
+): { visitedPages: string[] } {
   const currentPageNormalized = currentPage || "/";
   const visitedPages = existingSession?.visited_pages || [];
   
@@ -25,8 +18,6 @@ export function calculatePageData(
     : visitedPages;
   
   return {
-    entryPage: isNewSession ? currentPageNormalized : (existingSession?.entry_page || "/"),
-    exitPage: currentPageNormalized,
     visitedPages: updatedVisitedPages,
   };
 }

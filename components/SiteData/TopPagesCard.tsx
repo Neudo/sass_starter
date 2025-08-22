@@ -42,7 +42,9 @@ export function TopPagesCard({
 
       if (isRealtimeMode) {
         // For realtime: get sessions active in last 30 minutes (based on last_seen)
-        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+        const thirtyMinutesAgo = new Date(
+          Date.now() - 30 * 60 * 1000
+        ).toISOString();
         query = query.gte("last_seen", thirtyMinutesAgo);
       } else if (dateRange) {
         // For other modes: filter by creation date
@@ -60,8 +62,8 @@ export function TopPagesCard({
         // Count each unique page visited per session using visited_pages array
         sessionsData.forEach((session) => {
           // Parse visited_pages array and count each page
-          const visitedPages = Array.isArray(session.visited_pages) 
-            ? session.visited_pages 
+          const visitedPages = Array.isArray(session.visited_pages)
+            ? session.visited_pages
             : [];
 
           visitedPages.forEach((page: string) => {
@@ -81,11 +83,16 @@ export function TopPagesCard({
         setAllTopPages(processedPages);
         setTopPages(processedPages.slice(0, 7));
 
-        // Process entry pages
+        // Process entry pages (first page in visited_pages)
         const entryCounts = sessionsData.reduce(
           (acc: Record<string, number>, item) => {
-            const page = item.entry_page || "/";
-            acc[page] = (acc[page] || 0) + 1;
+            const visitedPages = Array.isArray(item.visited_pages)
+              ? item.visited_pages
+              : [];
+            if (visitedPages.length > 0) {
+              const firstPage = visitedPages[0];
+              acc[firstPage] = (acc[firstPage] || 0) + 1;
+            }
             return acc;
           },
           {}
@@ -106,11 +113,16 @@ export function TopPagesCard({
         setAllEntryPages(processedEntryPages);
         setEntryPages(processedEntryPages.slice(0, 7));
 
-        // Process exit pages
+        // Process exit pages (last page in visited_pages)
         const exitCounts = sessionsData.reduce(
           (acc: Record<string, number>, item) => {
-            const page = item.exit_page || "/";
-            acc[page] = (acc[page] || 0) + 1;
+            const visitedPages = Array.isArray(item.visited_pages)
+              ? item.visited_pages
+              : [];
+            if (visitedPages.length > 0) {
+              const lastPage = visitedPages[visitedPages.length - 1];
+              acc[lastPage] = (acc[lastPage] || 0) + 1;
+            }
             return acc;
           },
           {}
