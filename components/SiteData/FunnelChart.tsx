@@ -40,9 +40,10 @@ interface FunnelChartProps {
   funnelId: string;
   siteId: string;
   dateRange?: { from: Date; to: Date } | null;
+  isRealtimeMode?: boolean;
 }
 
-export function FunnelChart({ funnelId, siteId, dateRange }: FunnelChartProps) {
+export function FunnelChart({ funnelId, siteId, dateRange, isRealtimeMode = false }: FunnelChartProps) {
   const [data, setData] = useState<FunnelAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -112,7 +113,17 @@ export function FunnelChart({ funnelId, siteId, dateRange }: FunnelChartProps) {
     };
 
     fetchData();
-  }, [funnelId, siteId, dateRange]);
+
+    // Set up auto-refresh for realtime mode
+    let interval: NodeJS.Timeout | null = null;
+    if (isRealtimeMode) {
+      interval = setInterval(fetchData, 60000); // Refresh every minute
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [funnelId, siteId, dateRange, isRealtimeMode]);
 
   if (loading) {
     return (

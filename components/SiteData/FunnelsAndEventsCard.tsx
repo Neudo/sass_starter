@@ -31,6 +31,7 @@ interface Funnel {
 interface FunnelsAndEventsCardProps {
   siteId: string;
   dateRange?: { from: Date; to: Date } | null;
+  isRealtimeMode?: boolean;
 }
 
 // Helper function to get event icon
@@ -49,7 +50,7 @@ const getEventIcon = (eventType: string) => {
   }
 };
 
-export function FunnelsAndEventsCard({ siteId, dateRange }: FunnelsAndEventsCardProps) {
+export function FunnelsAndEventsCard({ siteId, dateRange, isRealtimeMode = false }: FunnelsAndEventsCardProps) {
   const [selectedFunnel, setSelectedFunnel] = useState<string>("");
   const [funnels, setFunnels] = useState<Funnel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,7 +89,17 @@ export function FunnelsAndEventsCard({ siteId, dateRange }: FunnelsAndEventsCard
     };
 
     fetchFunnels();
-  }, [siteId, dateRange]);
+
+    // Set up auto-refresh for realtime mode
+    let interval: NodeJS.Timeout | null = null;
+    if (isRealtimeMode) {
+      interval = setInterval(fetchFunnels, 60000); // Refresh every minute
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [siteId, dateRange, isRealtimeMode]);
 
   const [customEvents, setCustomEvents] = useState<
     Array<{
@@ -144,7 +155,17 @@ export function FunnelsAndEventsCard({ siteId, dateRange }: FunnelsAndEventsCard
     };
 
     fetchCustomEvents();
-  }, [siteId, dateRange]);
+
+    // Set up auto-refresh for realtime mode
+    let interval: NodeJS.Timeout | null = null;
+    if (isRealtimeMode) {
+      interval = setInterval(fetchCustomEvents, 60000); // Refresh every minute
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [siteId, dateRange, isRealtimeMode]);
 
   return (
     <Card className="w-full">
@@ -220,7 +241,7 @@ export function FunnelsAndEventsCard({ siteId, dateRange }: FunnelsAndEventsCard
                           </p>
                         )}
                       </div>
-                      <FunnelChart funnelId={selectedFunnel} siteId={siteId} dateRange={dateRange} />
+                      <FunnelChart funnelId={selectedFunnel} siteId={siteId} dateRange={dateRange} isRealtimeMode={isRealtimeMode} />
                     </div>
                   )}
                 </>

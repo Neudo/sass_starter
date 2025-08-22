@@ -46,14 +46,10 @@ interface ChartDataPoint {
   totalPageviews: number;
   bounceRate: number;
   avgDuration: number;
-  activeVisitors?: number;
   realtimePageViews?: number;
 }
 
 const chartConfig = {
-  activeVisitors: {
-    label: "Active Visitors",
-  },
   uniqueVisitors: {
     label: "Unique Visitors",
   },
@@ -82,8 +78,7 @@ export function MetricsChart({
   // Get the display title for the selected metric
   const getMetricTitle = (metric: string): string => {
     const titles: Record<string, string> = {
-      activeVisitors: "Active Visitors",
-      uniqueVisitors: "Unique Visitors",
+      uniqueVisitors: dateRange === "realtime" ? "Unique Visitors (last 30 min)" : "Unique Visitors",
       totalVisits: "Total Visits",
       totalPageviews: "Total Pageviews",
       bounceRate: "Bounce Rate",
@@ -182,9 +177,8 @@ export function MetricsChart({
       const supabase = createClient();
       const range = getDateRange(dateRange);
 
-      // Special handling for realtime metrics (activeVisitors, uniqueVisitors in realtime, realtimePageViews)
-      if (selectedMetrics[0] === "activeVisitors" || 
-          (selectedMetrics[0] === "uniqueVisitors" && dateRange === "realtime") ||
+      // Special handling for realtime metrics (uniqueVisitors in realtime, realtimePageViews)
+      if ((selectedMetrics[0] === "uniqueVisitors" && dateRange === "realtime") ||
           selectedMetrics[0] === "realtimePageViews") {
         // Generate last 30 minutes with 4-minute intervals
         const now = new Date();
@@ -210,12 +204,6 @@ export function MetricsChart({
           const intervalEnd = new Date(now.getTime() - i * 4 * 60 * 1000);
           const intervalStart = new Date(intervalEnd.getTime() - 4 * 60 * 1000);
           
-          // Count sessions active in this interval
-          const activeCount = recentSessions?.filter(session => {
-            const lastSeen = new Date(session.last_seen || session.created_at);
-            return lastSeen >= intervalStart && lastSeen <= intervalEnd;
-          }).length || 0;
-
           // Count unique visitors in this interval
           const intervalSessions = recentSessions?.filter(session => {
             const lastSeen = new Date(session.last_seen || session.created_at);
@@ -239,7 +227,6 @@ export function MetricsChart({
           realtimeData.push({
             date: intervalEnd.toISOString(),
             displayDate: displayLabel,
-            activeVisitors: activeCount,
             uniqueVisitors: uniqueVisitorsSet.size,
             realtimePageViews: intervalPageViews,
             totalVisits: 0,

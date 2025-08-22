@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Users,
   Eye,
   MousePointerClick,
   Clock,
@@ -19,11 +18,9 @@ interface AnalyticsMetricsProps {
   siteId: string;
   dateRange?: { from: Date; to: Date } | null;
   dateRangeOption?: DateRangeOption;
-  onMetricChange?: (metric: string) => void;
 }
 
 interface Metrics {
-  activeVisitors: number;
   uniqueVisitors: number;
   totalVisits: number;
   totalPageviews: number;
@@ -32,7 +29,6 @@ interface Metrics {
   avgDuration: number;
   realtimePageViews?: number;
   change?: {
-    activeVisitors: number;
     uniqueVisitors: number;
     totalVisits: number;
     totalPageviews: number;
@@ -43,10 +39,8 @@ export function AnalyticsMetrics({
   siteId,
   dateRange,
   dateRangeOption = "today",
-  onMetricChange,
 }: AnalyticsMetricsProps) {
   const [metrics, setMetrics] = useState<Metrics>({
-    activeVisitors: 0,
     uniqueVisitors: 0,
     totalVisits: 0,
     totalPageviews: 0,
@@ -80,10 +74,9 @@ export function AnalyticsMetrics({
         return;
       }
 
-      // Calculate active visitors (last 30 minutes)
+      // Calculate realtime page views (last 30 minutes)
       const now = new Date();
       const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
-      let activeVisitors = 0;
       let realtimePageViews = 0;
 
       // Calculate metrics from sessions data
@@ -97,7 +90,6 @@ export function AnalyticsMetrics({
         if (session.last_seen) {
           const lastSeen = new Date(session.last_seen);
           if (lastSeen >= thirtyMinutesAgo) {
-            activeVisitors++;
             // Add page views from sessions active in last 30 minutes for realtime metric
             realtimePageViews += session.page_views || 1;
           }
@@ -131,7 +123,6 @@ export function AnalyticsMetrics({
       const uniqueVisitors = uniqueVisitorsSet.size;
 
       setMetrics({
-        activeVisitors,
         uniqueVisitors,
         totalVisits,
         totalPageviews,
@@ -195,7 +186,6 @@ export function AnalyticsMetrics({
     const handleClick = () => {
       if (!metricKey) return;
       setSelectedMetric(metricKey);
-      onMetricChange?.(metricKey);
     };
 
     return (
@@ -208,14 +198,6 @@ export function AnalyticsMetrics({
         <CardHeader className="flex flex-row items-center justify-start gap-x-1 space-y-0 p-2">
           <div className="relative">
             <Icon className="h-4 w-4 text-muted-foreground" />
-            {metricKey === "activeVisitors" ? (
-              <div className="absolute -top-1 -right-1">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                </span>
-              </div>
-            ) : null}
           </div>
           <CardTitle className="text-sm font-medium">{title}</CardTitle>
         </CardHeader>
@@ -266,22 +248,12 @@ export function AnalyticsMetrics({
   // Determine grid columns based on realtime mode
   const isRealtimeMode = dateRangeOption === "realtime";
   const gridCols = isRealtimeMode
-    ? "grid-cols-2 lg:grid-cols-3"
+    ? "grid-cols-2 lg:grid-cols-2"
     : "grid-cols-2 lg:grid-cols-5 ";
 
   return (
     <div className="space-y-6 dark:bg-slate-800 dark:border-0 bg-white shadow-sm border border-gray-200 p-4 rounded-sm">
       <div className={`grid gap-4 ${gridCols}`}>
-        {isRealtimeMode && (
-          <MetricCard
-            title="Active Visitors"
-            value={metrics.activeVisitors}
-            icon={Users}
-            format="number"
-            change={metrics.change?.activeVisitors}
-            metricKey="activeVisitors"
-          />
-        )}
         <MetricCard
           title="Unique Visitors"
           value={metrics.uniqueVisitors}
