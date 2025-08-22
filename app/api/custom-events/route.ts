@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
     const siteParam = searchParams.get("siteId");
     const fromDate = searchParams.get("from");
     const toDate = searchParams.get("to");
+    const isRealtime = searchParams.get("realtime") === "true";
 
     if (!siteParam) {
       return NextResponse.json(
@@ -78,7 +79,12 @@ export async function GET(request: NextRequest) {
         .eq("site_id", siteData.id);
 
       // Apply date filters if provided
-      if (fromDate && toDate) {
+      if (isRealtime) {
+        // For realtime mode, get completions from the last 30 minutes
+        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+        completionsQuery = completionsQuery
+          .gte("custom_event_completions.created_at", thirtyMinutesAgo);
+      } else if (fromDate && toDate) {
         completionsQuery = completionsQuery
           .gte("custom_event_completions.created_at", fromDate)
           .lte("custom_event_completions.created_at", toDate);

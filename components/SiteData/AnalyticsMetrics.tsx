@@ -95,8 +95,11 @@ export function AnalyticsMetrics({
         }-${session.screen_size || "unknown"}-${session.country || "unknown"}`;
         uniqueVisitorsSet.add(visitorFingerprint);
 
-        // Calculate pageviews from the page_views column
-        const sessionPageviews = session.page_views || 1;
+        // Calculate pageviews from the visited_pages array length
+        const visitedPagesCount = Array.isArray(session.visited_pages) 
+          ? session.visited_pages.length 
+          : 1;
+        const sessionPageviews = visitedPagesCount;
         totalPageviews += sessionPageviews;
 
         // For realtime mode, all pageviews are "realtime pageviews"

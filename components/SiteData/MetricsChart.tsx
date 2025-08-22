@@ -35,7 +35,7 @@ interface SessionData {
   os?: string;
   screen_size?: string;
   country?: string;
-  page_views?: number;
+  visited_pages?: string[];
 }
 
 interface ChartDataPoint {
@@ -218,7 +218,10 @@ export function MetricsChart({
               session.os || "unknown"
             }-${session.screen_size || "unknown"}-${session.country || "unknown"}`;
             uniqueVisitorsSet.add(visitorFingerprint);
-            intervalPageViews += session.page_views || 1;
+            const visitedPagesCount = Array.isArray(session.visited_pages) 
+              ? session.visited_pages.length 
+              : 1;
+            intervalPageViews += visitedPagesCount;
           });
 
           const minutesAgo = i * 4;
@@ -347,7 +350,10 @@ export function MetricsChart({
             session.country || "unknown"
           }`;
           uniqueVisitorsSet.add(visitorFingerprint);
-          const sessionPageviews = session.page_views || 1;
+          const visitedPagesCount = Array.isArray(session.visited_pages) 
+            ? session.visited_pages.length 
+            : 1;
+          const sessionPageviews = visitedPagesCount;
           totalPageviews += sessionPageviews;
 
           if (session.created_at && session.last_seen) {

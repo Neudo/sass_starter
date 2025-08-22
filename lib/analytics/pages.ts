@@ -1,24 +1,32 @@
 export interface PageData {
   entryPage: string;
   exitPage: string;
-  pageViews: number;
 }
 
 export interface SessionPageData {
   entry_page: string | null;
-  page_views: number;
+  visited_pages?: string[] | null;
 }
 
 export function calculatePageData(
   currentPage: string | null,
   existingSession: SessionPageData | null
-): PageData {
+): PageData & { visitedPages: string[] } {
   const isNewSession = !existingSession;
-  const currentPageViews = existingSession?.page_views || 0;
+  const currentPageNormalized = currentPage || "/";
+  const visitedPages = existingSession?.visited_pages || [];
+  
+  // Check if this page was already visited in this session
+  const isNewPageVisit = !visitedPages.includes(currentPageNormalized);
+  
+  // Update visited pages array (add current page if it's new)
+  const updatedVisitedPages = isNewPageVisit 
+    ? [...visitedPages, currentPageNormalized]
+    : visitedPages;
   
   return {
-    entryPage: isNewSession ? (currentPage || "/") : (existingSession?.entry_page || "/"),
-    exitPage: currentPage || "/",
-    pageViews: currentPageViews + 1,
+    entryPage: isNewSession ? currentPageNormalized : (existingSession?.entry_page || "/"),
+    exitPage: currentPageNormalized,
+    visitedPages: updatedVisitedPages,
   };
 }

@@ -1,6 +1,7 @@
 import React from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { DashboardClient } from "@/components/DashboardClient";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { notFound } from "next/navigation";
 
 export default async function PublicDashboardPage({
@@ -42,11 +43,14 @@ export default async function PublicDashboardPage({
       <div className="min-h-screen bg-background">
         <div className="border-b">
           <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center gap-4">
-              <h1 className="text-2xl font-bold">{domain}</h1>
-              <div className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded">
-                Public Dashboard
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <h1 className="text-2xl font-bold">{domain}</h1>
+                <div className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded">
+                  Public Dashboard ok
+                </div>
               </div>
+              <ThemeToggle />
             </div>
           </div>
         </div>

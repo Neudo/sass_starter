@@ -34,10 +34,10 @@ export function TopPagesCard({
 
       const isRealtimeMode = dateRangeOption === "realtime";
 
-      // Fetch all sessions with entry_page, exit_page and page_views
+      // Fetch all sessions with visited_pages
       let query = supabase
         .from("sessions")
-        .select("entry_page, exit_page, page_views")
+        .select("visited_pages")
         .eq("site_id", siteId);
 
       if (isRealtimeMode) {
@@ -57,26 +57,16 @@ export function TopPagesCard({
       if (sessionsData) {
         const pageCounts: Record<string, number> = {};
 
-        // Count each page - both entry and exit pages represent visited pages
+        // Count each unique page visited per session using visited_pages array
         sessionsData.forEach((session) => {
-          // Count entry page
-          if (session.entry_page) {
-            pageCounts[session.entry_page] =
-              (pageCounts[session.entry_page] || 0) + 1;
-          }
+          // Parse visited_pages array and count each page
+          const visitedPages = Array.isArray(session.visited_pages) 
+            ? session.visited_pages 
+            : [];
 
-          // Count exit page (it's a separate page view if different from entry)
-          if (session.exit_page) {
-            // If it's the same as entry_page and page_views > 1, or if it's different, count it
-            if (session.exit_page !== session.entry_page) {
-              pageCounts[session.exit_page] =
-                (pageCounts[session.exit_page] || 0) + 1;
-            } else if (session.page_views && session.page_views > 1) {
-              // Same page but multiple views
-              pageCounts[session.exit_page] =
-                (pageCounts[session.exit_page] || 0) + (session.page_views - 1);
-            }
-          }
+          visitedPages.forEach((page: string) => {
+            pageCounts[page] = (pageCounts[page] || 0) + 1;
+          });
         });
 
         const total = Object.values(pageCounts).reduce((a, b) => a + b, 0);

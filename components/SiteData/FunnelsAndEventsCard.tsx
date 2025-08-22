@@ -127,15 +127,17 @@ export function FunnelsAndEventsCard({ siteId, dateRange, isRealtimeMode = false
       try {
         let url = `/api/custom-events?siteId=${siteId}`;
         
-        // Add date filters if provided
-        if (dateRange?.from && dateRange?.to) {
+        // Add realtime parameter or date filters
+        if (isRealtimeMode) {
+          url += `&realtime=true`;
+        } else if (dateRange?.from && dateRange?.to) {
           url += `&from=${dateRange.from.toISOString()}&to=${dateRange.to.toISOString()}`;
         }
         
         const response = await fetch(url);
         if (response.ok) {
           const events = await response.json();
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          
           const customEventsData = events.map((event: any) => ({
             id: event.id,
             name: event.name,
