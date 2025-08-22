@@ -57,14 +57,14 @@ export function DashboardClient({
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2">
-          <WorldMapCard siteId={siteId} dateRange={dateRange} />
+          <WorldMapCard siteId={siteId} dateRange={dateRange} dateRangeOption={selectedDateRange} />
         </div>
         <Card>
           <CardHeader>
             <CardTitle>Locations</CardTitle>
           </CardHeader>
           <CardContent>
-            <LocationCard siteId={siteId} dateRange={dateRange} />
+            <LocationCard siteId={siteId} dateRange={dateRange} dateRangeOption={selectedDateRange} />
           </CardContent>
         </Card>
         <Card>
@@ -72,7 +72,7 @@ export function DashboardClient({
             <CardTitle>Devices</CardTitle>
           </CardHeader>
           <CardContent>
-            <DeviceCard siteId={siteId} dateRange={dateRange} />
+            <DeviceCard siteId={siteId} dateRange={dateRange} dateRangeOption={selectedDateRange} />
           </CardContent>
         </Card>
         <Card>
@@ -80,7 +80,7 @@ export function DashboardClient({
             <CardTitle>Sources</CardTitle>
           </CardHeader>
           <CardContent>
-            <SourcesCard siteId={siteId} dateRange={dateRange} />
+            <SourcesCard siteId={siteId} dateRange={dateRange} dateRangeOption={selectedDateRange} />
           </CardContent>
         </Card>
         <Card>
@@ -88,7 +88,7 @@ export function DashboardClient({
             <CardTitle>Top Pages</CardTitle>
           </CardHeader>
           <CardContent>
-            <TopPagesCard siteId={siteId} dateRange={dateRange} />
+            <TopPagesCard siteId={siteId} dateRange={dateRange} dateRangeOption={selectedDateRange} />
           </CardContent>
         </Card>
       </div>

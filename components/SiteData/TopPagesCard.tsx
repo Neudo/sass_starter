@@ -14,9 +14,11 @@ interface PageData {
 export function TopPagesCard({
   siteId,
   dateRange,
+  dateRangeOption = "today",
 }: {
   siteId: string;
   dateRange?: { from: Date; to: Date } | null;
+  dateRangeOption?: string;
 }) {
   const [topPages, setTopPages] = useState<PageData[]>([]);
   const [entryPages, setEntryPages] = useState<PageData[]>([]);
@@ -30,13 +32,20 @@ export function TopPagesCard({
     const fetchPageData = async () => {
       const supabase = createClient();
 
+      const isRealtimeMode = dateRangeOption === "realtime";
+
       // Fetch all sessions with entry_page, exit_page and page_views
       let query = supabase
         .from("sessions")
         .select("entry_page, exit_page, page_views")
         .eq("site_id", siteId);
 
-      if (dateRange) {
+      if (isRealtimeMode) {
+        // For realtime: get sessions active in last 30 minutes (based on last_seen)
+        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+        query = query.gte("last_seen", thirtyMinutesAgo);
+      } else if (dateRange) {
+        // For other modes: filter by creation date
         query = query
           .gte("created_at", dateRange.from.toISOString())
           .lte("created_at", dateRange.to.toISOString());
@@ -134,7 +143,7 @@ export function TopPagesCard({
     };
 
     fetchPageData();
-  }, [siteId, dateRange]);
+  }, [siteId, dateRange, dateRangeOption]);
 
   const renderList = (
     data: PageData[],

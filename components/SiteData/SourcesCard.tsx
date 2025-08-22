@@ -93,9 +93,11 @@ const getSourceIcon = (sourceName: string) => {
 export function SourcesCard({
   siteId,
   dateRange,
+  dateRangeOption = "today",
 }: {
   siteId: string;
   dateRange?: { from: Date; to: Date } | null;
+  dateRangeOption?: string;
 }) {
   const [channels, setChannels] = useState<SourceData[]>([]);
   const [sources, setSources] = useState<SourceData[]>([]);
@@ -122,8 +124,16 @@ export function SourcesCard({
         .select("utm_source, referrer, referrer_domain")
         .eq("site_id", siteId);
 
+      const isRealtimeMode = dateRangeOption === "realtime";
+
       // Apply date filters if provided
-      if (dateRange) {
+      if (isRealtimeMode) {
+        // For realtime: get sessions active in last 30 minutes (based on last_seen)
+        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+        sessionsQuery = sessionsQuery.gte("last_seen", thirtyMinutesAgo);
+        sourcesQuery = sourcesQuery.gte("last_seen", thirtyMinutesAgo);
+      } else if (dateRange) {
+        // For other modes: filter by creation date
         sessionsQuery = sessionsQuery
           .gte("created_at", dateRange.from.toISOString())
           .lte("created_at", dateRange.to.toISOString());
@@ -146,7 +156,12 @@ export function SourcesCard({
         .eq("site_id", siteId)
         .not(selectedUTM, "is", null);
 
-      if (dateRange) {
+      if (isRealtimeMode) {
+        // For realtime: get sessions active in last 30 minutes (based on last_seen)
+        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+        utmQuery = utmQuery.gte("last_seen", thirtyMinutesAgo);
+      } else if (dateRange) {
+        // For other modes: filter by creation date
         utmQuery = utmQuery
           .gte("created_at", dateRange.from.toISOString())
           .lte("created_at", dateRange.to.toISOString());
@@ -256,7 +271,7 @@ export function SourcesCard({
     };
 
     fetchSourceData();
-  }, [siteId, selectedUTM, dateRange]);
+  }, [siteId, selectedUTM, dateRange, dateRangeOption]);
 
   const renderList = (
     data: SourceData[],

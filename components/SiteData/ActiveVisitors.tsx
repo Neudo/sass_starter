@@ -17,14 +17,14 @@ export function ActiveVisitors({ siteId }: ActiveVisitorsProps) {
     const fetchActiveVisitors = async () => {
       const supabase = createClient();
 
-      // Consider visitors active if they were seen in the last 5 minutes
-      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      // Consider visitors active if they were seen in the last 30 minutes (same as realtime mode)
+      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
 
-      const { error, count } = await supabase
+      const { data: sessions, error } = await supabase
         .from("sessions")
-        .select("id", { count: "exact", head: true })
+        .select("browser, os, screen_size, country")
         .eq("site_id", siteId)
-        .gte("last_seen", fiveMinutesAgo);
+        .gte("last_seen", thirtyMinutesAgo);
 
       if (error) {
         console.error("Error fetching active visitors:", error);
@@ -32,7 +32,16 @@ export function ActiveVisitors({ siteId }: ActiveVisitorsProps) {
         return;
       }
 
-      setActiveCount(count || 0);
+      // Count unique visitors using the same fingerprint logic as AnalyticsMetrics
+      const uniqueVisitorsSet = new Set<string>();
+      sessions?.forEach((session) => {
+        const visitorFingerprint = `${session.browser || "unknown"}-${
+          session.os || "unknown"
+        }-${session.screen_size || "unknown"}-${session.country || "unknown"}`;
+        uniqueVisitorsSet.add(visitorFingerprint);
+      });
+
+      setActiveCount(uniqueVisitorsSet.size);
       setLoading(false);
     };
 

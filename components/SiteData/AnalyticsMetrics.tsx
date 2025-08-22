@@ -57,10 +57,17 @@ export function AnalyticsMetrics({
     const fetchMetrics = async () => {
       const supabase = createClient();
 
-      // Build query with optional date range
+      const isRealtimeMode = dateRangeOption === "realtime";
+      
+      // Build query based on mode
       let query = supabase.from("sessions").select("*").eq("site_id", siteId);
 
-      if (dateRange) {
+      if (isRealtimeMode) {
+        // For realtime: get sessions active in last 30 minutes (based on last_seen)
+        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+        query = query.gte("last_seen", thirtyMinutesAgo);
+      } else if (dateRange) {
+        // For other modes: filter by creation date
         query = query
           .gte("created_at", dateRange.from.toISOString())
           .lte("created_at", dateRange.to.toISOString());
@@ -74,28 +81,15 @@ export function AnalyticsMetrics({
         return;
       }
 
-      // Calculate realtime page views (last 30 minutes)
-      const now = new Date();
-      const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
-      let realtimePageViews = 0;
-
       // Calculate metrics from sessions data
       const uniqueVisitorsSet = new Set<string>();
       let totalPageviews = 0;
       let totalDuration = 0;
       let bounces = 0;
+      let realtimePageViews = 0;
 
       sessions?.forEach((session) => {
-        // Check if session was active in last 30 minutes
-        if (session.last_seen) {
-          const lastSeen = new Date(session.last_seen);
-          if (lastSeen >= thirtyMinutesAgo) {
-            // Add page views from sessions active in last 30 minutes for realtime metric
-            realtimePageViews += session.page_views || 1;
-          }
-        }
-        // Create visitor fingerprint from available data for unique visitor identification
-        // This combines browser, OS, and screen size for privacy-friendly visitor tracking
+        // Create visitor fingerprint for unique visitor identification
         const visitorFingerprint = `${session.browser || "unknown"}-${
           session.os || "unknown"
         }-${session.screen_size || "unknown"}-${session.country || "unknown"}`;
@@ -104,6 +98,11 @@ export function AnalyticsMetrics({
         // Calculate pageviews from the page_views column
         const sessionPageviews = session.page_views || 1;
         totalPageviews += sessionPageviews;
+
+        // For realtime mode, all pageviews are "realtime pageviews"
+        if (isRealtimeMode) {
+          realtimePageViews += sessionPageviews;
+        }
 
         // Calculate duration (difference between created_at and last_seen)
         if (session.created_at && session.last_seen) {
@@ -143,7 +142,7 @@ export function AnalyticsMetrics({
     };
 
     fetchMetrics();
-  }, [siteId, dateRange]);
+  }, [siteId, dateRange, dateRangeOption]);
 
   const formatDuration = (seconds: number): string => {
     if (seconds < 60) return `${seconds}s`;

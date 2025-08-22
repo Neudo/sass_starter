@@ -17,6 +17,7 @@ export type GeoMercatorProps = {
   events?: boolean;
   siteId: string;
   dateRange?: { from: Date; to: Date } | null;
+  dateRangeOption?: string;
 };
 
 interface FeatureShape {
@@ -31,6 +32,7 @@ export default function WorldMap({
   height,
   siteId,
   dateRange,
+  dateRangeOption = "today",
 }: GeoMercatorProps) {
   const [world, setWorld] = useState<{
     type: "FeatureCollection";
@@ -71,13 +73,20 @@ export default function WorldMap({
     const fetchCountryData = async () => {
       const supabase = createClient();
 
+      const isRealtimeMode = dateRangeOption === "realtime";
+
       let query = supabase
         .from("sessions")
         .select("country")
         .eq("site_id", siteId)
         .not("country", "is", null);
 
-      if (dateRange) {
+      if (isRealtimeMode) {
+        // For realtime: get sessions active in last 30 minutes (based on last_seen)
+        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+        query = query.gte("last_seen", thirtyMinutesAgo);
+      } else if (dateRange) {
+        // For other modes: filter by creation date
         query = query
           .gte("created_at", dateRange.from.toISOString())
           .lte("created_at", dateRange.to.toISOString());
@@ -105,7 +114,7 @@ export default function WorldMap({
     if (siteId) {
       fetchCountryData();
     }
-  }, [siteId, dateRange]);
+  }, [siteId, dateRange, dateRangeOption]);
 
   if (!world) {
     return (

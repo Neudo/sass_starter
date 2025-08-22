@@ -9,9 +9,10 @@ import WorldMapWrapper from "./wordMapWrapper";
 interface WorldMapCardProps {
   siteId: string;
   dateRange?: { from: Date; to: Date } | null;
+  dateRangeOption?: string;
 }
 
-export function WorldMapCard({ siteId, dateRange }: WorldMapCardProps) {
+export function WorldMapCard({ siteId, dateRange, dateRangeOption = "today" }: WorldMapCardProps) {
   const [isMapVisible, setIsMapVisible] = useState(true);
 
   return (
@@ -34,7 +35,7 @@ export function WorldMapCard({ siteId, dateRange }: WorldMapCardProps) {
       {isMapVisible && (
         <CardContent className="pt-0">
           <div className="rounded-sm overflow-hidden">
-            <WorldMapWrapper siteId={siteId} dateRange={dateRange} />
+            <WorldMapWrapper siteId={siteId} dateRange={dateRange} dateRangeOption={dateRangeOption} />
           </div>
         </CardContent>
       )}
