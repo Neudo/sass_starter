@@ -62,7 +62,7 @@ export function ActiveFilters() {
       <div className="flex gap-2 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent pb-1">
         {filters.length === 0 ? (
           <div className="text-xs text-muted-foreground py-2">
-            No active filters. Click "Add" to filter your data.
+            No active filters. Click &quot;Add&quot; to filter your data.
           </div>
         ) : (
           <div className="flex gap-2 min-w-max">
@@ -84,7 +84,7 @@ export function ActiveFilters() {
         )}
       </div>
 
-      <FilterModal 
+      <FilterModal
         open={showFilterModal}
         onClose={() => setShowFilterModal(false)}
       />

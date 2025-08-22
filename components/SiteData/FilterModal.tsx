@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,11 +18,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Globe,
   Monitor,
@@ -52,8 +47,26 @@ export function FilterModal({ open, onClose }: FilterModalProps) {
   const [selectedValue, setSelectedValue] = useState("");
   const [openCombobox, setOpenCombobox] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const analyticsData = getAnalyticsData();
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpenCombobox(false);
+      }
+    };
+
+    if (openCombobox) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openCombobox]);
 
   const filterCategories = useMemo(() => {
     return {
@@ -228,10 +241,11 @@ export function FilterModal({ open, onClose }: FilterModalProps) {
   // Filter data based on search query
   const filteredData = useMemo(() => {
     if (!searchQuery) return availableData;
-    
-    return availableData.filter(item => 
-      item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.value.toLowerCase().includes(searchQuery.toLowerCase())
+
+    return availableData.filter(
+      (item) =>
+        item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.value.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [availableData, searchQuery]);
 
@@ -272,7 +286,15 @@ export function FilterModal({ open, onClose }: FilterModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent
+        className="max-w-2xl"
+        onInteractOutside={(e) => {
+          // Prevent closing dialog when clicking on the popover
+          if (openCombobox) {
+            e.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Add Filter</DialogTitle>
         </DialogHeader>
@@ -300,7 +322,7 @@ export function FilterModal({ open, onClose }: FilterModalProps) {
 
           {Object.entries(filterCategories).map(([key, category]) => (
             <TabsContent key={key} value={key} className="mt-6 space-y-4">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-[1fr_auto_2fr] gap-4">
                 {/* Filter Type Selection */}
                 <div className="space-y-2">
                   <Label htmlFor="filter-type">Filter Type</Label>
@@ -348,51 +370,53 @@ export function FilterModal({ open, onClose }: FilterModalProps) {
                 </div>
 
                 {/* Value Selection with Autocomplete */}
-                <div className="space-y-2">
+                <div className="space-y-2 relative" ref={dropdownRef}>
                   <Label htmlFor="value">Value</Label>
-                  <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={openCombobox}
-                        className="w-full justify-between"
-                        disabled={
-                          !selectedFilterType || availableData.length === 0
-                        }
-                      >
-                        {selectedValue ? (
-                          <div className="flex items-center gap-2">
-                            {availableData.find(
-                              (item) => item.value === selectedValue
-                            )?.icon && (
-                              <span className="text-sm">
-                                {
-                                  availableData.find(
-                                    (item) => item.value === selectedValue
-                                  )?.icon
-                                }
-                              </span>
-                            )}
-                            <span className="truncate">
-                              {availableData.find(
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openCombobox}
+                    className="w-full justify-between min-w-[200px]"
+                    disabled={
+                      !selectedFilterType || availableData.length === 0
+                    }
+                    onClick={() => setOpenCombobox(!openCombobox)}
+                  >
+                    {selectedValue ? (
+                      <div className="flex items-center gap-2">
+                        {availableData.find(
+                          (item) => item.value === selectedValue
+                        )?.icon && (
+                          <span className="text-sm">
+                            {
+                              availableData.find(
                                 (item) => item.value === selectedValue
-                              )?.label || selectedValue}
-                            </span>
-                          </div>
-                        ) : (
-                          "Select value..."
+                              )?.icon
+                            }
+                          </span>
                         )}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[300px] p-0 z-[60]">
+                        <span className="truncate">
+                          {availableData.find(
+                            (item) => item.value === selectedValue
+                          )?.label || selectedValue}
+                        </span>
+                      </div>
+                    ) : (
+                      "Select value..."
+                    )}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                  
+                  {/* Custom Dropdown */}
+                  {openCombobox && (
+                    <div className="absolute top-full mt-1 w-full min-w-[200px] max-w-[400px] bg-popover border rounded-md shadow-lg z-50">
                       <div className="p-2">
                         <Input
                           placeholder="Search..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                           className="mb-2"
+                          autoFocus
                         />
                         <div className="max-h-60 overflow-y-auto">
                           {filteredData.length === 0 ? (
@@ -432,8 +456,8 @@ export function FilterModal({ open, onClose }: FilterModalProps) {
                           )}
                         </div>
                       </div>
-                    </PopoverContent>
-                  </Popover>
+                    </div>
+                  )}
                 </div>
               </div>
 
