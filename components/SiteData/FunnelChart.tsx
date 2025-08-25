@@ -20,6 +20,16 @@ interface FunnelStep {
   completed_count: number;
   dropped_count: number;
   conversion_rate: number;
+  source_breakdown?: Array<{
+    source: string;
+    count: number;
+    percentage: number;
+  }>;
+  country_breakdown?: Array<{
+    country: string;
+    count: number;
+    percentage: number;
+  }>;
 }
 
 interface FunnelAnalytics {
@@ -98,6 +108,8 @@ export function FunnelChart({
                 ? selectedFunnel.steps[index - 1].visitors - step.visitors
                 : 0,
             conversion_rate: step.conversion_rate,
+            source_breakdown: step.source_breakdown || [],
+            country_breakdown: step.country_breakdown || [],
           })),
           total_entered: selectedFunnel.total_visitors,
           total_completed:
@@ -176,6 +188,8 @@ export function FunnelChart({
         actualCompleted: step.entered_count,
         actualDropped: 0,
         conversionRate: 100,
+        sourceBreakdown: step.source_breakdown,
+        countryBreakdown: step.country_breakdown,
       };
     }
 
@@ -198,6 +212,8 @@ export function FunnelChart({
       actualCompleted: step.entered_count,
       actualDropped: actualDropped > 0 ? actualDropped : 0,
       conversionRate: step.conversion_rate,
+      sourceBreakdown: step.source_breakdown,
+      countryBreakdown: step.country_breakdown,
     };
   });
 
@@ -246,7 +262,7 @@ export function FunnelChart({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
+        <div className="bg-background border border-border rounded-lg p-3 shadow-lg max-w-sm">
           <p className="font-medium text-sm">
             Step {data.stepNumber}: {data.fullName || data.name}
           </p>
@@ -266,6 +282,59 @@ export function FunnelChart({
               Relative to first step: {data.entered.toFixed(1)}%
             </p>
           </div>
+          
+          {/* Breakdowns if data exists */}
+          {(data.sourceBreakdown?.length > 0 || data.countryBreakdown?.length > 0) && (
+            <div className="grid grid-cols-2 gap-4 pt-2 mt-2 border-t border-border/50">
+              {/* Source Breakdown */}
+              {data.sourceBreakdown?.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Top Sources
+                  </p>
+                  {data.sourceBreakdown
+                    .slice(0, 3)
+                    .map((source: any) => (
+                      <div
+                        key={source.source}
+                        className="flex justify-between text-xs gap-2"
+                      >
+                        <span className="truncate">
+                          {source.source}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {source.percentage}%
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              )}
+
+              {/* Country Breakdown */}
+              {data.countryBreakdown?.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Top Countries
+                  </p>
+                  {data.countryBreakdown
+                    .slice(0, 3)
+                    .map((country: any) => (
+                      <div
+                        key={country.country}
+                        className="flex justify-between text-xs gap-2"
+                      >
+                        <span className="truncate">
+                          {country.country}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {country.percentage}%
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       );
     }

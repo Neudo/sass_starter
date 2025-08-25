@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
           steps.map(async (step) => {
             let completionsQuery = adminClient
               .from("funnel_step_completions")
-              .select("id")
+              .select("id, session_id")
               .eq("step_id", step.id);
 
             // Apply date filters if provided
@@ -97,10 +97,62 @@ export async function GET(request: NextRequest) {
 
             const { data: completions } = await completionsQuery;
             const visitors = completions?.length || 0;
+            
+            // Get session data for source and country breakdown
+            let sourceBreakdown = [];
+            let countryBreakdown = [];
+            
+            if (completions && completions.length > 0) {
+              const sessionIds = completions.map(c => c.session_id).filter(Boolean);
+              
+              if (sessionIds.length > 0) {
+                // Get sessions data
+                const { data: sessions } = await adminClient
+                  .from("sessions")
+                  .select("referrer, country")
+                  .in("id", sessionIds);
+                
+                if (sessions) {
+                  // Source breakdown
+                  const sourceCounts: Record<string, number> = {};
+                  sessions.forEach((session) => {
+                    const source = session.referrer || "Direct";
+                    sourceCounts[source] = (sourceCounts[source] || 0) + 1;
+                  });
+                  
+                  sourceBreakdown = Object.entries(sourceCounts)
+                    .map(([source, count]) => ({
+                      source,
+                      count,
+                      percentage: Math.round((count / sessions.length) * 100),
+                    }))
+                    .sort((a, b) => b.count - a.count)
+                    .slice(0, 3);
+                  
+                  // Country breakdown
+                  const countryCounts: Record<string, number> = {};
+                  sessions.forEach((session) => {
+                    const country = session.country || "Unknown";
+                    countryCounts[country] = (countryCounts[country] || 0) + 1;
+                  });
+                  
+                  countryBreakdown = Object.entries(countryCounts)
+                    .map(([country, count]) => ({
+                      country,
+                      count,
+                      percentage: Math.round((count / sessions.length) * 100),
+                    }))
+                    .sort((a, b) => b.count - a.count)
+                    .slice(0, 3);
+                }
+              }
+            }
 
             return {
               ...step,
               visitors,
+              source_breakdown: sourceBreakdown,
+              country_breakdown: countryBreakdown,
             };
           })
         );
