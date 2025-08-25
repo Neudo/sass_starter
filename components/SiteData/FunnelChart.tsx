@@ -157,10 +157,17 @@ export function FunnelChart({
   const chartData = data.steps.map((step, index) => {
     const proportionalEntered = (step.entered_count / firstStepEntries) * 100;
 
+    // Truncate step name if too long
+    const truncatedName =
+      step.step_name.length > 20
+        ? step.step_name.substring(0, 17) + "..."
+        : step.step_name;
+
     // First step is always 100% complete (no drops)
     if (index === 0) {
       return {
-        name: step.step_name,
+        name: truncatedName,
+        fullName: step.step_name,
         stepNumber: step.step_number,
         entered: 100,
         completed: 100,
@@ -179,7 +186,8 @@ export function FunnelChart({
     const proportionalCompleted = proportionalEntered;
 
     return {
-      name: step.step_name,
+      name: truncatedName,
+      fullName: step.step_name,
       stepNumber: step.step_number,
       // Store both proportional (for display) and actual (for tooltip)
       entered: proportionalEntered,
@@ -201,7 +209,7 @@ export function FunnelChart({
       return (
         <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
           <p className="font-medium text-sm">
-            Step {data.stepNumber}: {data.name}
+            Step {data.stepNumber}: {data.fullName || data.name}
           </p>
           <div className="space-y-1 mt-2">
             <p className="text-sm">
@@ -256,7 +264,12 @@ export function FunnelChart({
       </div>
 
       {/* Chart */}
-      <div className="h-80">
+      <div
+        className="h-80 mx-auto"
+        style={{
+          maxWidth: `${Math.min(800, Math.max(300, data.steps.length * 150))}px`,
+        }}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}
@@ -269,7 +282,8 @@ export function FunnelChart({
           >
             <XAxis
               dataKey="name"
-              className="text-xl fill-white"
+              tick={{ fill: "white", fontSize: 10 }}
+              tickLine={false}
               angle={0}
               axisLine={false}
               height={80}
@@ -282,14 +296,14 @@ export function FunnelChart({
               stackId="a"
               fill={"var(--chart-1)"}
               name="Completed"
-              radius={[0, 0, 4, 4]}
+              radius={[0, 0, 0, 0]}
             />
             <Bar
               dataKey="dropped"
               stackId="a"
               fill="var(--chart-3)"
               name="Dropped"
-              radius={[4, 4, 0, 0]}
+              radius={[0, 0, 0, 0]}
             />
           </BarChart>
         </ResponsiveContainer>
