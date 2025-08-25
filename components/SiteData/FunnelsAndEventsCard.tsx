@@ -50,7 +50,11 @@ const getEventIcon = (eventType: string) => {
   }
 };
 
-export function FunnelsAndEventsCard({ siteId, dateRange, isRealtimeMode = false }: FunnelsAndEventsCardProps) {
+export function FunnelsAndEventsCard({
+  siteId,
+  dateRange,
+  isRealtimeMode = false,
+}: FunnelsAndEventsCardProps) {
   const [selectedFunnel, setSelectedFunnel] = useState<string>("");
   const [funnels, setFunnels] = useState<Funnel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,12 +63,12 @@ export function FunnelsAndEventsCard({ siteId, dateRange, isRealtimeMode = false
     const fetchFunnels = async () => {
       try {
         let url = `/api/funnels?siteId=${siteId}`;
-        
+
         // Add date filters if provided
         if (dateRange?.from && dateRange?.to) {
           url += `&from=${dateRange.from.toISOString()}&to=${dateRange.to.toISOString()}`;
         }
-        
+
         const response = await fetch(url);
         if (response.ok) {
           const funnelsData = await response.json();
@@ -126,18 +130,18 @@ export function FunnelsAndEventsCard({ siteId, dateRange, isRealtimeMode = false
     const fetchCustomEvents = async () => {
       try {
         let url = `/api/custom-events?siteId=${siteId}`;
-        
+
         // Add realtime parameter or date filters
         if (isRealtimeMode) {
           url += `&realtime=true`;
         } else if (dateRange?.from && dateRange?.to) {
           url += `&from=${dateRange.from.toISOString()}&to=${dateRange.to.toISOString()}`;
         }
-        
+
         const response = await fetch(url);
         if (response.ok) {
           const events = await response.json();
-          
+
           const customEventsData = events.map((event: any) => ({
             id: event.id,
             name: event.name,
@@ -229,21 +233,12 @@ export function FunnelsAndEventsCard({ siteId, dateRange, isRealtimeMode = false
 
                   {selectedFunnel && (
                     <div className="space-y-4">
-                      <div className="p-3 bg-muted/30 rounded-md">
-                        <h4 className="font-medium text-sm">
-                          {funnels.find((f) => f.id === selectedFunnel)?.name}
-                        </h4>
-                        {funnels.find((f) => f.id === selectedFunnel)
-                          ?.description && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {
-                              funnels.find((f) => f.id === selectedFunnel)
-                                ?.description
-                            }
-                          </p>
-                        )}
-                      </div>
-                      <FunnelChart funnelId={selectedFunnel} siteId={siteId} dateRange={dateRange} isRealtimeMode={isRealtimeMode} />
+                      <FunnelChart
+                        funnelId={selectedFunnel}
+                        siteId={siteId}
+                        dateRange={dateRange}
+                        isRealtimeMode={isRealtimeMode}
+                      />
                     </div>
                   )}
                 </>
@@ -302,26 +297,48 @@ export function FunnelsAndEventsCard({ siteId, dateRange, isRealtimeMode = false
                               {/* Source Breakdown */}
                               {event.source_breakdown.length > 0 && (
                                 <div className="space-y-1">
-                                  <p className="text-xs font-medium text-muted-foreground">Top Sources</p>
-                                  {event.source_breakdown.slice(0, 3).map((source) => (
-                                    <div key={source.source} className="flex justify-between text-xs">
-                                      <span className="truncate">{source.source}</span>
-                                      <span className="text-muted-foreground">{source.percentage}%</span>
-                                    </div>
-                                  ))}
+                                  <p className="text-xs font-medium text-muted-foreground">
+                                    Top Sources
+                                  </p>
+                                  {event.source_breakdown
+                                    .slice(0, 3)
+                                    .map((source) => (
+                                      <div
+                                        key={source.source}
+                                        className="flex justify-between text-xs"
+                                      >
+                                        <span className="truncate">
+                                          {source.source}
+                                        </span>
+                                        <span className="text-muted-foreground">
+                                          {source.percentage}%
+                                        </span>
+                                      </div>
+                                    ))}
                                 </div>
                               )}
 
                               {/* Country Breakdown */}
                               {event.country_breakdown.length > 0 && (
                                 <div className="space-y-1">
-                                  <p className="text-xs font-medium text-muted-foreground">Top Countries</p>
-                                  {event.country_breakdown.slice(0, 3).map((country) => (
-                                    <div key={country.country} className="flex justify-between text-xs">
-                                      <span className="truncate">{country.country}</span>
-                                      <span className="text-muted-foreground">{country.percentage}%</span>
-                                    </div>
-                                  ))}
+                                  <p className="text-xs font-medium text-muted-foreground">
+                                    Top Countries
+                                  </p>
+                                  {event.country_breakdown
+                                    .slice(0, 3)
+                                    .map((country) => (
+                                      <div
+                                        key={country.country}
+                                        className="flex justify-between text-xs"
+                                      >
+                                        <span className="truncate">
+                                          {country.country}
+                                        </span>
+                                        <span className="text-muted-foreground">
+                                          {country.percentage}%
+                                        </span>
+                                      </div>
+                                    ))}
                                 </div>
                               )}
                             </div>
