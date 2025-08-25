@@ -11,11 +11,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { ChevronDown, Clock } from "lucide-react";
+import { ChevronDown, Clock, Lightbulb } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { LogoutButton } from "@/components/logout-button";
 import { QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { RequestFeatureModal } from "@/components/request-feature-modal";
 import Link from "next/link";
 import { useShowUserInfos } from "@/hooks/useLoggedUser";
 import { useEffect, useState } from "react";
@@ -37,6 +38,8 @@ export default function ProtectedLayout({
     isActive: boolean;
     hasActiveSubscription: boolean;
   } | null>(null);
+  
+  const [requestFeatureOpen, setRequestFeatureOpen] = useState(false);
 
   useEffect(() => {
     const fetchTrialStatus = async () => {
@@ -161,6 +164,15 @@ export default function ProtectedLayout({
                             Settings
                           </Link>
                         </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="p-4 cursor-pointer"
+                          onClick={() => setRequestFeatureOpen(true)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Lightbulb className="h-4 w-4" />
+                            Request a Feature
+                          </div>
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive">
                           <LogoutButton />
@@ -176,6 +188,11 @@ export default function ProtectedLayout({
             {children}
           </div>
         </div>
+        
+        <RequestFeatureModal 
+          open={requestFeatureOpen}
+          onOpenChange={setRequestFeatureOpen}
+        />
       </main>
     </QueryClientProvider>
   );

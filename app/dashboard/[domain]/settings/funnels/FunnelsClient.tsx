@@ -10,7 +10,15 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, TrendingUp, Edit, Trash2, ArrowDown, Lock } from "lucide-react";
+import {
+  Plus,
+  TrendingUp,
+  Edit,
+  Trash2,
+  ChevronDown,
+  ChevronRight,
+  Lock,
+} from "lucide-react";
 import Link from "next/link";
 
 interface FunnelStep {
@@ -50,6 +58,9 @@ export function FunnelsClient({
   const [funnels, setFunnels] = useState<Funnel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedFunnels, setExpandedFunnels] = useState<Set<string>>(
+    new Set()
+  );
 
   useEffect(() => {
     if (hasFunnelAccess) {
@@ -94,66 +105,31 @@ export function FunnelsClient({
     }
   };
 
-  const renderFunnelStep = (
-    step: FunnelStep,
-    index: number,
-    isLast: boolean
-  ) => {
-    const isCompleted = step.visitors && step.visitors > 0;
-    const bgOpacity = 50 - index * 10; // Decreasing opacity for each step
+  const toggleFunnelExpansion = (funnelId: string) => {
+    const newExpanded = new Set(expandedFunnels);
+    if (newExpanded.has(funnelId)) {
+      newExpanded.delete(funnelId);
+    } else {
+      newExpanded.add(funnelId);
+    }
+    setExpandedFunnels(newExpanded);
+  };
 
+  const renderFunnelStep = (step: FunnelStep) => {
     return (
-      <div key={step.id}>
-        <div
-          className={`flex items-center justify-between p-4 rounded-lg ${
-            index === 0
-              ? "bg-muted/50"
-              : isLast && isCompleted
-              ? "bg-green-50 border border-green-200"
-              : `bg-muted/${Math.max(bgOpacity, 20)}`
-          }`}
-        >
-          <div className="flex items-center gap-3">
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                isLast && isCompleted
-                  ? "bg-green-600 text-white"
-                  : index === 0
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted-foreground text-white"
-              }`}
-            >
-              {step.step_number}
-            </div>
-            <div>
-              <div className="font-medium">{step.name}</div>
-              <div className="text-sm text-muted-foreground">
-                {step.url_pattern}
-              </div>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="font-medium">
-              {step.visitors?.toLocaleString() || "0"} visitors
-            </div>
-            <div
-              className={`text-sm ${
-                isLast && isCompleted
-                  ? "text-green-600"
-                  : "text-muted-foreground"
-              }`}
-            >
-              {step.conversion_rate
-                ? `${step.conversion_rate.toFixed(1)}%`
-                : "0%"}
-            </div>
+      <div
+        key={step.id}
+        className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg"
+      >
+        <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium">
+          {step.step_number}
+        </div>
+        <div className="flex-1">
+          <div className="font-medium text-sm">{step.name}</div>
+          <div className="text-xs text-muted-foreground">
+            {step.url_pattern}
           </div>
         </div>
-        {!isLast && (
-          <div className="flex justify-center py-2">
-            <ArrowDown className="h-5 w-5 text-muted-foreground" />
-          </div>
-        )}
       </div>
     );
   };
@@ -266,60 +242,90 @@ export function FunnelsClient({
               </Button>
             </div>
           ) : (
-            funnels.map((funnel) => (
-              <div key={funnel.id} className="border rounded-lg p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <TrendingUp className="h-5 w-5 text-primary" />
-                    <div>
-                      <div className="font-semibold">{funnel.name}</div>
-                      {funnel.description && (
-                        <div className="text-sm text-muted-foreground">
-                          {funnel.description}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {funnel.conversion_rate && (
-                      <Badge variant="secondary">
-                        {funnel.conversion_rate.toFixed(1)}% conversion rate
-                      </Badge>
-                    )}
-                    <Button variant="outline" size="icon" asChild>
-                      <Link
-                        href={`/dashboard/${domain}/settings/funnels/${funnel.id}/edit`}
+            funnels.map((funnel) => {
+              const isExpanded = expandedFunnels.has(funnel.id);
+              return (
+                <div key={funnel.id} className="border rounded-lg">
+                  <div
+                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/20 transition-colors"
+                    onClick={() => toggleFunnelExpansion(funnel.id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <TrendingUp className="h-5 w-5 text-primary" />
+                      <div>
+                        <div className="font-semibold">{funnel.name}</div>
+                        {funnel.description && (
+                          <div className="text-sm text-muted-foreground">
+                            {funnel.description}
+                          </div>
+                        )}
+                      </div>
+                      <Badge
+                        variant={funnel.is_active ? "default" : "secondary"}
                       >
-                        <Edit className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => deleteFunnel(funnel.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  {funnel.steps.length === 0 ? (
-                    <div className="text-center py-6 text-muted-foreground">
-                      No steps configured for this funnel
+                        {funnel.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                      <div className="text-sm text-muted-foreground">
+                        {funnel.steps.length} step
+                        {funnel.steps.length !== 1 ? "s" : ""}
+                      </div>
                     </div>
-                  ) : (
-                    funnel.steps.map((step, index) =>
-                      renderFunnelStep(
-                        step,
-                        index,
-                        index === funnel.steps.length - 1
-                      )
-                    )
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFunnelExpansion(funnel.id);
+                        }}
+                      >
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        asChild
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Link
+                          href={`/dashboard/${domain}/settings/funnels/${funnel.id}/edit`}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteFunnel(funnel.id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {isExpanded && (
+                    <div className="border-t px-4 pb-4">
+                      <div className="space-y-2 mt-4">
+                        {funnel.steps.length === 0 ? (
+                          <div className="text-center py-6 text-muted-foreground">
+                            No steps configured for this funnel
+                          </div>
+                        ) : (
+                          funnel.steps.map((step) => renderFunnelStep(step))
+                        )}
+                      </div>
+                    </div>
                   )}
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </CardContent>
       </Card>
