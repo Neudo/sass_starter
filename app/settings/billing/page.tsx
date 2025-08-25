@@ -31,26 +31,77 @@ export default async function BillingPage() {
 
   const siteCount = userSites?.length || 0;
 
-  // Récupérer le nombre total de pageviews pour tous les sites de l'utilisateur
-  let totalPageViews = 0;
+  // Récupérer le nombre total d'événements pour tous les sites de l'utilisateur
+  let totalEvents = 0;
 
   if (userSites && userSites.length > 0) {
     const siteIds = userSites.map((site) => site.id);
+    console.log("User sites IDs:", siteIds);
 
-    // Récupérer les pageviews du mois en cours
+    // Récupérer les dates du mois en cours
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
+    console.log("Start of month:", startOfMonth.toISOString());
 
-    const { data: sessions } = await adminClient
+    // 1. Compter les sessions (1 session = 1 événement minimum)
+    const { data: sessions, error: sessionsError } = await adminClient
       .from("sessions")
-      .select("page_views")
+      .select("id")
       .in("site_id", siteIds)
       .gte("created_at", startOfMonth.toISOString());
 
-    totalPageViews =
-      sessions?.reduce((sum, session) => sum + (session.page_views || 0), 0) ||
-      0;
+    console.log("Sessions data:", sessions);
+    console.log("Sessions error:", sessionsError);
+
+    const totalPageViews = sessions?.length || 0;
+
+    // 2. Compter les custom events triggers (essayons plusieurs noms de tables possibles)
+    let totalCustomEvents = 0;
+    
+    // Essayer d'abord custom_event_triggers
+    const { data: eventTriggers, error: eventsError } = await adminClient
+      .from("custom_event_triggers")
+      .select("id")
+      .in("site_id", siteIds)
+      .gte("triggered_at", startOfMonth.toISOString());
+
+    if (eventsError) {
+      console.log("Trying alternative table names...");
+      
+      // Essayer event_triggers
+      const { data: altTriggers, error: altError } = await adminClient
+        .from("event_triggers")
+        .select("id")
+        .in("site_id", siteIds)
+        .gte("created_at", startOfMonth.toISOString());
+        
+      if (altError) {
+        // Essayer events
+        const { data: events, error: evError } = await adminClient
+          .from("events")
+          .select("id")
+          .in("site_id", siteIds)
+          .gte("created_at", startOfMonth.toISOString());
+          
+        totalCustomEvents = events?.length || 0;
+        console.log("Events table data:", events);
+        console.log("Events table error:", evError);
+      } else {
+        totalCustomEvents = altTriggers?.length || 0;
+        console.log("Event triggers alt data:", altTriggers);
+      }
+    } else {
+      totalCustomEvents = eventTriggers?.length || 0;
+      console.log("Event triggers data:", eventTriggers);
+    }
+
+    console.log("Total pageviews:", totalPageViews);
+    console.log("Total custom events:", totalCustomEvents);
+
+    // Total events = pageviews + custom events
+    totalEvents = totalPageViews + totalCustomEvents;
+    console.log("Total events:", totalEvents);
   }
   // Récupérer les données de subscription réelles
   const { data: subscription } = await adminClient
@@ -74,7 +125,16 @@ export default async function BillingPage() {
     if (hasPaidPlan) {
       // User has paid plan
       currentPlan = subscription.plan_tier;
-      currentTier = subscription.events_limit;
+      
+      // Convert numeric events_limit to string format (10000 -> "10k", 100000 -> "100k", etc.)
+      const eventsNum = subscription.events_limit;
+      if (eventsNum >= 1000000) {
+        currentTier = `${eventsNum / 1000000}m`;
+      } else if (eventsNum >= 1000) {
+        currentTier = `${eventsNum / 1000}k`;
+      } else {
+        currentTier = "10k"; // Default fallback
+      }
     } else {
       // User is on free plan - use helper functions
       isInFreePeriod = isWithinFreePeriod(subscription);
@@ -137,27 +197,35 @@ export default async function BillingPage() {
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Monthly Events</p>
               <p className="text-2xl font-bold">
-                {totalPageViews.toLocaleString()} /{" "}
+                {totalEvents.toLocaleString()} /{" "}
                 {limits.pageviews.toLocaleString()}
               </p>
               <Progress
-                value={(totalPageViews / limits.pageviews) * 100}
+                value={(totalEvents / limits.pageviews) * 100}
                 className="h-2"
               />
             </div>
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Websites</p>
               <p className="text-2xl font-bold">
-                {siteCount} / {limits.websites === -1 ? "∞" : limits.websites}
+                {currentPlan === "professional" ? (
+                  siteCount
+                ) : (
+                  <>
+                    {siteCount} / {limits.websites === -1 ? "∞" : limits.websites}
+                  </>
+                )}
               </p>
-              {limits.websites !== -1 && (
+              {currentPlan !== "professional" && limits.websites !== -1 && (
                 <Progress
                   value={(siteCount / limits.websites) * 100}
                   className="h-2"
                 />
               )}
-              {limits.websites === -1 && (
-                <div className="h-2 bg-primary rounded" />
+              {currentPlan === "professional" && (
+                <div className="text-xs text-muted-foreground">
+                  Unlimited websites allowed
+                </div>
               )}
             </div>
             <div className="space-y-2">

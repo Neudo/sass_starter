@@ -98,7 +98,7 @@ export const PRICING_TIERS = {
 export const PLAN_LIMITS = {
   free: {
     pageviews: 10000,
-    websites: 1,
+    websites: 2,
     retention: "30 days",
     goals: 0,
     customEvents: 0,
