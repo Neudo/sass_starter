@@ -6,8 +6,6 @@ import {
   BarChart,
   Bar,
   XAxis,
-  YAxis,
-  CartesianGrid,
   Tooltip,
   Legend,
   ResponsiveContainer,
@@ -43,7 +41,12 @@ interface FunnelChartProps {
   isRealtimeMode?: boolean;
 }
 
-export function FunnelChart({ funnelId, siteId, dateRange, isRealtimeMode = false }: FunnelChartProps) {
+export function FunnelChart({
+  funnelId,
+  siteId,
+  dateRange,
+  isRealtimeMode = false,
+}: FunnelChartProps) {
   const [data, setData] = useState<FunnelAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -151,11 +154,29 @@ export function FunnelChart({ funnelId, siteId, dateRange, isRealtimeMode = fals
   // Calculate proportional data based on first step (100%)
   const firstStepEntries = data.steps[0]?.entered_count || 1;
 
-  const chartData = data.steps.map((step) => {
+  const chartData = data.steps.map((step, index) => {
     const proportionalEntered = (step.entered_count / firstStepEntries) * 100;
-    const proportionalCompleted =
-      (step.completed_count / firstStepEntries) * 100;
-    const proportionalDropped = proportionalEntered - proportionalCompleted;
+
+    // First step is always 100% complete (no drops)
+    if (index === 0) {
+      return {
+        name: step.step_name,
+        stepNumber: step.step_number,
+        entered: 100,
+        completed: 100,
+        dropped: 0,
+        actualEntered: step.entered_count,
+        actualCompleted: step.entered_count,
+        actualDropped: 0,
+        conversionRate: 100,
+      };
+    }
+
+    // For other steps, calculate drops from previous step
+    const prevStepEntries = data.steps[index - 1]?.entered_count || 0;
+    const actualDropped = prevStepEntries - step.entered_count;
+    const proportionalDropped = (actualDropped / firstStepEntries) * 100;
+    const proportionalCompleted = proportionalEntered;
 
     return {
       name: step.step_name,
@@ -166,14 +187,14 @@ export function FunnelChart({ funnelId, siteId, dateRange, isRealtimeMode = fals
       dropped: proportionalDropped > 0 ? proportionalDropped : 0,
       // Keep actual numbers for tooltip
       actualEntered: step.entered_count,
-      actualCompleted: step.completed_count,
-      actualDropped: step.dropped_count,
+      actualCompleted: step.entered_count,
+      actualDropped: actualDropped > 0 ? actualDropped : 0,
       conversionRate: step.conversion_rate,
     };
   });
 
   // Custom tooltip component
-   
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -213,7 +234,7 @@ export function FunnelChart({ funnelId, siteId, dateRange, isRealtimeMode = fals
       {/* Summary Stats */}
       <div className="grid grid-cols-3 gap-4 p-4 bg-muted/30 rounded-lg">
         <div className="text-center">
-          <div className="text-2xl font-bold text-blue-600">
+          <div className="text-2xl font-bold">
             {data.total_entered.toLocaleString()}
           </div>
           <div className="text-xs text-muted-foreground">Total Entered</div>
@@ -246,33 +267,27 @@ export function FunnelChart({ funnelId, siteId, dateRange, isRealtimeMode = fals
               bottom: 5,
             }}
           >
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis
               dataKey="name"
-              className="text-xs fill-muted-foreground"
-              angle={-45}
-              textAnchor="end"
+              className="text-xl fill-white"
+              angle={0}
+              axisLine={false}
               height={80}
               interval={0}
-            />
-            <YAxis
-              domain={[0, 100]}
-              tickFormatter={(value) => `${value}%`}
-              className="text-xs fill-muted-foreground"
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend wrapperStyle={{ fontSize: "12px" }} />
             <Bar
               dataKey="completed"
               stackId="a"
-              fill="#16a34a"
+              fill={"var(--chart-1)"}
               name="Completed"
-              radius={[0, 0, 0, 0]}
+              radius={[0, 0, 4, 4]}
             />
             <Bar
               dataKey="dropped"
               stackId="a"
-              fill="#dc2626"
+              fill="var(--chart-3)"
               name="Dropped"
               radius={[4, 4, 0, 0]}
             />

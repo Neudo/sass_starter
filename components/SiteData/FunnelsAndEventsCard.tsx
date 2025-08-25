@@ -82,6 +82,11 @@ export function FunnelsAndEventsCard({
               is_active: funnel.is_active,
             }));
           setFunnels(activeFunnels);
+
+          // Select first funnel by default if available
+          if (activeFunnels.length > 0 && !selectedFunnel) {
+            setSelectedFunnel(activeFunnels[0].id);
+          }
         } else {
           console.error("Failed to fetch funnels:", response.status);
         }
@@ -174,7 +179,7 @@ export function FunnelsAndEventsCard({
   }, [siteId, dateRange, isRealtimeMode]);
 
   return (
-    <Card className="w-full">
+    <Card className="w-full min-h-[400px] md:min-h-[558px]">
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Activity className="h-4 w-4 text-muted-foreground" />
@@ -264,7 +269,7 @@ export function FunnelsAndEventsCard({
                       .map((event) => (
                         <div
                           key={event.id}
-                          className="space-y-2 p-3 bg-muted/50 rounded-md hover:bg-muted/70 transition-colors"
+                          className="group relative p-3 bg-muted/50 rounded-md hover:bg-muted/70 transition-colors"
                         >
                           {/* Event Header */}
                           <div className="flex items-center justify-between">
@@ -291,56 +296,60 @@ export function FunnelsAndEventsCard({
                             </div>
                           </div>
 
-                          {/* Breakdowns if data exists */}
+                          {/* Tooltip on hover */}
                           {event.count > 0 && (
-                            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/50">
-                              {/* Source Breakdown */}
-                              {event.source_breakdown.length > 0 && (
-                                <div className="space-y-1">
-                                  <p className="text-xs font-medium text-muted-foreground">
-                                    Top Sources
-                                  </p>
-                                  {event.source_breakdown
-                                    .slice(0, 3)
-                                    .map((source) => (
-                                      <div
-                                        key={source.source}
-                                        className="flex justify-between text-xs"
-                                      >
-                                        <span className="truncate">
-                                          {source.source}
-                                        </span>
-                                        <span className="text-muted-foreground">
-                                          {source.percentage}%
-                                        </span>
-                                      </div>
-                                    ))}
-                                </div>
-                              )}
+                            <div className="absolute max-w-[400px] left-0 right-0 top-full mt-2 z-10 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none">
+                              <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
+                                <div className="grid grid-cols-2 gap-4">
+                                  {/* Source Breakdown */}
+                                  {event.source_breakdown.length > 0 && (
+                                    <div className="space-y-1">
+                                      <p className="text-xs font-medium text-muted-foreground">
+                                        Top Sources
+                                      </p>
+                                      {event.source_breakdown
+                                        .slice(0, 3)
+                                        .map((source) => (
+                                          <div
+                                            key={source.source}
+                                            className="flex justify-between text-xs gap-2"
+                                          >
+                                            <span className="truncate">
+                                              {source.source}
+                                            </span>
+                                            <span className="text-muted-foreground">
+                                              {source.percentage}%
+                                            </span>
+                                          </div>
+                                        ))}
+                                    </div>
+                                  )}
 
-                              {/* Country Breakdown */}
-                              {event.country_breakdown.length > 0 && (
-                                <div className="space-y-1">
-                                  <p className="text-xs font-medium text-muted-foreground">
-                                    Top Countries
-                                  </p>
-                                  {event.country_breakdown
-                                    .slice(0, 3)
-                                    .map((country) => (
-                                      <div
-                                        key={country.country}
-                                        className="flex justify-between text-xs"
-                                      >
-                                        <span className="truncate">
-                                          {country.country}
-                                        </span>
-                                        <span className="text-muted-foreground">
-                                          {country.percentage}%
-                                        </span>
-                                      </div>
-                                    ))}
+                                  {/* Country Breakdown */}
+                                  {event.country_breakdown.length > 0 && (
+                                    <div className="space-y-1">
+                                      <p className="text-xs font-medium text-muted-foreground">
+                                        Top Countries
+                                      </p>
+                                      {event.country_breakdown
+                                        .slice(0, 3)
+                                        .map((country) => (
+                                          <div
+                                            key={country.country}
+                                            className="flex justify-between text-xs gap-2"
+                                          >
+                                            <span className="truncate">
+                                              {country.country}
+                                            </span>
+                                            <span className="text-muted-foreground">
+                                              {country.percentage}%
+                                            </span>
+                                          </div>
+                                        ))}
+                                    </div>
+                                  )}
                                 </div>
-                              )}
+                              </div>
                             </div>
                           )}
                         </div>
