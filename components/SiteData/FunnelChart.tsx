@@ -201,6 +201,45 @@ export function FunnelChart({
     };
   });
 
+  // Custom bar shape to handle conditional radius
+  const CustomBar = (props: any) => {
+    const { fill, x, y, width, height, payload, dataKey } = props;
+    
+    // Check if this bar has dropped value
+    const hasDropped = payload.dropped > 0;
+    
+    // Determine radius based on bar type and whether there's a dropped value
+    let radius = 0;
+    if (dataKey === "completed") {
+      // If there's no dropped bar on top, add radius to top corners
+      radius = hasDropped ? 0 : 4;
+    } else if (dataKey === "dropped") {
+      // Dropped bars always have radius on top
+      radius = 4;
+    }
+    
+    // Create path with conditional radius
+    const topLeftRadius = dataKey === "dropped" || (!hasDropped && dataKey === "completed") ? radius : 0;
+    const topRightRadius = dataKey === "dropped" || (!hasDropped && dataKey === "completed") ? radius : 0;
+    const bottomLeftRadius = 0;
+    const bottomRightRadius = 0;
+    
+    const path = `
+      M ${x + topLeftRadius} ${y}
+      L ${x + width - topRightRadius} ${y}
+      Q ${x + width} ${y} ${x + width} ${y + topRightRadius}
+      L ${x + width} ${y + height - bottomRightRadius}
+      Q ${x + width} ${y + height} ${x + width - bottomRightRadius} ${y + height}
+      L ${x + bottomLeftRadius} ${y + height}
+      Q ${x} ${y + height} ${x} ${y + height - bottomLeftRadius}
+      L ${x} ${y + topLeftRadius}
+      Q ${x} ${y} ${x + topLeftRadius} ${y}
+      Z
+    `;
+    
+    return <path d={path} fill={fill} />;
+  };
+
   // Custom tooltip component
 
   const CustomTooltip = ({ active, payload }: any) => {
@@ -212,10 +251,6 @@ export function FunnelChart({
             Step {data.stepNumber}: {data.fullName || data.name}
           </p>
           <div className="space-y-1 mt-2">
-            <p className="text-sm">
-              <span className="text-blue-600">●</span> Entered:{" "}
-              {data.actualEntered.toLocaleString()}
-            </p>
             <p className="text-sm">
               <span className="text-green-600">●</span> Completed:{" "}
               {data.actualCompleted.toLocaleString()}
@@ -296,14 +331,14 @@ export function FunnelChart({
               stackId="a"
               fill={"var(--chart-1)"}
               name="Completed"
-              radius={[0, 0, 0, 0]}
+              shape={CustomBar}
             />
             <Bar
               dataKey="dropped"
               stackId="a"
               fill="var(--chart-3)"
               name="Dropped"
-              radius={[0, 0, 0, 0]}
+              shape={CustomBar}
             />
           </BarChart>
         </ResponsiveContainer>
