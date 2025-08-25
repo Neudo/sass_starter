@@ -99,8 +99,16 @@ export async function GET(request: NextRequest) {
             const visitors = completions?.length || 0;
             
             // Get session data for source and country breakdown
-            let sourceBreakdown = [];
-            let countryBreakdown = [];
+            let sourceBreakdown: Array<{
+              source: string;
+              count: number;
+              percentage: number;
+            }> = [];
+            let countryBreakdown: Array<{
+              country: string;
+              count: number;
+              percentage: number;
+            }> = [];
             
             if (completions && completions.length > 0) {
               const sessionIds = completions.map(c => c.session_id).filter(Boolean);
