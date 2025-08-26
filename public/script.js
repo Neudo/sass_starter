@@ -15,10 +15,8 @@
       return `http://localhost:3000/api/${path}`;
     }
     
-    // Use the same origin to avoid CORS issues
-    const protocol = window.location.protocol;
-    const port = window.location.port ? `:${window.location.port}` : '';
-    return `${protocol}//${hostname}${port}/api/${path}`;
+    // Always use Hector Analytics servers for production
+    return `https://hectoranalytics.com/api/${path}`;
   };
   
   // Fetch helper with silent fail
