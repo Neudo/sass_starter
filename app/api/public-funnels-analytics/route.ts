@@ -17,11 +17,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Normalize domain - handle both with and without www
+    const domainVariants = [siteDomain];
+    if (siteDomain.startsWith('www.')) {
+      domainVariants.push(siteDomain.substring(4));
+    } else {
+      domainVariants.push(`www.${siteDomain}`);
+    }
+
     // Find site by domain and verify public access is enabled
     const { data: siteData, error: siteError } = await adminClient
       .from("sites")
       .select("id, public_enabled")
-      .eq("domain", siteDomain)
+      .in("domain", domainVariants)
       .single();
 
     if (siteError || !siteData || !siteData.public_enabled) {

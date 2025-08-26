@@ -15,11 +15,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Normalize domain - handle both with and without www
+    const domainVariants = [siteDomain];
+    if (siteDomain.startsWith('www.')) {
+      domainVariants.push(siteDomain.substring(4));
+    } else {
+      domainVariants.push(`www.${siteDomain}`);
+    }
+
     // Find site by domain (no auth check - public endpoint)
     const { data: siteData, error: siteError } = await adminClient
       .from("sites")
       .select("id")
-      .eq("domain", siteDomain)
+      .in("domain", domainVariants)
       .single();
 
     if (siteError || !siteData) {

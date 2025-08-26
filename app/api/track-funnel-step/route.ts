@@ -10,7 +10,14 @@ export async function POST(request: NextRequest) {
     if (!step_id || !session_id || !site_domain) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+        }
       );
     }
 
@@ -37,7 +44,14 @@ export async function POST(request: NextRequest) {
     if (stepError || !stepData) {
       return NextResponse.json(
         { error: "Funnel step not found" },
-        { status: 404 }
+        { 
+          status: 404,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+        }
       );
     }
 
@@ -45,10 +59,27 @@ export async function POST(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const typedStepData = stepData as any;
 
-    // Verify domain matches
+    // Normalize domains for comparison
     const actualDomain = typedStepData.funnels.sites.domain;
-    if (actualDomain !== site_domain) {
-      return NextResponse.json({ error: "Domain mismatch" }, { status: 403 });
+    const normalizedActual = actualDomain.startsWith('www.') 
+      ? actualDomain.substring(4) 
+      : actualDomain;
+    const normalizedSite = site_domain.startsWith('www.') 
+      ? site_domain.substring(4) 
+      : site_domain;
+    
+    if (normalizedActual !== normalizedSite) {
+      return NextResponse.json(
+        { error: "Domain mismatch" }, 
+        { 
+          status: 403,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+        }
+      );
     }
 
     // Check if this session has already completed this step
@@ -60,22 +91,37 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (checkError && checkError.code !== "PGRST116") {
-      // PGRST116 = not found, which is expected
       console.error("Error checking existing completion:", checkError);
       return NextResponse.json(
-        { error: "Failed to check completion status" },
-        { status: 500 }
+        { error: "Failed to check existing completion" },
+        { 
+          status: 500,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+        }
       );
     }
 
-    // If already completed, don't count again
+    // If already completed, return success without duplicating
     if (existingCompletion) {
-      return NextResponse.json({
-        success: true,
-        already_completed: true,
-        step_name: typedStepData.name,
-        step_number: typedStepData.step_number,
-      });
+      return NextResponse.json(
+        {
+          success: true,
+          step_name: typedStepData.name,
+          step_number: typedStepData.step_number,
+          already_completed: true,
+        },
+        {
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+        }
+      );
     }
 
     // Check if all previous steps have been completed by this session (sequential validation)
@@ -91,7 +137,14 @@ export async function POST(request: NextRequest) {
         console.error("Error fetching funnel steps:", allStepsError);
         return NextResponse.json(
           { error: "Failed to validate step sequence" },
-          { status: 500 }
+          { 
+            status: 500,
+            headers: {
+              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Methods": "POST, OPTIONS",
+              "Access-Control-Allow-Headers": "Content-Type",
+            },
+          }
         );
       }
 
@@ -112,19 +165,35 @@ export async function POST(request: NextRequest) {
           console.error("Error checking previous step completion:", prevError);
           return NextResponse.json(
             { error: "Failed to validate previous steps" },
-            { status: 500 }
+            { 
+              status: 500,
+              headers: {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type",
+              },
+            }
           );
         }
 
         // If any previous step is not completed, reject this step completion
         if (!prevCompletion) {
-          return NextResponse.json({
-            success: false,
-            error: "Previous step not completed",
-            step_name: typedStepData.name,
-            step_number: typedStepData.step_number,
-            required_previous_step: prevStep.step_number,
-          });
+          return NextResponse.json(
+            {
+              success: false,
+              error: "Previous step not completed",
+              step_name: typedStepData.name,
+              step_number: typedStepData.step_number,
+              required_previous_step: prevStep.step_number,
+            },
+            {
+              headers: {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type",
+              },
+            }
+          );
         }
       }
     }
@@ -143,7 +212,14 @@ export async function POST(request: NextRequest) {
       console.error("Error inserting completion:", insertCompletionError);
       return NextResponse.json(
         { error: "Failed to record completion" },
-        { status: 500 }
+        { 
+          status: 500,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+        }
       );
     }
 
@@ -158,7 +234,14 @@ export async function POST(request: NextRequest) {
       console.error("Error getting current step count:", getCurrentError);
       return NextResponse.json(
         { error: "Failed to get current step count" },
-        { status: 500 }
+        { 
+          status: 500,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+        }
       );
     }
 
@@ -174,20 +257,55 @@ export async function POST(request: NextRequest) {
       console.error("Error updating step count:", updateError);
       return NextResponse.json(
         { error: "Failed to update step count" },
-        { status: 500 }
+        { 
+          status: 500,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+        }
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      step_name: typedStepData.name,
-      step_number: typedStepData.step_number,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        step_name: typedStepData.name,
+        step_number: typedStepData.step_number,
+      },
+      {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      }
+    );
   } catch (error) {
     console.error("Error tracking funnel step:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      }
     );
   }
+}
+
+// Handle OPTIONS for CORS
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
 }

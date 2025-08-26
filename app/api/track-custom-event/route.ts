@@ -12,19 +12,44 @@ export async function POST(request: NextRequest) {
     if (!site_domain || !event_name || !session_id || !page_url) {
       return NextResponse.json(
         { error: "site_domain, event_name, session_id, and page_url are required" },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+        }
       );
+    }
+
+    // Normalize domain - handle both with and without www
+    const domainVariants = [site_domain];
+    if (site_domain.startsWith('www.')) {
+      domainVariants.push(site_domain.substring(4));
+    } else {
+      domainVariants.push(`www.${site_domain}`);
     }
 
     // Find the site by domain
     const { data: siteData, error: siteError } = await adminClient
       .from("sites")
       .select("id")
-      .eq("domain", site_domain)
+      .in("domain", domainVariants)
       .single();
 
     if (siteError || !siteData) {
-      return NextResponse.json({ error: "Site not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Site not found" }, 
+        { 
+          status: 404,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+        }
+      );
     }
 
     // Find the custom event by name and site
@@ -39,7 +64,14 @@ export async function POST(request: NextRequest) {
     if (eventError || !customEventData) {
       return NextResponse.json(
         { error: "Custom event not found or inactive" },
-        { status: 404 }
+        { 
+          status: 404,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+        }
       );
     }
 
@@ -111,27 +143,57 @@ export async function POST(request: NextRequest) {
             console.error("Retry failed:", retryError);
             return NextResponse.json(
               { error: "Failed to record completion after retry" },
-              { status: 500 }
+              { 
+                status: 500,
+                headers: {
+                  "Access-Control-Allow-Origin": "*",
+                  "Access-Control-Allow-Methods": "POST, OPTIONS",
+                  "Access-Control-Allow-Headers": "Content-Type",
+                },
+              }
             );
           }
         }
       } else {
         return NextResponse.json(
           { error: "Failed to record completion" },
-          { status: 500 }
+          { 
+            status: 500,
+            headers: {
+              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Methods": "POST, OPTIONS",
+              "Access-Control-Allow-Headers": "Content-Type",
+            },
+          }
         );
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      message: "Custom event recorded successfully",
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Custom event recorded successfully",
+      },
+      {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      }
+    );
   } catch (error) {
     console.error("Error in track-custom-event:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      }
     );
   }
 }

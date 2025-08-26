@@ -37,12 +37,20 @@ export async function POST(req: NextRequest) {
     // Parse traffic source
     const trafficSource = parseTrafficSource(urlParams, referrer);
 
+    // Normalize domain - handle both with and without www
+    const domainVariants = [domain];
+    if (domain.startsWith('www.')) {
+      domainVariants.push(domain.substring(4));
+    } else {
+      domainVariants.push(`www.${domain}`);
+    }
+
     // Get site from database
     const supabase = createAdminClient();
     const { data: site } = await supabase
       .from("sites")
       .select("id")
-      .eq("domain", domain);
+      .in("domain", domainVariants);
 
     if (!site || site.length === 0) {
       return NextResponse.json(

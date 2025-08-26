@@ -14,6 +14,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Normalize domain - handle both with and without www
+    const domainVariants = [siteId];
+    if (siteId.startsWith('www.')) {
+      domainVariants.push(siteId.substring(4));
+    } else {
+      domainVariants.push(`www.${siteId}`);
+    }
+
     // Get all active funnel steps for the site
     const { data: steps, error } = await adminClient
       .from("funnel_steps")
@@ -37,7 +45,7 @@ export async function GET(request: NextRequest) {
         )
       `
       )
-      .eq("funnels.sites.domain", siteId)
+      .in("funnels.sites.domain", domainVariants)
       .eq("funnels.is_active", true)
       .order("step_number", { ascending: true });
 
@@ -64,12 +72,37 @@ export async function GET(request: NextRequest) {
       match_type: step.match_type,
     }));
 
-    return NextResponse.json(transformedSteps);
+    return NextResponse.json(transformedSteps, {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
   } catch (error) {
     console.error("Error fetching public funnel steps:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      }
     );
   }
+}
+
+// Handle OPTIONS for CORS
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
 }
