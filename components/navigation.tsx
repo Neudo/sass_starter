@@ -125,6 +125,7 @@ export function Navigation() {
                   <Button
                     size="xl"
                     className={`bg-primary hover:bg-primary/90 text-primary-foreground transition-colors duration-200`}
+                    onClick={() => router.push("/auth/sign-up")}
                   >
                     Start Free Trial
                   </Button>
