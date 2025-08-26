@@ -5,7 +5,6 @@ import { Logo } from "./logo";
 import { Menu, X, LogOut, User } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { WaitlistModal } from "./waitlist-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   DropdownMenu,
