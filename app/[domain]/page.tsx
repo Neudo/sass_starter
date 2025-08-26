@@ -47,7 +47,7 @@ export default async function PublicDashboardPage({
               <div className="flex items-center gap-4">
                 <h1 className="text-2xl font-bold">{domain}</h1>
                 <div className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded">
-                  Public Dashboard ok
+                  Public Dashboard
                 </div>
               </div>
               <ThemeToggle />
