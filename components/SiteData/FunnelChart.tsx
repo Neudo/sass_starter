@@ -49,6 +49,8 @@ interface FunnelChartProps {
   siteId: string;
   dateRange?: { from: Date; to: Date } | null;
   isRealtimeMode?: boolean;
+  isPublic?: boolean;
+  domain?: string;
 }
 
 export function FunnelChart({
@@ -56,6 +58,8 @@ export function FunnelChart({
   siteId,
   dateRange,
   isRealtimeMode = false,
+  isPublic = false,
+  domain,
 }: FunnelChartProps) {
   const [data, setData] = useState<FunnelAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,7 +73,15 @@ export function FunnelChart({
       setError(null);
 
       try {
-        let url = `/api/funnels?siteId=${siteId}`;
+        let url: string;
+        
+        if (isPublic && domain) {
+          // Use public endpoint for public dashboard
+          url = `/api/public-funnels-analytics?domain=${domain}`;
+        } else {
+          // Use private endpoint for authenticated dashboard
+          url = `/api/funnels?siteId=${siteId}`;
+        }
 
         // Add date filters if provided
         if (dateRange?.from && dateRange?.to) {
@@ -138,7 +150,7 @@ export function FunnelChart({
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [funnelId, siteId, dateRange, isRealtimeMode]);
+  }, [funnelId, siteId, dateRange, isRealtimeMode, isPublic, domain]);
 
   if (loading) {
     return (

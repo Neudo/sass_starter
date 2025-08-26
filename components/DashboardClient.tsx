@@ -102,6 +102,8 @@ export function DashboardClient({
         siteId={siteId}
         dateRange={dateRange}
         isRealtimeMode={selectedDateRange === "realtime"}
+        isPublic={isPublic}
+        domain={isPublic ? domain : undefined}
       />
     </div>
   );

@@ -23,8 +23,20 @@ export function parseUserAgent(userAgent: string | null): DeviceData {
     deviceCategory = "desktop";
   }
 
+  // Normalize browser names for in-app WebViews
+  let normalizedBrowser = browser;
+  if (browser?.toLowerCase() === "instagram") {
+    normalizedBrowser = "Instagram WebView";
+  } else if (browser?.toLowerCase() === "facebook") {
+    normalizedBrowser = "Facebook WebView";
+  } else if (browser?.toLowerCase() === "twitter") {
+    normalizedBrowser = "Twitter/X WebView";
+  } else if (browser?.toLowerCase() === "linkedin") {
+    normalizedBrowser = "LinkedIn WebView";
+  }
+
   return {
-    browser,
+    browser: normalizedBrowser,
     browserVersion,
     os,
     osVersion,

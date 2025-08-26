@@ -32,6 +32,8 @@ interface FunnelsAndEventsCardProps {
   siteId: string;
   dateRange?: { from: Date; to: Date } | null;
   isRealtimeMode?: boolean;
+  isPublic?: boolean;
+  domain?: string;
 }
 
 // Helper function to get event icon
@@ -54,6 +56,8 @@ export function FunnelsAndEventsCard({
   siteId,
   dateRange,
   isRealtimeMode = false,
+  isPublic = false,
+  domain,
 }: FunnelsAndEventsCardProps) {
   const [selectedFunnel, setSelectedFunnel] = useState<string>("");
   const [funnels, setFunnels] = useState<Funnel[]>([]);
@@ -62,7 +66,15 @@ export function FunnelsAndEventsCard({
   useEffect(() => {
     const fetchFunnels = async () => {
       try {
-        let url = `/api/funnels?siteId=${siteId}`;
+        let url: string;
+        
+        if (isPublic && domain) {
+          // Use public endpoint for public dashboard
+          url = `/api/public-funnels-analytics?domain=${domain}`;
+        } else {
+          // Use private endpoint for authenticated dashboard
+          url = `/api/funnels?siteId=${siteId}`;
+        }
 
         // Add date filters if provided
         if (dateRange?.from && dateRange?.to) {
@@ -108,7 +120,7 @@ export function FunnelsAndEventsCard({
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [siteId, dateRange, isRealtimeMode]);
+  }, [siteId, dateRange, isRealtimeMode, isPublic, domain, selectedFunnel]);
 
   const [customEvents, setCustomEvents] = useState<
     Array<{
@@ -134,7 +146,15 @@ export function FunnelsAndEventsCard({
   useEffect(() => {
     const fetchCustomEvents = async () => {
       try {
-        let url = `/api/custom-events?siteId=${siteId}`;
+        let url: string;
+        
+        if (isPublic && domain) {
+          // Use public endpoint for public dashboard
+          url = `/api/public-custom-events-analytics?domain=${domain}`;
+        } else {
+          // Use private endpoint for authenticated dashboard
+          url = `/api/custom-events?siteId=${siteId}`;
+        }
 
         // Add realtime parameter or date filters
         if (isRealtimeMode) {
@@ -176,7 +196,7 @@ export function FunnelsAndEventsCard({
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [siteId, dateRange, isRealtimeMode]);
+  }, [siteId, dateRange, isRealtimeMode, isPublic, domain]);
 
   return (
     <Card className="w-full min-h-[400px] md:min-h-[558px]">
@@ -243,6 +263,8 @@ export function FunnelsAndEventsCard({
                         siteId={siteId}
                         dateRange={dateRange}
                         isRealtimeMode={isRealtimeMode}
+                        isPublic={isPublic}
+                        domain={domain}
                       />
                     </div>
                   )}
