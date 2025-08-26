@@ -5,6 +5,7 @@ import { extractClientIP, getLocationFromIP } from "@/lib/analytics/location";
 import { parseUserAgent } from "@/lib/analytics/device";
 import { parseTrafficSource } from "@/lib/analytics/sources";
 import { calculatePageData } from "@/lib/analytics/pages";
+import { shouldBlockRequest } from "@/lib/analytics/bot-detector";
 
 export async function POST(req: NextRequest) {
   try {
@@ -58,6 +59,25 @@ export async function POST(req: NextRequest) {
     }
 
     const siteId = site[0].id;
+
+    // Bot detection only (no IP blocking)
+    const blockCheck = await shouldBlockRequest(
+      userAgent,
+      deviceData.browser || null
+    );
+
+    if (blockCheck.blocked) {
+      // Return success but don't track the data
+      console.log(`Blocked bot request - Reason: ${blockCheck.reason}`);
+      return new NextResponse(null, {
+        status: 204,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      });
+    }
 
     // Check if this is a new session
     const { data: existingSession } = await supabase

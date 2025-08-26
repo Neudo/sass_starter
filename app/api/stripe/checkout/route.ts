@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@/lib/supabase/server";
+import { STRIPE_SECRET_KEY, getStripeReturnUrl, validateStripeConfig } from "@/lib/stripe-keys";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+// Valider la configuration Stripe au démarrage
+if (!validateStripeConfig()) {
+  console.error("⚠️ Stripe configuration incomplete - checkout will not work");
+}
+
+const stripe = new Stripe(STRIPE_SECRET_KEY);
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,7 +23,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if Stripe key exists
-    if (!process.env.STRIPE_SECRET_KEY) {
+    if (!STRIPE_SECRET_KEY) {
       return NextResponse.json(
         { error: "Stripe configuration missing" },
         { status: 500 }
@@ -64,9 +70,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get the origin URL
-    const origin = request.headers.get("origin") || "http://localhost:3000";
-
     // Prepare checkout session configuration
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       line_items: [
@@ -76,8 +79,8 @@ export async function GET(request: NextRequest) {
         },
       ],
       mode: "subscription",
-      success_url: `${origin}/settings/billing?success=true`,
-      cancel_url: `${origin}/pricing?canceled=true`,
+      success_url: getStripeReturnUrl(true),
+      cancel_url: getStripeReturnUrl(false),
       customer_email: user.email,
       automatic_tax: {
         enabled: true,

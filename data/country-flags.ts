@@ -21,6 +21,7 @@ export const countryFlags: Record<string, string> = {
   Spain: "🇪🇸",
   Italy: "🇮🇹",
   Netherlands: "🇳🇱",
+  "The Netherlands": "🇳🇱",
   Belgium: "🇧🇪",
   Switzerland: "🇨🇭",
   Austria: "🇦🇹",
