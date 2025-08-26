@@ -20,22 +20,14 @@ export function Navigation() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isLoggedIn = false;
-  const isProd = process.env.NEXT_PUBLIC_NODE_ENV === "production";
 
   // Navigation items definition
   const navItems = [
-    { name: "FAQ", path: "/faq", id: "faq" },
-    { name: "Contact", path: "/contact", id: "contact" },
-  ];
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const navItemsDev = [
     { name: "Pricing", path: "/pricing", id: "pricing" },
     { name: "FAQ", path: "/faq", id: "faq" },
-    { name: "Blog", path: "/blog", id: "blog" },
+    // { name: "Blog", path: "/blog", id: "blog" },
     { name: "Contact", path: "/contact", id: "contact" },
   ];
-
   return (
     <>
       {/* Overlay for mobile menu */}
@@ -123,26 +115,20 @@ export function Navigation() {
                 </DropdownMenu>
               ) : (
                 <>
-                  {!isProd ? (
-                    <Button
-                      size="xl"
-                      variant="ghost"
-                      onClick={() => router.push("/auth/login")}
-                      className={`hover:bg-primary/10 hover:text-primary transition-colors duration-200 `}
-                    >
-                      Sign In
-                    </Button>
-                  ) : null}
-                  <WaitlistModal
-                    triggerComponent={
-                      <Button
-                        size="xl"
-                        className={`bg-primary hover:bg-primary/90 text-primary-foreground transition-colors duration-200`}
-                      >
-                        Start Free Trial
-                      </Button>
-                    }
-                  />
+                  <Button
+                    size="xl"
+                    variant="ghost"
+                    onClick={() => router.push("/auth/login")}
+                    className={`hover:bg-primary/10 hover:text-primary transition-colors duration-200 `}
+                  >
+                    Sign In
+                  </Button>
+                  <Button
+                    size="xl"
+                    className={`bg-primary hover:bg-primary/90 text-primary-foreground transition-colors duration-200`}
+                  >
+                    Start Free Trial
+                  </Button>
                   <ThemeToggle />
                 </>
               )}
@@ -232,38 +218,26 @@ export function Navigation() {
                     </div>
                   ) : (
                     <div className="flex items-center px-3 space-y-2 flex-col">
-                      {!isProd ? (
-                        <Button
-                          variant="ghost"
-                          className="w-full hover:bg-primary/10 hover:text-primary"
-                          onClick={() => {
-                            router.push("/auth/login");
-                            setIsMenuOpen(false);
-                          }}
-                        >
-                          Sign In
-                        </Button>
-                      ) : null}
+                      <Button
+                        variant="ghost"
+                        className="w-full hover:bg-primary/10 hover:text-primary"
+                        onClick={() => {
+                          router.push("/auth/login");
+                          setIsMenuOpen(false);
+                        }}
+                      >
+                        Sign In
+                      </Button>
 
-                      {!isProd ? (
-                        <Button
-                          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                          onClick={() => {
-                            router.push("/auth/sign-up");
-                            setIsMenuOpen(false);
-                          }}
-                        >
-                          Start free trial
-                        </Button>
-                      ) : (
-                        <WaitlistModal
-                          triggerComponent={
-                            <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                              Start free trial
-                            </Button>
-                          }
-                        />
-                      )}
+                      <Button
+                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                        onClick={() => {
+                          router.push("/auth/sign-up");
+                          setIsMenuOpen(false);
+                        }}
+                      >
+                        Start free trial
+                      </Button>
                     </div>
                   )}
                 </div>

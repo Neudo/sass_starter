@@ -27,7 +27,7 @@ export function PricingSection({
 }: PricingSectionProps) {
   const router = useRouter();
   const onNavigateToPricing = () => router.push("/pricing");
-  const [isYearly, setIsYearly] = useState(true);
+  const [isYearly, setIsYearly] = useState(false);
   const [eventTier, setEventTier] = useState(0); // Index for event tiers
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -108,8 +108,8 @@ export function PricingSection({
     cta: isCustomTier
       ? "Contact us"
       : showUpgradeButtons
-      ? "Upgrade"
-      : plan.cta,
+        ? "Upgrade"
+        : plan.cta,
   }));
 
   return (
@@ -230,8 +230,8 @@ export function PricingSection({
                   plan.popular
                     ? "border-primary shadow-lg scale-105 ring-2 ring-primary/20"
                     : plan.color === "secondary"
-                    ? "border-slate-100 hover:border-slate-200 dark:border-slate-800 dark:hover:border-slate-700 transition-colors"
-                    : ""
+                      ? "border-slate-100 hover:border-slate-200 dark:border-slate-800 dark:hover:border-slate-700 transition-colors"
+                      : ""
                 }`}
               >
                 {plan.popular && (
@@ -296,15 +296,15 @@ export function PricingSection({
                       plan.popular
                         ? ""
                         : plan.color === "secondary"
-                        ? "text-secondar y-foreground"
-                        : "variant-outline border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                          ? "text-secondar y-foreground"
+                          : "variant-outline border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                     }`}
                     variant={
                       plan.popular
                         ? "default"
                         : plan.color === "secondary"
-                        ? "outline"
-                        : "ghost"
+                          ? "outline"
+                          : "ghost"
                     }
                     onClick={() => handleStartTrial(plan.name)}
                     disabled={loading || isCustomTier}
