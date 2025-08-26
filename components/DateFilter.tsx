@@ -104,3 +104,62 @@ export function getDateRange(
       };
   }
 }
+
+export function getPreviousDateRange(
+  option: DateRangeOption
+): { from: Date; to: Date } | null {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  switch (option) {
+    case "today":
+      // Previous period: yesterday
+      const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+      return {
+        from: yesterday,
+        to: new Date(today.getTime() - 1),
+      };
+    case "yesterday":
+      // Previous period: day before yesterday
+      const dayBeforeYesterday = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000);
+      const yesterdayStart = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+      return {
+        from: dayBeforeYesterday,
+        to: new Date(yesterdayStart.getTime() - 1),
+      };
+    case "last7days":
+      // Previous period: 7 days before the last 7 days (14 days ago to 7 days ago)
+      const fourteenDaysAgo = new Date(today.getTime() - 14 * 24 * 60 * 60 * 1000);
+      const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      return {
+        from: fourteenDaysAgo,
+        to: sevenDaysAgo,
+      };
+    case "last30days":
+      // Previous period: 30 days before the last 30 days (60 days ago to 30 days ago)
+      const sixtyDaysAgo = new Date(today.getTime() - 60 * 24 * 60 * 60 * 1000);
+      const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+      return {
+        from: sixtyDaysAgo,
+        to: thirtyDaysAgo,
+      };
+    case "last90days":
+      // Previous period: 90 days before the last 90 days (180 days ago to 90 days ago)
+      const oneEightyDaysAgo = new Date(today.getTime() - 180 * 24 * 60 * 60 * 1000);
+      const ninetyDaysAgo = new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000);
+      return {
+        from: oneEightyDaysAgo,
+        to: ninetyDaysAgo,
+      };
+    case "alltime":
+      return null; // No comparison for all time
+    case "realtime":
+      // Previous period: 30 minutes before the current 30 minutes
+      const sixtyMinutesAgo = new Date(now.getTime() - 60 * 60 * 1000);
+      const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
+      return {
+        from: sixtyMinutesAgo,
+        to: thirtyMinutesAgo,
+      };
+  }
+}

@@ -52,6 +52,7 @@ export function AnalyticsMetrics({
     bounceRate: analyticsData.metrics.bounceRate,
     avgDuration: analyticsData.metrics.avgDuration,
     realtimePageViews: analyticsData.metrics.totalPageviews, // For realtime mode
+    change: analyticsData.metrics.change, // Add the change data
   };
 
   const formatDuration = (seconds: number): string => {

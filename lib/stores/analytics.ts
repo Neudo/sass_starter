@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { createClient } from '@/lib/supabase/client';
 import { normalizeReferrer, getChannel } from '@/lib/referrer-helper';
+import { getPreviousDateRange, DateRangeOption } from '@/components/DateFilter';
 
 export interface Filter {
   type: FilterType;
@@ -75,6 +76,11 @@ export interface AnalyticsData {
     viewsPerVisit: number;
     bounceRate: number;
     avgDuration: number;
+    change?: {
+      uniqueVisitors: number;
+      totalVisits: number;
+      totalPageviews: number;
+    };
   };
 }
 
@@ -84,6 +90,7 @@ interface AnalyticsStore {
   dateRange: { from: Date; to: Date } | null;
   dateRangeOption: string;
   allSessions: Session[];
+  previousSessions: Session[];
   loading: boolean;
   error: string | null;
   
@@ -98,6 +105,7 @@ interface AnalyticsStore {
   getFilteredSessions: () => Session[];
   getAnalyticsData: () => AnalyticsData;
   updateCache: () => void;
+  calculateTrends: (currentMetrics: { uniqueVisitors: number; totalVisits: number; totalPageviews: number }, previousMetrics: { uniqueVisitors: number; totalVisits: number; totalPageviews: number }) => { uniqueVisitors: number; totalVisits: number; totalPageviews: number };
   
   // Actions
   fetchAllData: (siteId: string, dateRange: { from: Date; to: Date } | null, dateRangeOption: string) => Promise<void>;
@@ -114,6 +122,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
   dateRange: null,
   dateRangeOption: 'alltime',
   allSessions: [],
+  previousSessions: [],
   loading: false,
   error: null,
   filters: [],
@@ -456,6 +465,42 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
     const bounceRate = totalVisits > 0 ? parseFloat(((bounceCount / totalVisits) * 100).toFixed(1)) : 0;
     const avgDuration = totalVisits > 0 ? Math.round(totalDuration / totalVisits) : 0;
     
+    // Calculate trends using previous period data
+    const { previousSessions, calculateTrends } = state;
+    let change;
+    
+    if (previousSessions.length > 0) {
+      // Calculate metrics for previous period
+      const prevUniqueVisitorsSet = new Set<string>();
+      let prevTotalPageviews = 0;
+      
+      previousSessions.forEach((session) => {
+        const visitorFingerprint = `${session.browser || "unknown"}-${
+          session.os || "unknown"
+        }-${session.screen_size || "unknown"}-${session.country || "unknown"}`;
+        prevUniqueVisitorsSet.add(visitorFingerprint);
+        
+        const visitedPagesCount = Array.isArray(session.visited_pages) 
+          ? session.visited_pages.length 
+          : 1;
+        prevTotalPageviews += visitedPagesCount;
+      });
+      
+      const previousMetrics = {
+        uniqueVisitors: prevUniqueVisitorsSet.size,
+        totalVisits: previousSessions.length,
+        totalPageviews: prevTotalPageviews,
+      };
+      
+      const currentMetrics = {
+        uniqueVisitors,
+        totalVisits,
+        totalPageviews,
+      };
+      
+      change = calculateTrends(currentMetrics, previousMetrics);
+    }
+    
     const analyticsData = {
       countries,
       regions,
@@ -483,6 +528,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
         viewsPerVisit,
         bounceRate,
         avgDuration,
+        change,
       },
     };
     
@@ -505,6 +551,30 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
         lastFiltersHash: currentFiltersHash
       });
     }
+  },
+
+  calculateTrends: (currentMetrics: { uniqueVisitors: number; totalVisits: number; totalPageviews: number }, previousMetrics: { uniqueVisitors: number; totalVisits: number; totalPageviews: number }) => {
+    const calculatePercentageChange = (current: number, previous: number): number => {
+      if (previous === 0) {
+        return current > 0 ? 100 : 0;
+      }
+      return Math.round(((current - previous) / previous) * 100);
+    };
+
+    return {
+      uniqueVisitors: calculatePercentageChange(
+        currentMetrics.uniqueVisitors, 
+        previousMetrics.uniqueVisitors
+      ),
+      totalVisits: calculatePercentageChange(
+        currentMetrics.totalVisits, 
+        previousMetrics.totalVisits
+      ),
+      totalPageviews: calculatePercentageChange(
+        currentMetrics.totalPageviews, 
+        previousMetrics.totalPageviews
+      ),
+    };
   },
 
   // Actions
@@ -534,9 +604,29 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       if (error) {
         throw error;
       }
+
+      // Fetch previous period data for trends
+      let previousSessions: Session[] = [];
+      const previousRange = getPreviousDateRange(dateRangeOption as DateRangeOption);
+      
+      if (previousRange) {
+        const previousQuery = supabase
+          .from("sessions")
+          .select("*")
+          .eq("site_id", siteId)
+          .gte("created_at", previousRange.from.toISOString())
+          .lte("created_at", previousRange.to.toISOString());
+        
+        const { data: prevSessions, error: prevError } = await previousQuery;
+        
+        if (!prevError && prevSessions) {
+          previousSessions = prevSessions;
+        }
+      }
       
       set({ 
         allSessions: sessions || [], 
+        previousSessions,
         loading: false,
         cachedAnalyticsData: null, // Invalidate cache when new data is loaded
         lastFiltersHash: ''
@@ -547,7 +637,8 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       set({ 
         error: error instanceof Error ? error.message : 'Unknown error',
         loading: false,
-        allSessions: []
+        allSessions: [],
+        previousSessions: []
       });
     }
   },
