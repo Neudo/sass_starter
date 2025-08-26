@@ -32,11 +32,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Find the site by domain
-    const { data: siteData, error: siteError } = await adminClient
+    const { data: sites, error: siteError } = await adminClient
       .from("sites")
       .select("id")
-      .in("domain", domainVariants)
-      .single();
+      .in("domain", domainVariants);
+    
+    const siteData = sites && sites.length > 0 ? sites[0] : null;
 
     if (siteError || !siteData) {
       return NextResponse.json(

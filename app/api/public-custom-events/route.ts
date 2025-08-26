@@ -11,7 +11,14 @@ export async function GET(request: NextRequest) {
     if (!siteDomain) {
       return NextResponse.json(
         { error: "Site domain is required" },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+        }
       );
     }
 
@@ -24,15 +31,22 @@ export async function GET(request: NextRequest) {
     }
 
     // Find site by domain (no auth check - public endpoint)
-    const { data: siteData, error: siteError } = await adminClient
+    const { data: sites, error: siteError } = await adminClient
       .from("sites")
       .select("id")
-      .in("domain", domainVariants)
-      .single();
+      .in("domain", domainVariants);
+    
+    const siteData = sites && sites.length > 0 ? sites[0] : null;
 
     if (siteError || !siteData) {
       console.log("[API Debug] Site not found for domain:", siteDomain);
-      return NextResponse.json([]); // Return empty array if site not found
+      return NextResponse.json([], {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      }); // Return empty array if site not found
     }
 
     // Fetch only active custom events for this site
@@ -54,7 +68,13 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error("Error fetching custom events:", error);
-      return NextResponse.json([]);
+      return NextResponse.json([], {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      });
     }
 
     console.log(
@@ -63,10 +83,22 @@ export async function GET(request: NextRequest) {
       "count:",
       customEvents?.length
     );
-    return NextResponse.json(customEvents || []);
+    return NextResponse.json(customEvents || [], {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
   } catch (error) {
     console.error("Error in public-custom-events:", error);
-    return NextResponse.json([]);
+    return NextResponse.json([], {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
   }
 }
 

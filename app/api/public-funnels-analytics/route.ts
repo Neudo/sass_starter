@@ -26,11 +26,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Find site by domain and verify public access is enabled
-    const { data: siteData, error: siteError } = await adminClient
+    const { data: sites, error: siteError } = await adminClient
       .from("sites")
       .select("id, public_enabled")
-      .in("domain", domainVariants)
-      .single();
+      .in("domain", domainVariants);
+    
+    const siteData = sites && sites.length > 0 ? sites[0] : null;
 
     if (siteError || !siteData || !siteData.public_enabled) {
       return NextResponse.json([]);
