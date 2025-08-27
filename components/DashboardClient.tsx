@@ -38,7 +38,7 @@ export function DashboardClient({
   isPublic = false,
 }: DashboardClientProps) {
   const [selectedDateRange, setSelectedDateRange] =
-    useState<DateRangeOption>("alltime");
+    useState<DateRangeOption>("last7days");
   const dateRange = useMemo(() => getDateRange(selectedDateRange), [selectedDateRange]);
 
   const { fetchAllData } = useAnalyticsStore();
