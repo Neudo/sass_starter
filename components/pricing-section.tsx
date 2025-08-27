@@ -14,6 +14,7 @@ import {
   EVENT_TIERS,
   PRICING_TIERS,
   getStripePriceId,
+  PLAN_LIMITS,
 } from "@/lib/stripe-config";
 
 interface PricingSectionProps {
@@ -44,13 +45,17 @@ export function PricingSection({
     checkUser();
   }, []);
 
-  const handleStartTrial = (plan: string) => {
+  const handleStartTrial = (plan: "hobby" | "professional") => {
+    if (plan === "hobby") {
+      router.push("/auth/sign-up");
+      return;
+    }
+
+    // For Professional plan
     if (!user && !showUpgradeButtons) {
       router.push("/auth/sign-up");
     } else if (showUpgradeButtons || user) {
-      const priceId = getStripePriceId(plan, eventTier, isYearly);
-
-      // Redirect to Stripe Checkout
+      const priceId = getStripePriceId("professional", eventTier, isYearly);
       const checkoutUrl = `/api/stripe/checkout?price_id=${priceId}`;
       window.location.href = checkoutUrl;
     } else {
@@ -58,59 +63,10 @@ export function PricingSection({
     }
   };
 
-  const basePlans = [
-    {
-      name: "Hobby",
-      description: "Perfect for personal projects",
-      features: [
-        "events/month",
-        "2 websites",
-        "3 years retention",
-        "Custom events (limited to 5)",
-        "Export data",
-      ],
-      cta: "Start free trial",
-      popular: false,
-      color: "secondary",
-      pricing: PRICING_TIERS.hobby,
-    },
-    {
-      name: "Professional",
-      description: "For serious businesses",
-      features: [
-        "events/month",
-        "Unlimited websites",
-        "5 years data retention",
-        "Unlimited custom events",
-        "Export/import data",
-        "Google Analytics import",
-        "Teams (unlimited members)",
-        "Public dashboard",
-        "Funnels",
-      ],
-      cta: "Start free trial",
-      popular: true,
-      color: "primary",
-      pricing: PRICING_TIERS.professional,
-    },
-  ];
-
-  // Get current prices based on selected tier
-  const isCustomTier = eventTier === EVENT_TIERS.length - 1; // Check if it's 10M+
-
-  const plans = basePlans.map((plan) => ({
-    ...plan,
-    monthlyPrice: plan.pricing.monthly[eventTier],
-    yearlyPrice: plan.pricing.yearly[eventTier],
-    features: plan.features.map((feature, index) =>
-      index === 0 ? `${EVENT_TIERS[eventTier].label} ${feature}` : feature
-    ),
-    cta: isCustomTier
-      ? "Contact us"
-      : showUpgradeButtons
-        ? "Upgrade"
-        : plan.cta,
-  }));
+  const isCustomTier = eventTier === EVENT_TIERS.length - 1;
+  const professionalPrice = PRICING_TIERS.professional;
+  const monthlyPrice = professionalPrice.monthly[eventTier];
+  const yearlyPrice = professionalPrice.yearly[eventTier];
 
   return (
     <section className={`${showFullPage ? "py-24" : "py-16"} bg-background`}>
@@ -182,10 +138,10 @@ export function PricingSection({
               </Badge>
             </div>
 
-            {/* Event tier selector */}
+            {/* Event tier selector - Only affects Professional plan */}
             <div className="max-w-2xl mx-auto mb-5 md:mb-16">
               <label className="block text-sm font-medium text-muted-foreground mb-4 text-center">
-                Monthly page views
+                Monthly page views (Professional plan)
               </label>
               <div className="relative px-4">
                 <Slider
@@ -216,118 +172,177 @@ export function PricingSection({
           </motion.div>
         </div>
 
+        {/* Two Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 max-w-4xl mx-auto">
-          {plans.map((plan, index) => (
-            <motion.div
-              key={plan.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              viewport={{ once: true }}
-            >
-              <Card
-                className={`relative h-full ${
-                  plan.popular
-                    ? "border-primary shadow-lg scale-105 ring-2 ring-primary/20"
-                    : plan.color === "secondary"
-                      ? "border-slate-100 hover:border-slate-200 dark:border-slate-800 dark:hover:border-slate-700 transition-colors"
-                      : ""
-                }`}
-              >
-                {plan.popular && (
-                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground">
-                    Most Popular
-                  </Badge>
-                )}
+          {/* Hobby Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            viewport={{ once: true }}
+          >
+            <Card className="relative h-full border-slate-100 hover:border-slate-200 dark:border-slate-800 dark:hover:border-slate-700 transition-colors">
+              <CardHeader className="text-center pb-8">
+                <CardTitle className="text-xl mb-2">Hobby</CardTitle>
+                <p className="text-muted-foreground mb-4">
+                  Perfect for personal projects and to discover.
+                </p>
 
-                <CardHeader className="text-center pb-8">
-                  <CardTitle className="text-xl mb-2">{plan.name}</CardTitle>
-                  <p className="text-muted-foreground mb-4">
-                    {plan.description}
-                  </p>
+                <div className="space-y-2">
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-4xl font-bold text-white">Free</span>
+                  </div>
+                </div>
+              </CardHeader>
 
-                  <div className="space-y-2">
-                    {isCustomTier ? (
+              <CardContent className="space-y-4">
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={() => handleStartTrial("hobby")}
+                  disabled={loading}
+                >
+                  Start for free
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+
+                <div className="flex items-start gap-3">
+                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-secondary" />
+                  <span className="text-sm">
+                    {PLAN_LIMITS.hobby.pageviews.toLocaleString()} events/month
+                  </span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-secondary" />
+                  <span className="text-sm">
+                    {PLAN_LIMITS.hobby.websites} websites max
+                  </span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-secondary" />
+                  <span className="text-sm">
+                    {PLAN_LIMITS.hobby.retention} data retention
+                  </span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-secondary" />
+                  <span className="text-sm">Basic analytics</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-secondary" />
+                  <span className="text-sm">Export data</span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Professional Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            viewport={{ once: true }}
+          >
+            <Card className="relative h-full border-primary shadow-lg scale-105 ring-2 ring-primary/20">
+              <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground">
+                Most Popular
+              </Badge>
+
+              <CardHeader className="text-center pb-8">
+                <CardTitle className="text-xl mb-2">Professional</CardTitle>
+                <p className="text-muted-foreground mb-4">
+                  For serious businesses
+                </p>
+
+                <div className="space-y-2">
+                  {isCustomTier ? (
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className="text-3xl font-bold text-primary">
+                        Custom
+                      </span>
+                    </div>
+                  ) : (
+                    <>
                       <div className="flex items-baseline justify-center gap-1">
-                        <span
-                          className={`text-3xl font-bold ${
-                            plan.color === "primary" ? "text-primary" : "black"
-                          }`}
-                        >
-                          Custom
+                        <span className="text-4xl font-bold text-primary">
+                          ${isYearly ? yearlyPrice : monthlyPrice}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {isYearly ? "/year" : "/month"}
                         </span>
                       </div>
-                    ) : (
-                      <>
-                        <div className="flex items-baseline justify-center gap-1">
-                          <span
-                            className={`text-4xl font-bold ${
-                              plan.color === "primary"
-                                ? "text-primary"
-                                : "black"
-                            }`}
-                          >
-                            ${isYearly ? plan.yearlyPrice : plan.monthlyPrice}
-                          </span>
-                          <span className="text-muted-foreground">
-                            {isYearly ? "/year" : "/month"}
-                          </span>
-                        </div>
-                        {isYearly &&
-                          typeof plan.monthlyPrice === "number" &&
-                          typeof plan.yearlyPrice === "number" && (
-                            <div className="text-sm text-muted-foreground">
-                              <span className="line-through">
-                                ${plan.monthlyPrice * 12}
-                              </span>
-                              <span className="ml-2 text-slate-500">
-                                ${(plan.yearlyPrice / 12).toFixed(2)}/month
-                              </span>
-                            </div>
-                          )}
-                      </>
-                    )}
-                  </div>
-                </CardHeader>
+                      {isYearly &&
+                        typeof monthlyPrice === "number" &&
+                        typeof yearlyPrice === "number" && (
+                          <div className="text-sm text-muted-foreground">
+                            <span className="line-through">
+                              ${monthlyPrice * 12}
+                            </span>
+                            <span className="ml-2 text-slate-500">
+                              ${(yearlyPrice / 12).toFixed(2)}/month
+                            </span>
+                          </div>
+                        )}
+                    </>
+                  )}
+                </div>
+              </CardHeader>
 
-                <CardContent className="space-y-4">
-                  <Button
-                    className={`w-full ${
-                      plan.popular
-                        ? ""
-                        : plan.color === "secondary"
-                          ? "text-secondar y-foreground"
-                          : "variant-outline border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                    }`}
-                    variant={
-                      plan.popular
-                        ? "default"
-                        : plan.color === "secondary"
-                          ? "outline"
-                          : "ghost"
-                    }
-                    onClick={() => handleStartTrial(plan.name)}
-                    disabled={loading || isCustomTier}
-                  >
-                    {plan.cta}
-                    <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                  {plan.features.map((feature) => (
-                    <div key={feature} className="flex items-start gap-3">
-                      <Check
-                        className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
-                          plan.color === "primary"
-                            ? "text-primary"
-                            : "text-secondary"
-                        }`}
-                      />
-                      <span className="text-sm">{feature}</span>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+              <CardContent className="space-y-4">
+                <Button
+                  className="w-full"
+                  onClick={() => handleStartTrial("professional")}
+                  disabled={loading || isCustomTier}
+                >
+                  {isCustomTier
+                    ? "Contact us"
+                    : showUpgradeButtons
+                      ? "Upgrade"
+                      : "Start free trial"}
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+
+                <div className="flex items-start gap-3">
+                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
+                  <span className="text-sm">
+                    {EVENT_TIERS[eventTier].label} events/month
+                  </span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
+                  <span className="text-sm">Unlimited websites</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
+                  <span className="text-sm">5 years data retention</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
+                  <span className="text-sm">Unlimited custom events</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
+                  <span className="text-sm">Export/import data</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
+                  <span className="text-sm">Google Analytics import</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
+                  <span className="text-sm">Teams (unlimited members)</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
+                  <span className="text-sm">Public dashboard</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
+                  <span className="text-sm">Funnels</span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
 
         {!showFullPage && (

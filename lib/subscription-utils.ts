@@ -1,57 +1,57 @@
 import { createClient } from "@/lib/supabase/client";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { PLAN_LIMITS } from "./stripe-config";
 
 export interface SubscriptionInfo {
-  planTier: "free" | "hobby" | "pro" | "enterprise";
+  planTier: "hobby" | "professional";
   status: string;
   eventsLimit: number;
-  daysLeft: number;
+  websitesLimit: number;
+  dataRetention: string;
   hasLimitations: boolean;
   hasPaidPlan: boolean;
 }
 
 /**
- * Check if user is within the 30-day free period
- * Uses created_at + 30 days instead of storing trial_end
+ * Check if user has a paid plan
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isWithinFreePeriod(subscription: any): boolean {
+export function hasPaidPlan(subscription: any): boolean {
   if (!subscription) return false;
-  if (subscription.plan_tier !== "free") return true; // Paid plans are always active
-
-  const freeEndDate = new Date(subscription.created_at);
-  freeEndDate.setDate(freeEndDate.getDate() + 30); // +30 days from account creation
-  const now = new Date();
-
-  return now < freeEndDate;
+  return (
+    subscription.plan_tier === "professional" &&
+    subscription.stripe_subscription_id &&
+    subscription.stripe_subscription_id !== ""
+  );
 }
 
 /**
- * Get number of free days left
- * Calculates dynamically from created_at + 30 days
+ * Get plan limits based on plan tier
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function getFreeDaysLeft(subscription: any): number {
-  if (!subscription) return 0;
-  if (subscription.plan_tier !== "free") return Infinity; // Paid plans don't expire
-
-  const freeEndDate = new Date(subscription.created_at);
-  freeEndDate.setDate(freeEndDate.getDate() + 30); // +30 days from account creation
-  const now = new Date();
-  const daysLeft = Math.ceil(
-    (freeEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-  );
-
-  return Math.max(0, daysLeft);
+function getPlanLimits(planTier: "hobby" | "professional", eventsTier?: string) {
+  if (planTier === "hobby") {
+    return {
+      pageviews: PLAN_LIMITS.hobby.pageviews,
+      websites: PLAN_LIMITS.hobby.websites,
+      retention: PLAN_LIMITS.hobby.retention,
+      customEvents: PLAN_LIMITS.hobby.customEvents,
+    };
+  } else {
+    // Professional plan - get limits based on events tier
+    const tier = eventsTier as keyof typeof PLAN_LIMITS.professional || "10k";
+    const tierLimits = PLAN_LIMITS.professional[tier];
+    return {
+      pageviews: tierLimits?.pageviews || 10000,
+      websites: tierLimits?.websites || -1, // -1 = unlimited
+      retention: tierLimits?.retention || "5 years",
+      customEvents: tierLimits?.customEvents || -1,
+    };
+  }
 }
-
-// Legacy function names for backward compatibility
-export const isWithinFreeTrial = isWithinFreePeriod;
-export const getTrialDaysLeft = getFreeDaysLeft;
 
 /**
  * Check user's subscription status and limitations
- * New simplified logic using computed trial end from created_at
+ * Simplified logic: Hobby = free with limits, Professional = paid
  */
 export async function checkUserSubscription(
   userId: string
@@ -69,43 +69,28 @@ export async function checkUserSubscription(
     return null;
   }
 
-  // Check if user has paid subscription
-  const hasPaidPlan =
-    subscription.plan_tier !== "free" &&
-    subscription.stripe_subscription_id &&
-    subscription.stripe_subscription_id !== "";
-
-  if (hasPaidPlan) {
-    // User has paid plan - no limitations
-    return {
-      planTier: subscription.plan_tier,
-      status: subscription.status,
-      eventsLimit: subscription.events_limit || 0,
-      daysLeft: 0,
-      hasLimitations: false,
-      hasPaidPlan: true,
-    };
-  }
-
-  // User is on free plan - calculate days left from created_at + 30 days
-  const daysLeft = getFreeDaysLeft(subscription);
+  const isPaid = hasPaidPlan(subscription);
+  const planTier = isPaid ? "professional" : "hobby";
+  const limits = getPlanLimits(planTier, subscription.events_tier);
 
   return {
-    planTier: "free",
-    status: subscription.status,
-    eventsLimit: subscription.events_limit || 10000,
-    daysLeft,
-    hasLimitations: daysLeft === 0, // Limited after 30 days
-    hasPaidPlan: false,
+    planTier,
+    status: subscription.status || "active",
+    eventsLimit: limits.pageviews,
+    websitesLimit: limits.websites,
+    dataRetention: limits.retention,
+    hasLimitations: planTier === "hobby", // Hobby always has limitations
+    hasPaidPlan: isPaid,
   };
 }
 
 /**
  * Check if user can access a premium feature
+ * Hobby plan: limited features, Professional plan: all features
  */
 export async function canAccessFeature(
-  userId: string
-  // feature: "funnels" | "goals" | "exports"
+  userId: string,
+  feature: "funnels" | "goals" | "unlimited_websites" | "long_retention" | "unlimited_events" | "imports" | "teams"
 ): Promise<boolean> {
   const subscriptionInfo = await checkUserSubscription(userId);
 
@@ -113,18 +98,86 @@ export async function canAccessFeature(
     return false;
   }
 
-  // If user has paid plan, they can access everything
+  // Professional plan: access to everything
   if (subscriptionInfo.hasPaidPlan) {
     return true;
   }
 
-  // If user is on free plan but still within 30 days, they can access features
-  if (!subscriptionInfo.hasLimitations) {
+  // Hobby plan: limited access to premium features
+  switch (feature) {
+    case "goals":
+      return true; // Basic goals allowed on Hobby
+    case "funnels":
+    case "unlimited_websites":
+    case "long_retention":
+    case "unlimited_events":
+    case "imports":
+    case "teams":
+      return false; // These require Professional plan
+    default:
+      return true;
+  }
+}
+
+/**
+ * Check if user can add a new website (based on website limit)
+ */
+export async function canAddWebsite(userId: string, currentWebsiteCount: number): Promise<boolean> {
+  const subscriptionInfo = await checkUserSubscription(userId);
+
+  if (!subscriptionInfo) {
+    return false;
+  }
+
+  // Professional plan: unlimited websites
+  if (subscriptionInfo.hasPaidPlan || subscriptionInfo.websitesLimit === -1) {
     return true;
   }
 
-  // After 30 days on free plan, block premium features
-  return false;
+  // Hobby plan: check against limit
+  return currentWebsiteCount < subscriptionInfo.websitesLimit;
+}
+
+/**
+ * Check if user has reached their monthly events limit
+ */
+export async function hasReachedEventsLimit(userId: string, currentEventsThisMonth: number): Promise<boolean> {
+  const subscriptionInfo = await checkUserSubscription(userId);
+
+  if (!subscriptionInfo) {
+    return true; // Block if no subscription info
+  }
+
+  // Professional plan: no events limit (or very high limit)
+  if (subscriptionInfo.hasPaidPlan) {
+    return false;
+  }
+
+  // Hobby plan: check against monthly limit
+  return currentEventsThisMonth >= subscriptionInfo.eventsLimit;
+}
+
+/**
+ * Get user's current plan limits
+ */
+export async function getUserLimits(userId: string): Promise<{
+  eventsLimit: number;
+  websitesLimit: number;
+  dataRetention: string;
+  planTier: "hobby" | "professional";
+} | null> {
+  const subscriptionInfo = await checkUserSubscription(userId);
+
+  if (!subscriptionInfo) {
+    return null;
+  }
+
+  return {
+    eventsLimit: subscriptionInfo.eventsLimit,
+    websitesLimit: subscriptionInfo.websitesLimit,
+    dataRetention: subscriptionInfo.dataRetention,
+    planTier: subscriptionInfo.planTier,
+  };
 }
 
 /**

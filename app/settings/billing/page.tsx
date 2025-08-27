@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PLAN_LIMITS } from "@/lib/stripe-config";
 import { BillingHistory } from "@/components/billing-history";
-import { isWithinFreePeriod, getFreeDaysLeft } from "@/lib/subscription-utils";
+import { checkUserSubscription } from "@/lib/subscription-utils";
 import Link from "next/link";
 
 export default async function BillingPage() {
@@ -103,31 +103,19 @@ export default async function BillingPage() {
     totalEvents = totalPageViews + totalCustomEvents;
     console.log("Total events:", totalEvents);
   }
-  // Récupérer les données de subscription réelles
-  const { data: subscription } = await adminClient
-    .from("subscriptions")
-    .select("plan_tier, events_limit, status, created_at, stripe_subscription_id, billing_period")
-    .eq("user_id", user?.id || "")
-    .single();
+  // Récupérer les informations de subscription avec la nouvelle logique
+  const subscriptionInfo = user?.id ? await checkUserSubscription(user.id) : null;
 
   // Déterminer le plan actuel avec la nouvelle logique simplifiée
-  let currentPlan = "free";
+  let currentPlan = "hobby"; // Par défaut hobby (gratuit)
   let currentTier = "10k";
-  let isInFreePeriod = false;
-  let daysLeft = 0;
 
-  if (subscription) {
-    // Check if user has paid subscription
-    const hasPaidPlan = subscription.plan_tier !== "free" && 
-                       subscription.stripe_subscription_id && 
-                       subscription.stripe_subscription_id !== "";
-
-    if (hasPaidPlan) {
-      // User has paid plan
-      currentPlan = subscription.plan_tier;
-      
-      // Convert numeric events_limit to string format (10000 -> "10k", 100000 -> "100k", etc.)
-      const eventsNum = subscription.events_limit;
+  if (subscriptionInfo) {
+    currentPlan = subscriptionInfo.planTier;
+    
+    if (subscriptionInfo.hasPaidPlan) {
+      // Convert numeric events_limit to string format pour Professional
+      const eventsNum = subscriptionInfo.eventsLimit;
       if (eventsNum >= 1000000) {
         currentTier = `${eventsNum / 1000000}m`;
       } else if (eventsNum >= 1000) {
@@ -136,24 +124,18 @@ export default async function BillingPage() {
         currentTier = "10k"; // Default fallback
       }
     } else {
-      // User is on free plan - use helper functions
-      isInFreePeriod = isWithinFreePeriod(subscription);
-      daysLeft = getFreeDaysLeft(subscription);
-      currentPlan = "free";
-      currentTier = "10k"; // Free plan limit
+      // Hobby plan has fixed limits
+      currentTier = "3k"; // 3000 events pour hobby
     }
   }
 
 
 
-  const limits =
-    currentPlan === "free"
-      ? PLAN_LIMITS.free
-      : currentPlan === "trial"
-      ? PLAN_LIMITS.trial
-      : PLAN_LIMITS[currentPlan as "hobby" | "professional"]?.[
-          currentTier as keyof typeof PLAN_LIMITS.hobby
-        ] || PLAN_LIMITS.free;
+  const limits = subscriptionInfo ? {
+    pageviews: subscriptionInfo.eventsLimit,
+    websites: subscriptionInfo.websitesLimit,
+    retention: subscriptionInfo.dataRetention,
+  } : PLAN_LIMITS.hobby;
 
   return (
     <div className="space-y-6">
@@ -163,17 +145,12 @@ export default async function BillingPage() {
             <div>
               <CardTitle>Current Plan</CardTitle>
               <CardDescription>
-                {currentPlan === "free" && isInFreePeriod ? (
+                You are currently on the <strong>{currentPlan}</strong> plan
+                {subscriptionInfo && (
                   <>
-                    You are currently on the <strong>free plan</strong>
-                    <span> ({daysLeft} days remaining)</span>
-                  </>
-                ) : (
-                  <>
-                    You are currently on the {currentPlan} plan
-                    {currentPlan !== "free" && ` (${currentTier} events/month)`}
-                    {subscription?.billing_period && currentPlan !== "free" && (
-                      <span> - {subscription.billing_period}</span>
+                    {" "}({subscriptionInfo.eventsLimit.toLocaleString()} events/month)
+                    {subscriptionInfo.hasPaidPlan && (
+                      <span> - Active subscription</span>
                     )}
                   </>
                 )}
@@ -181,14 +158,10 @@ export default async function BillingPage() {
             </div>
             <Badge
               variant={
-                currentPlan === "free"
-                  ? isInFreePeriod ? "outline" : "secondary"
-                  : "default"
+                subscriptionInfo?.hasPaidPlan ? "default" : "secondary"
               }
             >
-              {currentPlan === "free" && isInFreePeriod 
-                ? `Free (${daysLeft} days left)` 
-                : currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}
+              {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}
             </Badge>
           </div>
         </CardHeader>
