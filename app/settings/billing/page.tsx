@@ -58,7 +58,7 @@ export default async function BillingPage() {
 
     // 2. Compter les custom events triggers (essayons plusieurs noms de tables possibles)
     let totalCustomEvents = 0;
-    
+
     // Essayer d'abord custom_event_triggers
     const { data: eventTriggers, error: eventsError } = await adminClient
       .from("custom_event_triggers")
@@ -68,14 +68,14 @@ export default async function BillingPage() {
 
     if (eventsError) {
       console.log("Trying alternative table names...");
-      
+
       // Essayer event_triggers
       const { data: altTriggers, error: altError } = await adminClient
         .from("event_triggers")
         .select("id")
         .in("site_id", siteIds)
         .gte("created_at", startOfMonth.toISOString());
-        
+
       if (altError) {
         // Essayer events
         const { data: events, error: evError } = await adminClient
@@ -83,7 +83,7 @@ export default async function BillingPage() {
           .select("id")
           .in("site_id", siteIds)
           .gte("created_at", startOfMonth.toISOString());
-          
+
         totalCustomEvents = events?.length || 0;
         console.log("Events table data:", events);
         console.log("Events table error:", evError);
@@ -104,38 +104,24 @@ export default async function BillingPage() {
     console.log("Total events:", totalEvents);
   }
   // Récupérer les informations de subscription avec la nouvelle logique
-  const subscriptionInfo = user?.id ? await checkUserSubscription(user.id) : null;
+  const subscriptionInfo = user?.id
+    ? await checkUserSubscription(user.id)
+    : null;
 
   // Déterminer le plan actuel avec la nouvelle logique simplifiée
   let currentPlan = "hobby"; // Par défaut hobby (gratuit)
-  let currentTier = "10k";
 
   if (subscriptionInfo) {
     currentPlan = subscriptionInfo.planTier;
-    
-    if (subscriptionInfo.hasPaidPlan) {
-      // Convert numeric events_limit to string format pour Professional
-      const eventsNum = subscriptionInfo.eventsLimit;
-      if (eventsNum >= 1000000) {
-        currentTier = `${eventsNum / 1000000}m`;
-      } else if (eventsNum >= 1000) {
-        currentTier = `${eventsNum / 1000}k`;
-      } else {
-        currentTier = "10k"; // Default fallback
-      }
-    } else {
-      // Hobby plan has fixed limits
-      currentTier = "3k"; // 3000 events pour hobby
-    }
   }
 
-
-
-  const limits = subscriptionInfo ? {
-    pageviews: subscriptionInfo.eventsLimit,
-    websites: subscriptionInfo.websitesLimit,
-    retention: subscriptionInfo.dataRetention,
-  } : PLAN_LIMITS.hobby;
+  const limits = subscriptionInfo
+    ? {
+        pageviews: subscriptionInfo.eventsLimit,
+        websites: subscriptionInfo.websitesLimit,
+        retention: subscriptionInfo.dataRetention,
+      }
+    : PLAN_LIMITS.hobby;
 
   return (
     <div className="space-y-6">
@@ -148,7 +134,9 @@ export default async function BillingPage() {
                 You are currently on the <strong>{currentPlan}</strong> plan
                 {subscriptionInfo && (
                   <>
-                    {" "}({subscriptionInfo.eventsLimit.toLocaleString()} events/month)
+                    {" "}
+                    ({subscriptionInfo.eventsLimit.toLocaleString()}{" "}
+                    events/month)
                     {subscriptionInfo.hasPaidPlan && (
                       <span> - Active subscription</span>
                     )}
@@ -157,9 +145,7 @@ export default async function BillingPage() {
               </CardDescription>
             </div>
             <Badge
-              variant={
-                subscriptionInfo?.hasPaidPlan ? "default" : "secondary"
-              }
+              variant={subscriptionInfo?.hasPaidPlan ? "default" : "secondary"}
             >
               {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}
             </Badge>
@@ -185,7 +171,8 @@ export default async function BillingPage() {
                   siteCount
                 ) : (
                   <>
-                    {siteCount} / {limits.websites === -1 ? "∞" : limits.websites}
+                    {siteCount} /{" "}
+                    {limits.websites === -1 ? "∞" : limits.websites}
                   </>
                 )}
               </p>
@@ -211,8 +198,8 @@ export default async function BillingPage() {
           <div className="pt-4 border-t">
             <Button asChild className="w-full md:w-auto">
               <Link href="/settings/billing/plans">
-                {currentPlan === "free"
-                  ? isInFreePeriod ? "Choose Your Plan" : "Upgrade Plan"
+                {currentPlan === "hobby"
+                  ? "Upgrade Plan"
                   : "Change Plan"}
               </Link>
             </Button>
