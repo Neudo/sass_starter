@@ -16,6 +16,7 @@ export type FilterType =
   | "browser"
   | "os"
   | "screen_size"
+  | "channel"
   | "referrer_domain"
   | "utm_source"
   | "utm_medium"
@@ -148,6 +149,14 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
             return session.os === filter.value;
           case 'screen_size':
             return session.screen_size === filter.value;
+          case 'channel':
+            // Calculate channel for this session
+            const channel = getChannel(
+              session.utm_medium,
+              session.utm_source,
+              session.referrer_domain
+            );
+            return channel === filter.value;
           case 'referrer_domain':
             return session.referrer_domain === filter.value;
           case 'utm_source':

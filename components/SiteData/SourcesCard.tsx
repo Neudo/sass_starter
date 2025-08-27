@@ -169,7 +169,7 @@ export function SourcesCard() {
   }, [analyticsData.sources]);
 
   const handleItemClick = (
-    type: "referrer_domain" | "utm_source" | "utm_medium" | "utm_campaign" | "utm_term" | "utm_content",
+    type: "channel" | "referrer_domain" | "utm_source" | "utm_medium" | "utm_campaign" | "utm_term" | "utm_content",
     value: string
   ) => {
     if (hasFilter(type, value)) {
@@ -184,7 +184,7 @@ export function SourcesCard() {
     showIcons = false,
     allData?: SourceData[],
     title?: string,
-    clickType?: "referrer_domain" | "utm_source" | "utm_medium" | "utm_campaign" | "utm_term" | "utm_content"
+    clickType?: "channel" | "referrer_domain" | "utm_source" | "utm_medium" | "utm_campaign" | "utm_term" | "utm_content"
   ) => {
     if (loading) {
       return <div className="text-muted-foreground">Loading...</div>;
@@ -272,7 +272,7 @@ export function SourcesCard() {
         <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
       </TabsList>
       <TabsContent value="channels" className="mt-4">
-        {renderList(channels, false, allChannels, "All channels")}
+        {renderList(channels, false, allChannels, "All channels", "channel")}
       </TabsContent>
       <TabsContent value="sources" className="mt-4">
         {renderList(

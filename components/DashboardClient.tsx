@@ -53,7 +53,7 @@ export function DashboardClient({
     <div className="space-y-6">
       <div className="flex gap-4 flex-wrap items-center justify-between">
         {!isPublic && <SiteSelector sites={userSites} currentDomain={domain} />}
-        <ActiveVisitors siteId={siteId} />
+        <ActiveVisitors siteId={siteId} onActivateRealtime={() => setSelectedDateRange("realtime")} />
         <DateFilter
           selectedRange={selectedDateRange}
           onRangeChange={setSelectedDateRange}

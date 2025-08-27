@@ -7,9 +7,10 @@ import { Users } from "lucide-react";
 
 interface ActiveVisitorsProps {
   siteId: string;
+  onActivateRealtime?: () => void;
 }
 
-export function ActiveVisitors({ siteId }: ActiveVisitorsProps) {
+export function ActiveVisitors({ siteId, onActivateRealtime }: ActiveVisitorsProps) {
   const [activeCount, setActiveCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
@@ -55,7 +56,10 @@ export function ActiveVisitors({ siteId }: ActiveVisitorsProps) {
   }, [siteId]);
 
   return (
-    <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 px-2 py-4 md:py-4 md:px-6">
+    <Card 
+      className={`bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 px-2 py-4 md:py-4 md:px-6 ${onActivateRealtime ? 'cursor-pointer hover:from-primary/20 hover:to-primary/10 transition-all' : ''}`}
+      onClick={onActivateRealtime}
+    >
       {loading ? (
         <div className="flex items-center gap-2">
           <div className="h-8 w-12 bg-muted animate-pulse rounded" />

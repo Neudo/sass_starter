@@ -87,6 +87,19 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Block sessions with suspicious null geolocation data (likely bots/proxies)
+    if (locationData.country === null || locationData.region === null || locationData.city === null) {
+      console.log(`Blocked suspicious session - Missing geolocation: Country=${locationData.country}, Region=${locationData.region}, City=${locationData.city}`);
+      return new NextResponse(null, {
+        status: 204,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      });
+    }
+
     // Check if this is a new session
     const { data: existingSession } = await supabase
       .from("sessions")

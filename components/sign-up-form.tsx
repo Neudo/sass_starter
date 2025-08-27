@@ -20,7 +20,6 @@ export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
@@ -47,10 +46,6 @@ export function SignUpForm({
         email,
         password,
         options: {
-          data: {
-            display_name: name, // Set display_name for Supabase Auth
-            full_name: name, // Also set full_name for compatibility
-          },
           emailRedirectTo: `${window.location.origin}/welcome`,
         },
       });
@@ -74,17 +69,6 @@ export function SignUpForm({
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                {/* name */}
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="John Doe"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-                {/* email */}
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
