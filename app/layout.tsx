@@ -19,7 +19,8 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Hector Analytics | Privacy-First Web Analytics",
-    description: "Cookie-free, GDPR compliant analytics that respects user privacy while delivering powerful insights.",
+    description:
+      "Cookie-free, GDPR compliant analytics that respects user privacy while delivering powerful insights.",
     url: "https://hectoranalytics.com",
     siteName: "Hector Analytics",
     type: "website",
@@ -27,7 +28,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Hector Analytics | Privacy-First Web Analytics",
-    description: "Cookie-free, GDPR compliant analytics that respects user privacy while delivering powerful insights.",
+    description:
+      "Cookie-free, GDPR compliant analytics that respects user privacy while delivering powerful insights.",
   },
 };
 
@@ -53,37 +55,38 @@ export default function RootLayout({
           {children}
           <Toaster />
         </ThemeProvider>
-        <Script 
-          id="schema-org" 
+        <Script
+          id="schema-org"
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "SoftwareApplication",
-              "name": "Hector Analytics",
-              "applicationCategory": "BusinessApplication",
-              "description": "Privacy-first web analytics platform that provides actionable insights without cookies. GDPR compliant alternative to Google Analytics.",
-              "operatingSystem": "Web Browser",
-              "offers": {
+              name: "Hector Analytics",
+              applicationCategory: "BusinessApplication",
+              description:
+                "Privacy-first web analytics platform that provides actionable insights without cookies. GDPR compliant alternative to Google Analytics.",
+              operatingSystem: "Web Browser",
+              offers: {
                 "@type": "Offer",
-                "price": "9",
-                "priceCurrency": "EUR",
-                "priceValidUntil": "2025-12-31"
+                price: "9",
+                priceCurrency: "EUR",
+                priceValidUntil: "2025-12-31",
               },
-              "aggregateRating": {
+              aggregateRating: {
                 "@type": "AggregateRating",
-                "ratingValue": "4.8",
-                "ratingCount": "127"
+                ratingValue: "4.8",
+                ratingCount: "127",
               },
-              "developer": {
+              developer: {
                 "@type": "Organization",
-                "name": "Hector Analytics",
-                "url": "https://hectoranalytics.com"
-              }
-            })
+                name: "Hector Analytics",
+                url: "https://hectoranalytics.com",
+              },
+            }),
           }}
         />
-        <Script src="/script.js" />
+        <Script src="/script-funnels-and-custom-events.js" />
       </body>
     </html>
   );
