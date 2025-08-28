@@ -10,7 +10,10 @@ interface ActiveVisitorsProps {
   onActivateRealtime?: () => void;
 }
 
-export function ActiveVisitors({ siteId, onActivateRealtime }: ActiveVisitorsProps) {
+export function ActiveVisitors({
+  siteId,
+  onActivateRealtime,
+}: ActiveVisitorsProps) {
   const [activeCount, setActiveCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
@@ -19,7 +22,9 @@ export function ActiveVisitors({ siteId, onActivateRealtime }: ActiveVisitorsPro
       const supabase = createClient();
 
       // Consider visitors active if they were seen in the last 30 minutes (same as realtime mode)
-      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      const thirtyMinutesAgo = new Date(
+        Date.now() - 30 * 60 * 1000
+      ).toISOString();
 
       const { data: sessions, error } = await supabase
         .from("sessions")
@@ -56,14 +61,16 @@ export function ActiveVisitors({ siteId, onActivateRealtime }: ActiveVisitorsPro
   }, [siteId]);
 
   return (
-    <Card 
-      className={`bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 px-2 py-4 md:py-4 md:px-6 ${onActivateRealtime ? 'cursor-pointer hover:from-primary/20 hover:to-primary/10 transition-all' : ''}`}
+    <Card
+      className={`bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 px-2 py-4 md:py-4 md:px-6 ${onActivateRealtime ? "cursor-pointer hover:from-primary/20 hover:to-primary/10  transition-all" : ""}`}
       onClick={onActivateRealtime}
     >
       {loading ? (
         <div className="flex items-center gap-2">
           <div className="h-8 w-12 bg-muted animate-pulse rounded" />
-          <span className="text-xs text-muted-foreground">Loading...</span>
+          <span className="text-xs text-muted-foreground min-h-4">
+            Loading...
+          </span>
         </div>
       ) : (
         <div className="flex items-center gap-3">
@@ -77,7 +84,7 @@ export function ActiveVisitors({ siteId, onActivateRealtime }: ActiveVisitorsPro
               </span>
             </div>
           </div>
-          Current Visitors
+          <span className="hidden sm:block">Current Visitors</span>
           <div className="text-3xl font-bold">{activeCount}</div>
         </div>
       )}
