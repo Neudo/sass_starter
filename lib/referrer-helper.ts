@@ -57,6 +57,11 @@ const referrerMappings: Record<string, ReferrerInfo> = {
     displayName: "Reddit",
     category: "social",
   },
+  "com.reddit.frontpage": {
+    name: "reddit",
+    displayName: "Reddit",
+    category: "social",
+  },
   "tiktok.com": {
     name: "tiktok",
     displayName: "TikTok",
@@ -230,6 +235,161 @@ export function normalizeReferrer(
   // Check domain mappings
   if (referrerMappings[cleaned]) {
     return referrerMappings[cleaned];
+  }
+
+  // Special patterns for mobile apps and variations
+  const specialPatterns = [
+    {
+      pattern: /reddit/i,
+      info: {
+        name: "reddit",
+        displayName: "Reddit",
+        category: "social" as const,
+      },
+    },
+    {
+      pattern: /facebook|fb\.|fbclid/i,
+      info: {
+        name: "facebook",
+        displayName: "Facebook",
+        category: "social" as const,
+      },
+    },
+    {
+      pattern: /twitter|t\.co|x\.com/i,
+      info: {
+        name: "twitter",
+        displayName: "X (Twitter)",
+        category: "social" as const,
+      },
+    },
+    {
+      pattern: /linkedin/i,
+      info: {
+        name: "linkedin",
+        displayName: "LinkedIn",
+        category: "social" as const,
+      },
+    },
+    {
+      pattern: /instagram/i,
+      info: {
+        name: "instagram",
+        displayName: "Instagram",
+        category: "social" as const,
+      },
+    },
+    {
+      pattern: /youtube|youtu\.be/i,
+      info: {
+        name: "youtube",
+        displayName: "YouTube",
+        category: "social" as const,
+      },
+    },
+    {
+      pattern: /google\.|goo\.gl/i,
+      info: {
+        name: "google",
+        displayName: "Google",
+        category: "search" as const,
+      },
+    },
+    {
+      pattern: /bing\.|msn\./i,
+      info: {
+        name: "bing",
+        displayName: "Bing",
+        category: "search" as const,
+      },
+    },
+    {
+      pattern: /duckduckgo|ddg\./i,
+      info: {
+        name: "duckduckgo",
+        displayName: "DuckDuckGo",
+        category: "search" as const,
+      },
+    },
+    {
+      pattern: /hackernews|ycombinator|hn\.algolia/i,
+      info: {
+        name: "hackernews",
+        displayName: "Hacker News",
+        category: "news" as const,
+      },
+    },
+    {
+      pattern: /producthunt/i,
+      info: {
+        name: "producthunt",
+        displayName: "Product Hunt",
+        category: "news" as const,
+      },
+    },
+    {
+      pattern: /tiktok/i,
+      info: {
+        name: "tiktok",
+        displayName: "TikTok",
+        category: "social" as const,
+      },
+    },
+    {
+      pattern: /pinterest/i,
+      info: {
+        name: "pinterest",
+        displayName: "Pinterest",
+        category: "social" as const,
+      },
+    },
+    {
+      pattern: /snapchat/i,
+      info: {
+        name: "snapchat",
+        displayName: "Snapchat",
+        category: "social" as const,
+      },
+    },
+    {
+      pattern: /whatsapp/i,
+      info: {
+        name: "whatsapp",
+        displayName: "WhatsApp",
+        category: "social" as const,
+      },
+    },
+    {
+      pattern: /telegram/i,
+      info: {
+        name: "telegram",
+        displayName: "Telegram",
+        category: "social" as const,
+      },
+    },
+    {
+      pattern: /discord/i,
+      info: {
+        name: "discord",
+        displayName: "Discord",
+        category: "social" as const,
+      },
+    },
+    {
+      pattern: /slack/i,
+      info: {
+        name: "slack",
+        displayName: "Slack",
+        category: "other" as const,
+      },
+    },
+  ];
+
+  // Check special patterns (for mobile apps and variations)
+  for (const { pattern, info } of specialPatterns) {
+    if (pattern.test(cleaned)) {
+      return info;
+    }
   }
 
   // Try to match partial domains (e.g., "google.co.uk" -> "google")
