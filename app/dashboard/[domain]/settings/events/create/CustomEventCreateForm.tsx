@@ -239,7 +239,8 @@ export function CustomEventCreateForm({
                 }
               />
               <p className="text-sm text-muted-foreground mt-1">
-                Track scroll only on specific pages. Use / for homepage, * as wildcard. Leave empty for all pages.
+                Track scroll only on specific pages. Use / for homepage, * as
+                wildcard. Leave empty for all pages.
               </p>
             </div>
           </div>
@@ -353,7 +354,7 @@ export function CustomEventCreateForm({
                   }
                   required
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="py-6">
                     <SelectValue placeholder="Select event type" />
                   </SelectTrigger>
                   <SelectContent>
