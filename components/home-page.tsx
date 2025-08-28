@@ -12,10 +12,33 @@ import { HelpCircle, ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
 
+// Import new sections
+import { HowItWorks } from "./sections/how-it-works";
+import { FeaturesDeepDive } from "./sections/features-deep-dive";
+import { WhyPrivacyMatters } from "./sections/why-privacy-matters";
+import { UseCases } from "./sections/use-cases";
+import { Pricing } from "./sections/pricing";
+import { Integrations } from "./sections/integrations";
+import { MigrationGuide } from "./sections/migration-guide";
+import { CustomerSuccess } from "./sections/customer-success";
+import { ResourcesLearning } from "./sections/resources-learning";
+import { FinalCTA } from "./sections/final-cta";
+
 export function HomePage() {
   return (
     <div className="min-h-screen theme-transition">
       <Hero />
+
+      {/* New sections */}
+      <HowItWorks />
+      <FeaturesDeepDive />
+      <WhyPrivacyMatters />
+      <UseCases />
+      <MigrationGuide />
+      {/* <Integrations /> */}
+      {/* <CustomerSuccess /> */}
+      {/* <ResourcesLearning /> */}
+
       {/* FAQ Preview */}
       <section className="py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -76,6 +99,8 @@ export function HomePage() {
           </motion.div>
         </div>
       </section>
+
+      <FinalCTA />
     </div>
   );
 }
