@@ -1,7 +1,7 @@
 "use client";
 import { motion } from "motion/react";
 import { Badge } from "@/components/ui/badge";
-import { 
+import {
   Shield,
   AlertTriangle,
   Ban,
@@ -9,62 +9,65 @@ import {
   Lock,
   Eye,
   Users,
-  Globe
+  Globe,
 } from "lucide-react";
 
 export function WhyPrivacyMatters() {
   const reasons = [
     {
       icon: Ban,
-      title: "Ad Blockers Are Everywhere",
-      stat: "42.7%",
-      description: "of internet users now use ad blockers that also block Google Analytics",
-      color: "text-destructive"
+      title: "Ad Blockers Everywhere",
+      description:
+        "Nearly half of users run ad blockers - your Google Analytics data is incomplete",
+      color: "text-destructive",
     },
     {
       icon: TrendingDown,
-      title: "Cookie Consent Fatigue",
-      stat: "90%",
-      description: "of users reject optional cookies, making your data incomplete",
-      color: "text-orange-500"
+      title: "Users Reject Cookies",
+      description:
+        'Most users hit "Reject All" on cookie banners - goodbye tracking accuracy',
+      color: "text-orange-500",
     },
     {
       icon: AlertTriangle,
-      title: "GDPR Compliance Risk",
-      stat: "€20M",
-      description: "or 4% of revenue - maximum GDPR fine for privacy violations",
-      color: "text-yellow-500"
+      title: "GDPR Gets Stricter",
+      description:
+        "Google Analytics is already banned in several EU countries for privacy violations (Australia, France, Italy, Sweden ...)",
+      color: "text-yellow-500",
     },
     {
       icon: Users,
-      title: "Build User Trust",
-      stat: "86%",
-      description: "of users are concerned about their data privacy online",
-      color: "text-primary"
-    }
+      title: "Users Want Privacy",
+      description:
+        "Privacy-focused alternatives are growing 300% year-over-year",
+      color: "text-primary",
+    },
   ];
 
   const benefits = [
     {
       icon: Shield,
       title: "No Personal Data Collection",
-      description: "We don't store IP addresses, fingerprints, or any personally identifiable information."
+      description:
+        "We don't store IP addresses, fingerprints, or any personally identifiable information.",
     },
     {
       icon: Lock,
       title: "No Cookie Banners Required",
-      description: "Since we don't use cookies, you don't need annoying consent popups."
+      description:
+        "Since we don't use cookies, you don't need annoying consent popups.",
     },
     {
       icon: Eye,
       title: "100% Data Visibility",
-      description: "No sampling. Track every visitor without privacy concerns."
+      description: "No sampling. Track every visitor without privacy concerns.",
     },
     {
       icon: Globe,
       title: "Global Compliance",
-      description: "GDPR, CCPA, PECR, and other privacy laws - we've got you covered."
-    }
+      description:
+        "GDPR, CCPA, PECR, and other privacy laws - we've got you covered.",
+    },
   ];
 
   return (
@@ -85,7 +88,7 @@ export function WhyPrivacyMatters() {
               Why Privacy-First Analytics?
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              The web is changing. Users demand privacy, regulations require it, 
+              The web is changing. Users demand privacy, regulations require it,
               and traditional analytics tools are becoming obsolete.
             </p>
           </motion.div>
@@ -103,9 +106,6 @@ export function WhyPrivacyMatters() {
             >
               <div className="inline-flex p-3 rounded-full bg-muted mb-4">
                 <reason.icon className={`w-6 h-6 ${reason.color}`} />
-              </div>
-              <div className={`text-3xl font-bold mb-2 ${reason.color}`}>
-                {reason.stat}
               </div>
               <h3 className="font-semibold mb-2">{reason.title}</h3>
               <p className="text-sm text-muted-foreground">
@@ -153,26 +153,13 @@ export function WhyPrivacyMatters() {
         >
           <div className="max-w-3xl mx-auto text-center">
             <h3 className="text-2xl font-bold mb-4">
-              Privacy Is Not Just Compliance, It's Good Business
+              Privacy Is Not Just Compliance, It&apos;s Good Business
             </h3>
             <p className="text-muted-foreground mb-6">
-              When you respect user privacy, you build trust. When you build trust, 
-              users engage more. Better engagement means better business outcomes.
+              When you respect user privacy, you build trust. When you build
+              trust, users engage more. Better engagement means better business
+              outcomes.
             </p>
-            <div className="grid grid-cols-3 gap-6 mt-8">
-              <div>
-                <div className="text-3xl font-bold text-primary mb-2">+23%</div>
-                <p className="text-sm text-muted-foreground">Higher engagement</p>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-primary mb-2">-100%</div>
-                <p className="text-sm text-muted-foreground">Cookie banners needed</p>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-primary mb-2">0ms</div>
-                <p className="text-sm text-muted-foreground">Consent delay</p>
-              </div>
-            </div>
           </div>
         </motion.div>
       </div>

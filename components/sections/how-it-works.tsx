@@ -1,12 +1,9 @@
 "use client";
 import { motion } from "motion/react";
 import { Badge } from "@/components/ui/badge";
-import { 
-  UserPlus, 
-  Code2, 
-  BarChart3,
-  ArrowRight
-} from "lucide-react";
+import { UserPlus, Code2, BarChart3, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export function HowItWorks() {
   const steps = [
@@ -14,27 +11,30 @@ export function HowItWorks() {
       number: "01",
       icon: UserPlus,
       title: "Create Your Free Account",
-      description: "Sign up in seconds. No credit card required. Start tracking immediately.",
-      color: "from-primary/20 to-primary/10"
+      description:
+        "Sign up in seconds. No credit card required. Start tracking immediately.",
+      color: "from-primary/20 to-primary/10",
     },
     {
-      number: "02", 
+      number: "02",
       icon: Code2,
       title: "Add One Line of Code",
-      description: "Copy and paste our lightweight tracking script. Works with any website or framework.",
-      color: "from-secondary/20 to-secondary/10"
+      description:
+        "Copy and paste our lightweight tracking script. Works with any website or framework.",
+      color: "from-secondary/20 to-secondary/10",
     },
     {
       number: "03",
       icon: BarChart3,
       title: "Get Real-Time Insights",
-      description: "Watch your analytics dashboard come alive with privacy-respecting visitor data.",
-      color: "from-ring/20 to-ring/10"
-    }
+      description:
+        "Watch your analytics dashboard come alive with privacy-respecting visitor data.",
+      color: "from-ring/20 to-ring/10",
+    },
   ];
 
   return (
-    <section className="py-24 bg-muted/30">
+    <section className="py-24 bg-muted dark:bg-muted/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <motion.div
@@ -51,8 +51,8 @@ export function HowItWorks() {
               How It Works
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Get started with privacy-first analytics in under 2 minutes. 
-              No technical expertise required.
+              Get started with privacy-first analytics in under 2 minutes. No
+              technical expertise required.
             </p>
           </motion.div>
         </div>
@@ -68,18 +68,16 @@ export function HowItWorks() {
               className="relative"
             >
               <div className="text-center">
-                <div className={`inline-flex items-center justify-center w-20 h-20 mb-6 rounded-2xl bg-gradient-to-br ${step.color}`}>
+                <div
+                  className={`inline-flex items-center justify-center w-20 h-20 mb-6 rounded-2xl bg-gradient-to-br ${step.color}`}
+                >
                   <step.icon className="w-10 h-10 text-primary" />
                 </div>
-                <div className="text-5xl font-bold text-muted-foreground/20 mb-4">
+                <div className="text-5xl font-bold text-muted-foreground/50 mb-4">
                   {step.number}
                 </div>
-                <h3 className="text-xl font-semibold mb-3">
-                  {step.title}
-                </h3>
-                <p className="text-muted-foreground">
-                  {step.description}
-                </p>
+                <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
+                <p className="text-muted-foreground">{step.description}</p>
               </div>
               {index < steps.length - 1 && (
                 <div className="hidden md:block absolute top-1/3 -right-6 text-muted-foreground/30">
@@ -97,25 +95,29 @@ export function HowItWorks() {
           viewport={{ once: true }}
           className="mt-16 bg-card rounded-lg border p-8 text-center"
         >
-          <h3 className="text-2xl font-semibold mb-4">
-            Installation Example
-          </h3>
+          <h3 className="text-2xl font-semibold mb-4">Installation Example</h3>
           <div className="bg-muted rounded-md p-4 font-mono text-sm text-left max-w-2xl mx-auto">
-            <span className="text-muted-foreground">&lt;!-- Add before &lt;/body&gt; tag --&gt;</span>
+            <span className="text-muted-foreground">
+              &lt;!-- Add before &lt;/body&gt; tag --&gt;
+            </span>
             <br />
             <span className="text-primary">&lt;script</span>
             <span className="text-secondary"> async defer</span>
             <br />
-            <span className="text-secondary ml-4">data-website-id=</span>
-            <span className="text-ring">"YOUR_ID"</span>
-            <br />
             <span className="text-secondary ml-4">src=</span>
-            <span className="text-ring">"https://hectoranalytics.com/script.js"</span>
+            <span className="text-ring">
+              &quot;https://hectoranalytics.com/script.js&quot;
+            </span>
             <span className="text-primary">&gt;&lt;/script&gt;</span>
           </div>
           <p className="text-muted-foreground mt-4">
-            That's it! Your analytics are now live and GDPR-compliant.
+            That&apos;s it! Your analytics are now live and GDPR-compliant.
           </p>
+          <Link href="/auth/sign-up">
+            <Button size="xl" className="mt-8 mx-auto block">
+              Start collecting data
+            </Button>
+          </Link>
         </motion.div>
       </div>
     </section>

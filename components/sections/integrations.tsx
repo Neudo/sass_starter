@@ -2,15 +2,14 @@
 import { motion } from "motion/react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { 
+import {
   Plug,
   Globe,
   Code2,
   Webhook,
   FileJson,
   Terminal,
-  Layers,
-  Zap
+  Zap,
 } from "lucide-react";
 
 export function Integrations() {
@@ -23,8 +22,8 @@ export function Integrations() {
         { name: "Next.js", icon: "⚡", status: "Available" },
         { name: "React", icon: "⚛️", status: "Available" },
         { name: "Vue.js", icon: "💚", status: "Available" },
-        { name: "Angular", icon: "🅰️", status: "Available" }
-      ]
+        { name: "Angular", icon: "🅰️", status: "Available" },
+      ],
     },
     {
       category: "CMS",
@@ -32,8 +31,8 @@ export function Integrations() {
         { name: "Ghost", icon: "👻", status: "Available" },
         { name: "Webflow", icon: "🎨", status: "Available" },
         { name: "Strapi", icon: "🚀", status: "Coming Soon" },
-        { name: "Contentful", icon: "📝", status: "Coming Soon" }
-      ]
+        { name: "Contentful", icon: "📝", status: "Coming Soon" },
+      ],
     },
     {
       category: "Tools",
@@ -41,32 +40,32 @@ export function Integrations() {
         { name: "Slack", icon: "💬", status: "Available" },
         { name: "Zapier", icon: "⚡", status: "Coming Soon" },
         { name: "Make", icon: "🔄", status: "Coming Soon" },
-        { name: "n8n", icon: "🔗", status: "Available" }
-      ]
-    }
+        { name: "n8n", icon: "🔗", status: "Available" },
+      ],
+    },
   ];
 
   const features = [
     {
       icon: Webhook,
       title: "Webhooks",
-      description: "Real-time event notifications to your systems"
+      description: "Real-time event notifications to your systems",
     },
     {
       icon: FileJson,
       title: "REST API",
-      description: "Full API access to all your analytics data"
+      description: "Full API access to all your analytics data",
     },
     {
       icon: Terminal,
       title: "NPM Package",
-      description: "JavaScript SDK for custom implementations"
+      description: "JavaScript SDK for custom implementations",
     },
     {
       icon: Code2,
       title: "Embed Anywhere",
-      description: "Simple script tag works on any website"
-    }
+      description: "Simple script tag works on any website",
+    },
   ];
 
   return (
@@ -87,8 +86,8 @@ export function Integrations() {
               Works With Your Stack
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Seamlessly integrate Hector Analytics with your favorite tools and platforms. 
-              One line of code, endless possibilities.
+              Seamlessly integrate Hector Analytics with your favorite tools and
+              platforms. One line of code, endless possibilities.
             </p>
           </motion.div>
         </div>
@@ -100,7 +99,9 @@ export function Integrations() {
             transition={{ duration: 0.5 }}
             viewport={{ once: true }}
           >
-            <h3 className="text-2xl font-semibold mb-8">Popular Integrations</h3>
+            <h3 className="text-2xl font-semibold mb-8">
+              Popular Integrations
+            </h3>
             <div className="space-y-8">
               {integrations.map((category, idx) => (
                 <div key={idx}>
@@ -185,8 +186,9 @@ export function Integrations() {
             Universal Compatibility
           </h3>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Works with any website, framework, or platform. If you can add a script tag, 
-            you can use Hector Analytics. No dependencies, no conflicts, just insights.
+            Works with any website, framework, or platform. If you can add a
+            script tag, you can use Hector Analytics. No dependencies, no
+            conflicts, just insights.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/docs" className="text-primary hover:underline">

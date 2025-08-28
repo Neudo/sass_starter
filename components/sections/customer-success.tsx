@@ -3,59 +3,60 @@ import { motion } from "motion/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { 
+import {
   Users,
   Quote,
   Star,
   TrendingUp,
   ArrowRight,
   Building2,
-  Globe,
-  Zap
 } from "lucide-react";
 
 export function CustomerSuccess() {
   const testimonials = [
     {
-      quote: "Switching to Hector Analytics was the best decision we made. Our page load times improved by 40% and we finally have reliable data without privacy concerns.",
+      quote:
+        "Switching to Hector Analytics was the best decision we made. Our page load times improved by 40% and we finally have reliable data without privacy concerns.",
       author: "Sarah Chen",
       role: "Marketing Director",
       company: "TechStart",
       industry: "SaaS",
       results: [
         { metric: "Page Load", improvement: "+40%" },
-        { metric: "Data Accuracy", improvement: "+95%" }
-      ]
+        { metric: "Data Accuracy", improvement: "+95%" },
+      ],
     },
     {
-      quote: "As a blogger, I was tired of cookie banners and unreliable data. Hector gives me everything I need to understand my audience without the privacy headache.",
+      quote:
+        "As a blogger, I was tired of cookie banners and unreliable data. Hector gives me everything I need to understand my audience without the privacy headache.",
       author: "Mike Rodriguez",
       role: "Content Creator",
       company: "Digital Nomad Blog",
       industry: "Media",
       results: [
         { metric: "Visitor Tracking", improvement: "+100%" },
-        { metric: "Bounce Rate", improvement: "-25%" }
-      ]
+        { metric: "Bounce Rate", improvement: "-25%" },
+      ],
     },
     {
-      quote: "Our e-commerce conversion tracking is now more accurate than ever. No more lost data from ad blockers or cookie rejections.",
+      quote:
+        "Our e-commerce conversion tracking is now more accurate than ever. No more lost data from ad blockers or cookie rejections.",
       author: "Emma Thompson",
       role: "E-commerce Manager",
       company: "GreenGadgets",
       industry: "Retail",
       results: [
         { metric: "Conversion Tracking", improvement: "+60%" },
-        { metric: "Customer Insights", improvement: "+80%" }
-      ]
-    }
+        { metric: "Customer Insights", improvement: "+80%" },
+      ],
+    },
   ];
 
   const stats = [
     { number: "1,000+", label: "Happy Customers" },
     { number: "50M+", label: "Page Views Tracked" },
     { number: "99.9%", label: "Uptime" },
-    { number: "< 2min", label: "Setup Time" }
+    { number: "< 2min", label: "Setup Time" },
   ];
 
   const companies = [
@@ -64,7 +65,7 @@ export function CustomerSuccess() {
     { name: "CreativeAgency", logo: "🎨" },
     { name: "DataLabs", logo: "📊" },
     { name: "CloudCorp", logo: "☁️" },
-    { name: "InnovateCo", logo: "🚀" }
+    { name: "InnovateCo", logo: "🚀" },
   ];
 
   return (
@@ -85,8 +86,8 @@ export function CustomerSuccess() {
               Loved by Teams Worldwide
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              See how businesses of all sizes use Hector Analytics to grow 
-              while respecting user privacy.
+              See how businesses of all sizes use Hector Analytics to grow while
+              respecting user privacy.
             </p>
           </motion.div>
         </div>
@@ -122,16 +123,19 @@ export function CustomerSuccess() {
             >
               <div className="flex items-center gap-1 mb-4">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  <Star
+                    key={i}
+                    className="w-4 h-4 fill-yellow-400 text-yellow-400"
+                  />
                 ))}
               </div>
-              
+
               <Quote className="w-6 h-6 text-muted-foreground mb-3" />
-              
+
               <blockquote className="text-muted-foreground mb-4">
-                "{testimonial.quote}"
+                &quot;{testimonial.quote}&quot;
               </blockquote>
-              
+
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
                   <Building2 className="w-5 h-5 text-primary" />
@@ -173,7 +177,10 @@ export function CustomerSuccess() {
           </p>
           <div className="flex flex-wrap justify-center items-center gap-8">
             {companies.map((company, index) => (
-              <div key={index} className="flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity">
+              <div
+                key={index}
+                className="flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity"
+              >
                 <span className="text-2xl">{company.logo}</span>
                 <span className="font-medium">{company.name}</span>
               </div>
@@ -194,8 +201,9 @@ export function CustomerSuccess() {
             Join Thousands of Satisfied Customers
           </h3>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Start your privacy-first analytics journey today. See why teams choose 
-            Hector Analytics for accurate, compliant, and fast web analytics.
+            Start your privacy-first analytics journey today. See why teams
+            choose Hector Analytics for accurate, compliant, and fast web
+            analytics.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/auth/sign-up">

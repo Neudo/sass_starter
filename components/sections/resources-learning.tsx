@@ -2,7 +2,7 @@
 import { motion } from "motion/react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { 
+import {
   GraduationCap,
   BookOpen,
   Video,
@@ -10,7 +10,7 @@ import {
   Code,
   MessageCircle,
   ArrowRight,
-  ExternalLink
+  ExternalLink,
 } from "lucide-react";
 
 export function ResourcesLearning() {
@@ -24,7 +24,7 @@ export function ResourcesLearning() {
           description: "Watch how to install and configure Hector Analytics",
           type: "Video",
           link: "/learn/setup-tutorial",
-          duration: "5 min"
+          duration: "5 min",
         },
         {
           icon: FileText,
@@ -32,7 +32,7 @@ export function ResourcesLearning() {
           description: "Step-by-step instructions for all platforms",
           type: "Guide",
           link: "/docs/installation",
-          duration: "3 min read"
+          duration: "3 min read",
         },
         {
           icon: Code,
@@ -40,9 +40,9 @@ export function ResourcesLearning() {
           description: "Ready-to-use code snippets for popular frameworks",
           type: "Code",
           link: "/docs/examples",
-          duration: "Quick reference"
-        }
-      ]
+          duration: "Quick reference",
+        },
+      ],
     },
     {
       category: "Analytics Fundamentals",
@@ -53,7 +53,7 @@ export function ResourcesLearning() {
           description: "Learn the basics of website tracking and metrics",
           type: "Article",
           link: "/learn/analytics-basics",
-          duration: "10 min read"
+          duration: "10 min read",
         },
         {
           icon: FileText,
@@ -61,7 +61,7 @@ export function ResourcesLearning() {
           description: "Why cookieless tracking matters and how it works",
           type: "Guide",
           link: "/learn/privacy-first",
-          duration: "8 min read"
+          duration: "8 min read",
         },
         {
           icon: Video,
@@ -69,9 +69,9 @@ export function ResourcesLearning() {
           description: "Master the Hector Analytics interface",
           type: "Video",
           link: "/learn/dashboard-tour",
-          duration: "12 min"
-        }
-      ]
+          duration: "12 min",
+        },
+      ],
     },
     {
       category: "Advanced Topics",
@@ -82,7 +82,7 @@ export function ResourcesLearning() {
           description: "Complete reference for developers",
           type: "Docs",
           link: "/api",
-          duration: "Reference"
+          duration: "Reference",
         },
         {
           icon: FileText,
@@ -90,7 +90,7 @@ export function ResourcesLearning() {
           description: "Track user interactions beyond page views",
           type: "Tutorial",
           link: "/learn/custom-events",
-          duration: "15 min"
+          duration: "15 min",
         },
         {
           icon: BookOpen,
@@ -98,10 +98,10 @@ export function ResourcesLearning() {
           description: "Track sales, conversions, and customer behavior",
           type: "Guide",
           link: "/learn/ecommerce",
-          duration: "20 min"
-        }
-      ]
-    }
+          duration: "20 min",
+        },
+      ],
+    },
   ];
 
   const quickLinks = [
@@ -109,26 +109,26 @@ export function ResourcesLearning() {
       title: "Analytics Glossary",
       description: "Definitions of common analytics terms",
       icon: BookOpen,
-      link: "/glossary"
+      link: "/glossary",
     },
     {
       title: "Best Practices",
       description: "Tips for better data collection and analysis",
       icon: FileText,
-      link: "/learn/best-practices"
+      link: "/learn/best-practices",
     },
     {
       title: "Troubleshooting",
       description: "Solutions to common setup and tracking issues",
       icon: MessageCircle,
-      link: "/learn/troubleshooting"
+      link: "/learn/troubleshooting",
     },
     {
       title: "Migration Checklist",
       description: "Complete checklist for switching from other tools",
       icon: FileText,
-      link: "/learn/migration-checklist"
-    }
+      link: "/learn/migration-checklist",
+    },
   ];
 
   return (
@@ -149,8 +149,8 @@ export function ResourcesLearning() {
               Master Privacy-First Analytics
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              From basic setup to advanced analytics strategies, we've got the resources 
-              to help you succeed with Hector Analytics.
+              From basic setup to advanced analytics strategies, we&apos;ve got
+              the resources to help you succeed with Hector Analytics.
             </p>
           </motion.div>
         </div>
@@ -165,7 +165,9 @@ export function ResourcesLearning() {
               transition={{ duration: 0.5, delay: categoryIndex * 0.1 }}
               viewport={{ once: true }}
             >
-              <h3 className="text-2xl font-semibold mb-6">{category.category}</h3>
+              <h3 className="text-2xl font-semibold mb-6">
+                {category.category}
+              </h3>
               <div className="grid md:grid-cols-3 gap-6">
                 {category.items.map((item, index) => (
                   <Link key={index} href={item.link}>
@@ -247,7 +249,8 @@ export function ResourcesLearning() {
                 Need Personalized Help?
               </h3>
               <p className="text-muted-foreground">
-                Book a free 1-on-1 session with our analytics experts to get the most out of your data.
+                Book a free 1-on-1 session with our analytics experts to get the
+                most out of your data.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">

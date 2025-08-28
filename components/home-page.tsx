@@ -14,14 +14,9 @@ import Link from "next/link";
 
 // Import new sections
 import { HowItWorks } from "./sections/how-it-works";
-import { FeaturesDeepDive } from "./sections/features-deep-dive";
 import { WhyPrivacyMatters } from "./sections/why-privacy-matters";
 import { UseCases } from "./sections/use-cases";
-import { Pricing } from "./sections/pricing";
-import { Integrations } from "./sections/integrations";
 import { MigrationGuide } from "./sections/migration-guide";
-import { CustomerSuccess } from "./sections/customer-success";
-import { ResourcesLearning } from "./sections/resources-learning";
 import { FinalCTA } from "./sections/final-cta";
 
 export function HomePage() {
@@ -31,7 +26,7 @@ export function HomePage() {
 
       {/* New sections */}
       <HowItWorks />
-      <FeaturesDeepDive />
+      {/* <FeaturesDeepDive /> */}
       <WhyPrivacyMatters />
       <UseCases />
       <MigrationGuide />
@@ -40,7 +35,7 @@ export function HomePage() {
       {/* <ResourcesLearning /> */}
 
       {/* FAQ Preview */}
-      <section className="py-24">
+      <section className="py-24 bg-muted dark:bg-muted/40">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <motion.div

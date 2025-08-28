@@ -43,10 +43,8 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-xl sm:text-2xl text-muted-foreground max-w-4xl mx-auto mb-10"
           >
-            The cookieless web analytics platform that respects visitor privacy
-            while delivering powerful insights. No technical skills required -
-            GDPR compliant by design, 2-minute setup, and under 10KB tracking
-            script. Perfect for beginners and pros alike.
+            Privacy-first web analytics that actually works. No cookies, no
+            complexity, no compromises. GDPR-compliant by design.
           </motion.p>
 
           {/* CTA area */}
@@ -64,7 +62,7 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
                   size="lg"
                   className="text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
                 >
-                  Start Free - No Credit Card
+                  Start for free
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
@@ -98,7 +96,7 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
             </div>
             <div className="flex items-center gap-2">
               <Gauge className="w-4 h-4 text-secondary" />
-              <span>50x lighter than GA4</span>
+              <span>45x lighter than GA4</span>
             </div>
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-primary" />
@@ -255,22 +253,6 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
                         </div>
                         <p className="text-xs text-muted-foreground">
                           Own your data - export anytime, integrate anywhere
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* More Features Card */}
-                    <div className="bg-gradient-to-r from-primary/5 to-secondary/5 p-4 md:px-6 md:pt-6 md:pb-10 rounded-lg border border-primary/10 shadow-sm">
-                      <div className="flex flex-col items-center gap-2 mb-2 p-4 justify-center">
-                        <div className="flex items-center gap-2">
-                          <TrendingUp className="h-5 w-5 md:h-8 md:w-8 text-primary" />
-                          <span className="text-xl md:text-3xl text-center font-bold text-primary">
-                            Everything You Need
-                          </span>
-                        </div>
-                        <p className="text-sm md:text-base text-muted-foreground text-center mt-2">
-                          Referral tracking • UTM campaigns • Device insights •
-                          Page views • Custom events and more...
                         </p>
                       </div>
                     </div>

@@ -2,23 +2,16 @@
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { 
+import {
   ArrowRight,
   Users,
   TrendingUp,
   Shield,
-  Clock,
   Play,
-  CheckCircle
+  CheckCircle,
 } from "lucide-react";
 
 export function FinalCTA() {
-  const stats = [
-    { icon: Users, number: "1,000+", label: "websites trust us" },
-    { icon: TrendingUp, number: "50M+", label: "events tracked monthly" },
-    { icon: Shield, number: "100%", label: "privacy compliant" },
-    { icon: Clock, number: "< 2min", label: "setup time" }
-  ];
 
   const features = [
     "Free forever plan",
@@ -26,7 +19,7 @@ export function FinalCTA() {
     "2-minute setup",
     "GDPR compliant by design",
     "Cancel anytime",
-    "Expert support included"
+    "Expert support included",
   ];
 
   return (
@@ -43,31 +36,9 @@ export function FinalCTA() {
             Ready to Ditch Google Analytics?
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            Join thousands of websites that have made the switch to privacy-first analytics. 
-            Start tracking your visitors without compromising their privacy or your site's performance.
+            Start collecting data for free. Start tracking your visitors without
+            compromising their privacy or your site&apos;s performance.
           </p>
-          
-          {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {stats.map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.05 }}
-                viewport={{ once: true }}
-                className="text-center"
-              >
-                <div className="inline-flex p-3 rounded-full bg-primary/10 mb-3">
-                  <stat.icon className="w-6 h-6 text-primary" />
-                </div>
-                <div className="text-2xl lg:text-3xl font-bold text-primary mb-1">
-                  {stat.number}
-                </div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
         </motion.div>
 
         <motion.div
@@ -75,7 +46,7 @@ export function FinalCTA() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
           viewport={{ once: true }}
-          className="bg-card rounded-2xl border shadow-lg p-8 lg:p-12 max-w-4xl mx-auto"
+          className="bg-card rounded-2xl border shadow-lg p-8 lg:p-12 max-w-6xl mx-auto"
         >
           <div className="grid lg:grid-cols-2 gap-8 items-center">
             <div>
@@ -91,7 +62,7 @@ export function FinalCTA() {
                 ))}
               </div>
             </div>
-            
+
             <div className="text-center lg:text-left">
               <div className="mb-8">
                 <div className="text-4xl font-bold mb-2">Start Free Today</div>
@@ -99,7 +70,7 @@ export function FinalCTA() {
                   No credit card • No setup fees • No surprises
                 </div>
               </div>
-              
+
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link href="/auth/sign-up">
                   <Button size="lg" className="text-lg px-8 py-6">
@@ -108,9 +79,9 @@ export function FinalCTA() {
                   </Button>
                 </Link>
                 <Link href="/hectoranalytics.com" target="_blank">
-                  <Button 
-                    variant="outline" 
-                    size="lg" 
+                  <Button
+                    variant="outline"
+                    size="lg"
                     className="text-lg px-8 py-6"
                   >
                     <Play className="mr-2 w-5 h-5" />
@@ -118,9 +89,9 @@ export function FinalCTA() {
                   </Button>
                 </Link>
               </div>
-              
+
               <p className="text-sm text-muted-foreground mt-4">
-                Join 1,000+ websites already using Hector Analytics
+                Join early adopters.
               </p>
             </div>
           </div>
@@ -140,10 +111,6 @@ export function FinalCTA() {
               <span>GDPR Compliant</span>
             </div>
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              <span>99.9% Uptime</span>
-            </div>
-            <div className="flex items-center gap-2">
               <Users className="w-4 h-4" />
               <span>Expert Support</span>
             </div>
@@ -152,10 +119,16 @@ export function FinalCTA() {
               <span>Real-time Data</span>
             </div>
           </div>
-          
+
           <div className="mt-8 text-xs text-muted-foreground">
-            Questions? <Link href="/contact" className="text-primary hover:underline">Contact our team</Link> • 
-            <Link href="/faq" className="text-primary hover:underline ml-2">View FAQ</Link>
+            Questions?{" "}
+            <Link href="/contact" className="text-primary hover:underline">
+              Contact our team
+            </Link>{" "}
+            •
+            <Link href="/faq" className="text-primary hover:underline ml-2">
+              View FAQ
+            </Link>
           </div>
         </motion.div>
       </div>
