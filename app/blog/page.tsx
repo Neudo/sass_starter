@@ -1,7 +1,9 @@
 import Link from "next/link";
+import Script from "next/script";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { blogSchema } from "@/lib/schema";
 import { Clock, Eye, Calendar } from "lucide-react";
 
 interface BlogPost {
@@ -35,6 +37,13 @@ export default async function BlogPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Script
+        id="blog-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(blogSchema)
+        }}
+      />
       {/* Header */}
       <div className="bg-white border-b">
         <div className="container mx-auto px-4 py-16">
@@ -177,6 +186,9 @@ export async function generateMetadata() {
     title: "Blog - Hector Analytics | Privacy-First Web Analytics Guides",
     description: "Expert guides on cookie-free web analytics, GDPR compliance, and privacy-first alternatives to Google Analytics. Learn from industry professionals.",
     keywords: ["cookie-free analytics", "GDPR compliance", "privacy-first", "Google Analytics alternative", "web analytics blog"],
+    alternates: {
+      canonical: "https://www.hectoranalytics.com/blog",
+    },
     openGraph: {
       title: "Hector Analytics Blog - Privacy-First Analytics Guides",
       description: "Expert insights on privacy-respecting web analytics and GDPR compliance",

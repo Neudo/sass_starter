@@ -19,7 +19,8 @@
       "mcp__supabase__list_tables",
       "mcp__ide__getDiagnostics",
       "Bash(pnpm add:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(curl:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

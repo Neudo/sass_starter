@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Script from "next/script";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { generateArticleSchema } from "@/lib/schema";
 import { Clock, Calendar, Eye, ArrowLeft, Share2 } from "lucide-react";
 
 interface BlogPostProps {
@@ -59,8 +61,27 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
 
   const relatedPosts = await getRelatedPosts(post.slug, post.keywords);
 
+  const articleSchema = generateArticleSchema({
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt,
+    content: post.content,
+    publishedAt: post.published_at,
+    keywords: post.keywords,
+    readingTime: post.reading_time,
+    viewCount: post.view_count + 1, // +1 because we incremented it
+    featuredImage: post.featured_image
+  });
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <Script
+        id="article-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(articleSchema)
+        }}
+      />
       {/* Header */}
       <div className="bg-white border-b">
         <div className="container mx-auto px-4 py-8">
@@ -215,6 +236,9 @@ export async function generateMetadata({ params }: BlogPostProps) {
     title: `${post.title} | Blog Hector Analytics`,
     description: post.meta_description || post.excerpt,
     keywords: post.keywords.join(", "),
+    alternates: {
+      canonical: `https://www.hectoranalytics.com/blog/${post.slug}`,
+    },
     openGraph: {
       title: post.title,
       description: post.meta_description || post.excerpt,

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
+import { combinedHomeSchema } from "@/lib/schema";
 import "./globals.css";
 import Script from "next/script";
 
@@ -17,10 +18,13 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
+  alternates: {
+    canonical: "https://www.hectoranalytics.com",
+  },
   openGraph: {
     title: "Hector Analytics | Privacy-First Web Analytics",
     description: "Cookie-free, GDPR compliant analytics that respects user privacy while delivering powerful insights.",
-    url: "https://hectoranalytics.com",
+    url: "https://www.hectoranalytics.com",
     siteName: "Hector Analytics",
     type: "website",
   },
@@ -57,30 +61,7 @@ export default function RootLayout({
           id="schema-org" 
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "SoftwareApplication",
-              "name": "Hector Analytics",
-              "applicationCategory": "BusinessApplication",
-              "description": "Privacy-first web analytics platform that provides actionable insights without cookies. GDPR compliant alternative to Google Analytics.",
-              "operatingSystem": "Web Browser",
-              "offers": {
-                "@type": "Offer",
-                "price": "9",
-                "priceCurrency": "EUR",
-                "priceValidUntil": "2025-12-31"
-              },
-              "aggregateRating": {
-                "@type": "AggregateRating",
-                "ratingValue": "4.8",
-                "ratingCount": "127"
-              },
-              "developer": {
-                "@type": "Organization",
-                "name": "Hector Analytics",
-                "url": "https://hectoranalytics.com"
-              }
-            })
+            __html: JSON.stringify(combinedHomeSchema)
           }}
         />
         <Script src="/script.js" />
