@@ -76,6 +76,47 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if this session has already completed this custom event
+    const { data: existingCompletion, error: checkError } = await adminClient
+      .from("custom_event_completions")
+      .select("id")
+      .eq("custom_event_id", customEventData.id)
+      .eq("session_id", session_id)
+      .single();
+
+    if (checkError && checkError.code !== "PGRST116") {
+      console.error("Error checking existing custom event completion:", checkError);
+      return NextResponse.json(
+        { error: "Failed to check existing completion" },
+        { 
+          status: 500,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+        }
+      );
+    }
+
+    // If already completed, return success without duplicating
+    if (existingCompletion) {
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Custom event already recorded for this session",
+          already_completed: true,
+        },
+        {
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+        }
+      );
+    }
+
     // Get session data for metadata (don't fail if session doesn't exist yet)
     const { data: sessionData, error: sessionError } = await adminClient
       .from("sessions")
