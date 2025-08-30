@@ -46,7 +46,7 @@ const STRIPE_PRICE_IDS_TEST: Record<string, string> = {
 // TODO: Remplacer ces IDs par les vrais price IDs de production quand ils seront créés
 const STRIPE_PRICE_IDS_PROD: Record<string, string> = {
   // Professional Monthly (Production)
-  professional_monthly_10k: "price_1S0HlHRFlE5uDVLg03oHJ1vQ",
+  professional_monthly_10k: "price_1S1kDDRFlE5uDVLgthW4nHvt",
   professional_monthly_100k: "price_1S0HlHRFlE5uDVLgfVC5oSdN",
   professional_monthly_250k: "price_1S0HlHRFlE5uDVLggm9SqFOz",
   professional_monthly_500k: "price_1S0HlHRFlE5uDVLgAoU7F0XW",
@@ -110,8 +110,8 @@ export const EVENT_TIERS = [
 // Configuration des tarifs pour chaque tier
 export const PRICING_TIERS = {
   professional: {
-    monthly: [14, 29, 46, 69, 99, 129, 189, 229, "Custom"],
-    yearly: [140, 290, 450, 690, 990, 1290, 1890, 2290, "Custom"],
+    monthly: [9, 29, 46, 69, 99, 129, 189, 229, "Custom"],
+    yearly: [90, 290, 450, 690, 990, 1290, 1890, 2290, "Custom"],
   },
 };
 
