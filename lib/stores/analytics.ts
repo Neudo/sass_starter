@@ -456,11 +456,23 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       totalPageviews += visitedPagesCount;
 
       // Calculate duration (difference between created_at and last_seen)
+      // Cap session duration at 30 minutes (1800 seconds) to avoid unrealistic values
       if (session.created_at && session.last_seen) {
         const created = new Date(session.created_at).getTime();
         const lastSeen = new Date(session.last_seen).getTime();
-        const duration = Math.round((lastSeen - created) / 1000); // in seconds
-        totalDuration += duration;
+        let duration = Math.round((lastSeen - created) / 1000); // in seconds
+        
+        // Cap duration at 30 minutes (1800 seconds)
+        // Sessions longer than this are likely idle/inactive
+        const MAX_SESSION_DURATION = 1800; // 30 minutes in seconds
+        if (duration > MAX_SESSION_DURATION) {
+          duration = MAX_SESSION_DURATION;
+        }
+        
+        // Only count positive durations
+        if (duration > 0) {
+          totalDuration += duration;
+        }
       }
 
       // Count bounces (sessions with only 1 pageview)
@@ -475,11 +487,14 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
     const avgDuration = totalVisits > 0 ? Math.round(totalDuration / totalVisits) : 0;
     
     // Calculate trends using previous period data
-    const { previousSessions, calculateTrends } = state;
+    const { previousSessions, calculateTrends, dateRangeOption } = state;
     let change;
     
-    if (previousSessions.length > 0) {
-      // Calculate metrics for previous period
+    // Always calculate trends for supported date ranges (not realtime or alltime)
+    const shouldCalculateTrends = !['realtime', 'alltime'].includes(dateRangeOption);
+    
+    if (shouldCalculateTrends) {
+      // Calculate metrics for previous period, even if no sessions
       const prevUniqueVisitorsSet = new Set<string>();
       let prevTotalPageviews = 0;
       
@@ -618,7 +633,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       let previousSessions: Session[] = [];
       const previousRange = getPreviousDateRange(dateRangeOption as DateRangeOption);
       
-      if (previousRange) {
+      if (previousRange && !isRealtimeMode) {
         const previousQuery = supabase
           .from("sessions")
           .select("*")
@@ -630,6 +645,10 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
         
         if (!prevError && prevSessions) {
           previousSessions = prevSessions;
+          console.log(`Fetched ${prevSessions.length} sessions for previous period (${dateRangeOption}):`, {
+            from: previousRange.from.toISOString(),
+            to: previousRange.to.toISOString()
+          });
         }
       }
       

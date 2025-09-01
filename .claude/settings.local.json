@@ -20,7 +20,8 @@
       "mcp__ide__getDiagnostics",
       "Bash(pnpm add:*)",
       "Bash(npx tsc:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(pnpm dev:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
