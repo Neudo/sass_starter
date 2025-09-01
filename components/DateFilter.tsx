@@ -57,40 +57,41 @@ export function getDateRange(
   option: DateRangeOption
 ): { from: Date; to: Date } | null {
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  // Use UTC for consistent timezone handling
+  const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
   switch (option) {
     case "today":
       return {
-        from: today,
-        to: new Date(today.getTime() + 24 * 60 * 60 * 1000 - 1),
+        from: todayUTC,
+        to: new Date(todayUTC.getTime() + 24 * 60 * 60 * 1000 - 1),
       };
     case "yesterday":
-      const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+      const yesterdayUTC = new Date(todayUTC.getTime() - 24 * 60 * 60 * 1000);
       return {
-        from: yesterday,
-        to: new Date(today.getTime() - 1),
+        from: yesterdayUTC,
+        to: new Date(todayUTC.getTime() - 1),
       };
     case "last7days":
-      const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const sevenDaysAgoUTC = new Date(todayUTC.getTime() - 7 * 24 * 60 * 60 * 1000);
       return {
-        from: sevenDaysAgo,
+        from: sevenDaysAgoUTC,
         to: now,
       };
     case "last30days":
-      const thirtyDaysAgo = new Date(
-        today.getTime() - 30 * 24 * 60 * 60 * 1000
+      const thirtyDaysAgoUTC = new Date(
+        todayUTC.getTime() - 30 * 24 * 60 * 60 * 1000
       );
       return {
-        from: thirtyDaysAgo,
+        from: thirtyDaysAgoUTC,
         to: now,
       };
     case "last90days":
-      const ninetyDaysAgo = new Date(
-        today.getTime() - 90 * 24 * 60 * 60 * 1000
+      const ninetyDaysAgoUTC = new Date(
+        todayUTC.getTime() - 90 * 24 * 60 * 60 * 1000
       );
       return {
-        from: ninetyDaysAgo,
+        from: ninetyDaysAgoUTC,
         to: now,
       };
     case "alltime":
@@ -109,47 +110,47 @@ export function getPreviousDateRange(
   option: DateRangeOption
 ): { from: Date; to: Date } | null {
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
   switch (option) {
     case "today":
       // Previous period: yesterday
-      const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+      const yesterdayUTC = new Date(todayUTC.getTime() - 24 * 60 * 60 * 1000);
       return {
-        from: yesterday,
-        to: new Date(today.getTime() - 1),
+        from: yesterdayUTC,
+        to: new Date(todayUTC.getTime() - 1),
       };
     case "yesterday":
       // Previous period: day before yesterday
-      const dayBeforeYesterday = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000);
-      const yesterdayStart = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+      const dayBeforeYesterdayUTC = new Date(todayUTC.getTime() - 2 * 24 * 60 * 60 * 1000);
+      const yesterdayStartUTC = new Date(todayUTC.getTime() - 24 * 60 * 60 * 1000);
       return {
-        from: dayBeforeYesterday,
-        to: new Date(yesterdayStart.getTime() - 1),
+        from: dayBeforeYesterdayUTC,
+        to: new Date(yesterdayStartUTC.getTime() - 1),
       };
     case "last7days":
       // Previous period: 7 days before the last 7 days (14 days ago to 7 days ago)
-      const fourteenDaysAgo = new Date(today.getTime() - 14 * 24 * 60 * 60 * 1000);
-      const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const fourteenDaysAgoUTC = new Date(todayUTC.getTime() - 14 * 24 * 60 * 60 * 1000);
+      const sevenDaysAgoUTC = new Date(todayUTC.getTime() - 7 * 24 * 60 * 60 * 1000);
       return {
-        from: fourteenDaysAgo,
-        to: sevenDaysAgo,
+        from: fourteenDaysAgoUTC,
+        to: sevenDaysAgoUTC,
       };
     case "last30days":
       // Previous period: 30 days before the last 30 days (60 days ago to 30 days ago)
-      const sixtyDaysAgo = new Date(today.getTime() - 60 * 24 * 60 * 60 * 1000);
-      const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const sixtyDaysAgoUTC = new Date(todayUTC.getTime() - 60 * 24 * 60 * 60 * 1000);
+      const thirtyDaysAgoUTC = new Date(todayUTC.getTime() - 30 * 24 * 60 * 60 * 1000);
       return {
-        from: sixtyDaysAgo,
-        to: thirtyDaysAgo,
+        from: sixtyDaysAgoUTC,
+        to: thirtyDaysAgoUTC,
       };
     case "last90days":
       // Previous period: 90 days before the last 90 days (180 days ago to 90 days ago)
-      const oneEightyDaysAgo = new Date(today.getTime() - 180 * 24 * 60 * 60 * 1000);
-      const ninetyDaysAgo = new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000);
+      const oneEightyDaysAgoUTC = new Date(todayUTC.getTime() - 180 * 24 * 60 * 60 * 1000);
+      const ninetyDaysAgoUTC = new Date(todayUTC.getTime() - 90 * 24 * 60 * 60 * 1000);
       return {
-        from: oneEightyDaysAgo,
-        to: ninetyDaysAgo,
+        from: oneEightyDaysAgoUTC,
+        to: ninetyDaysAgoUTC,
       };
     case "alltime":
       return null; // No comparison for all time

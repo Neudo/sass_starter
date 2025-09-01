@@ -18,6 +18,7 @@ import { WhyPrivacyMatters } from "./sections/why-privacy-matters";
 // import { UseCases } from "./sections/use-cases";
 import { MigrationGuide } from "./sections/migration-guide";
 import { FinalCTA } from "./sections/final-cta";
+import { PricingSection } from "./pricing-section";
 
 export function HomePage() {
   return (
@@ -95,6 +96,7 @@ export function HomePage() {
         </div>
       </section>
 
+      <PricingSection />
       <FinalCTA />
     </div>
   );

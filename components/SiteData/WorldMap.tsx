@@ -24,10 +24,7 @@ interface FeatureShape {
   properties: { name: string };
 }
 
-export default function WorldMap({
-  width,
-  height,
-}: GeoMercatorProps) {
+export default function WorldMap({ width, height }: GeoMercatorProps) {
   const [world, setWorld] = useState<{
     type: "FeatureCollection";
     features: FeatureShape[];
@@ -39,7 +36,8 @@ export default function WorldMap({
   } | null>(null);
 
   const { theme } = useTheme();
-  const { addFilter, hasFilter, removeFilter, getAnalyticsData } = useAnalyticsStore();
+  const { addFilter, hasFilter, removeFilter, getAnalyticsData } =
+    useAnalyticsStore();
   const analyticsData = getAnalyticsData();
   // Charger les données géographiques
 
@@ -148,7 +146,7 @@ export default function WorldMap({
           width={width}
           height={height}
           fill={
-            theme === "dark" ? "rgb(12 20 37)" : "oklch(93.2% 0.032 255.585)"
+            theme === "dark" ? "rgb(12 20 37)" : "oklch(93.2% 0.012 255.585)"
           }
           rx={14}
         />

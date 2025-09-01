@@ -604,8 +604,8 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
         query = query.gte("last_seen", thirtyMinutesAgo);
       } else if (dateRange) {
         query = query
-          .gte("created_at", dateRange.from.toISOString())
-          .lte("created_at", dateRange.to.toISOString());
+          .gte("last_seen", dateRange.from.toISOString())
+          .lte("last_seen", dateRange.to.toISOString());
       }
       
       const { data: sessions, error } = await query;
@@ -623,8 +623,8 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
           .from("sessions")
           .select("*")
           .eq("site_id", siteId)
-          .gte("created_at", previousRange.from.toISOString())
-          .lte("created_at", previousRange.to.toISOString());
+          .gte("last_seen", previousRange.from.toISOString())
+          .lte("last_seen", previousRange.to.toISOString());
         
         const { data: prevSessions, error: prevError } = await previousQuery;
         

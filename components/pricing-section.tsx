@@ -27,7 +27,6 @@ export function PricingSection({
   showUpgradeButtons = false,
 }: PricingSectionProps) {
   const router = useRouter();
-  const onNavigateToPricing = () => router.push("/pricing");
   const [isYearly, setIsYearly] = useState(false);
   const [eventTier, setEventTier] = useState(0); // Index for event tiers
   const [user, setUser] = useState<User | null>(null);
@@ -84,24 +83,9 @@ export function PricingSection({
             >
               Pricing
             </Badge>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
-              Go as you growth
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-8">
+              Start Free, Scale When Ready
             </h2>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <div className="flex items-center gap-2 text-green-600">
-                <Check className="w-5 h-5" />
-                <span>30 days free</span>
-              </div>
-              <div className="flex items-center gap-2 text-green-600">
-                <Check className="w-5 h-5" />
-                <span>Cancel anytime</span>
-              </div>
-              <div className="flex items-center gap-2 text-green-600">
-                <Check className="w-5 h-5" />
-                <span>No hidden fees</span>
-              </div>
-            </div>
 
             {/* Annual/Monthly toggle */}
             <div className="relative flex items-center justify-center gap-4 mb-10 bg-slate-50 dark:bg-slate-800 w-fit px-4 py-4 mx-auto rounded-lg">
@@ -140,7 +124,6 @@ export function PricingSection({
           </motion.div>
         </div>
 
-        {/* Two Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 max-w-4xl mx-auto">
           {/* Hobby Card */}
           <motion.div
@@ -157,11 +140,11 @@ export function PricingSection({
                 </p>
 
                 <div className="space-y-2">
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-4xl font-bold text-white">Free</span>
-                  </div>
                   <div className="text-lg font-semibold text-primary">
                     {PLAN_LIMITS.hobby.pageviews.toLocaleString()} events/month
+                  </div>
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-4xl font-bold text-white">$0</span>
                   </div>
                 </div>
               </CardHeader>
@@ -246,7 +229,7 @@ export function PricingSection({
                   ) : (
                     <>
                       <div className="flex items-baseline justify-center gap-1">
-                        <span className="text-4xl font-bold text-primary">
+                        <span className="text-4xl font-bold">
                           ${isYearly ? yearlyPrice : monthlyPrice}
                         </span>
                         <span className="text-muted-foreground">
@@ -274,7 +257,7 @@ export function PricingSection({
                 <Button
                   className="w-full"
                   onClick={() => handleStartTrial("professional")}
-                  disabled={loading || isCustomTier}
+                  disabled={loading}
                 >
                   {isCustomTier
                     ? "Contact us"
@@ -312,26 +295,6 @@ export function PricingSection({
             </Card>
           </motion.div>
         </div>
-
-        {!showFullPage && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            viewport={{ once: true }}
-            className="text-center mt-12"
-          >
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={onNavigateToPricing}
-              className="border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground"
-            >
-              View all pricing details
-              <ArrowRight className="ml-2 w-4 h-4" />
-            </Button>
-          </motion.div>
-        )}
       </div>
     </section>
   );

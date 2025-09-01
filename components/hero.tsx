@@ -27,13 +27,13 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="sun text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight mb-6"
+            className="sun text-4xl sm:text-5xl lg:text-6xl xl:text-6xl font-bold tracking-tight mb-6"
           >
-            Ditch Google Analytics.{" "}
+            The privacy-first{" "}
             <span className="bg-gradient-to-r from-primary via-ring to-secondary bg-clip-text text-transparent">
-              Embrace Privacy.{" "}
+              analytics platform <br />
             </span>
-            Keep Your Data.
+            simple to use
           </motion.h1>
 
           {/* Subtitle */}
@@ -41,10 +41,10 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-xl sm:text-2xl text-muted-foreground max-w-4xl mx-auto mb-10"
+            className="text-xl sm:text-2xl text-muted-foreground max-w-2xl mx-auto mb-10"
           >
-            Privacy-first web analytics that actually works. No cookies, no
-            complexity, no compromises. GDPR-compliant by design.
+            Track your visitors, not their personal data. Clean insights without
+            cookies or complexity. All data in a single page.
           </motion.p>
 
           {/* CTA area */}

@@ -88,37 +88,11 @@ export function HowItWorks() {
           ))}
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          viewport={{ once: true }}
-          className="mt-16 bg-card rounded-lg border p-8 text-center"
-        >
-          <h3 className="text-2xl font-semibold mb-4">Installation Example</h3>
-          <div className="bg-muted rounded-md p-4 font-mono overflow-scroll text-sm text-left max-w-2xl mx-auto">
-            <span className="text-muted-foreground">
-              &lt;!-- Add before &lt;/body&gt; tag --&gt;
-            </span>
-            <br />
-            <span className="text-primary">&lt;script</span>
-            <span className="text-secondary"> async defer</span>
-            <br />
-            <span className="text-secondary ml-4">src=</span>
-            <span className="text-ring">
-              &quot;https://hectoranalytics.com/script.js&quot;
-            </span>
-            <span className="text-primary">&gt;&lt;/script&gt;</span>
-          </div>
-          <p className="text-muted-foreground mt-4">
-            That&apos;s it! Your analytics are now live and GDPR-compliant.
-          </p>
-          <Link href="/auth/sign-up">
-            <Button size="xl" className="mt-8 mx-auto block">
-              Start collecting data
-            </Button>
-          </Link>
-        </motion.div>
+        <Link href="/auth/sign-up">
+          <Button size="xl" className="mt-12 md:mt-24 mx-auto block">
+            Start collecting data
+          </Button>
+        </Link>
       </div>
     </section>
   );

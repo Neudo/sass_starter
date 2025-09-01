@@ -27,7 +27,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Skip tracking for dashboard pages
-    if (page && page.startsWith('/dashboard/')) {
+    if (page && page.startsWith("/dashboard/")) {
+      console.log("Skipping tracking for dashboard page");
+
       return new NextResponse(null, {
         status: 204,
         headers: {
@@ -51,7 +53,7 @@ export async function POST(req: NextRequest) {
 
     // Normalize domain - handle both with and without www
     const domainVariants = [domain];
-    if (domain.startsWith('www.')) {
+    if (domain.startsWith("www.")) {
       domainVariants.push(domain.substring(4));
     } else {
       domainVariants.push(`www.${domain}`);
@@ -100,8 +102,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Block sessions with suspicious null geolocation data (likely bots/proxies)
-    if (locationData.country === null || locationData.region === null || locationData.city === null) {
-      console.log(`Blocked suspicious session - Missing geolocation: Country=${locationData.country}, Region=${locationData.region}, City=${locationData.city}`);
+    if (
+      locationData.country === null ||
+      locationData.region === null ||
+      locationData.city === null
+    ) {
+      console.log(
+        `Blocked suspicious session - Missing geolocation: Country=${locationData.country}, Region=${locationData.region}, City=${locationData.city}`
+      );
       return new NextResponse(null, {
         status: 204,
         headers: {
