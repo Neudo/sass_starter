@@ -120,7 +120,7 @@ export function WhyPrivacyMatters() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
           viewport={{ once: true }}
-          className="bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg border p-12 mb-16"
+          className="bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg  p-12 mb-16"
         >
           <h3 className="text-2xl font-bold text-center mb-8">
             The Hector Analytics Difference
