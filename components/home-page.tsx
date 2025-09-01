@@ -26,9 +26,9 @@ export function HomePage() {
       <Hero />
 
       {/* New sections */}
-      <HowItWorks />
       {/* <FeaturesDeepDive /> */}
       <WhyPrivacyMatters />
+      <HowItWorks />
       {/* <UseCases /> */}
       <MigrationGuide />
       {/* <Integrations /> */}
