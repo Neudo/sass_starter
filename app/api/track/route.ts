@@ -26,6 +26,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Skip tracking for dashboard pages
+    if (page && page.startsWith('/dashboard/')) {
+      return new NextResponse(null, {
+        status: 204,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      });
+    }
+
     // Parse user agent for device information
     const userAgent = req.headers.get("user-agent");
     const deviceData = parseUserAgent(userAgent);

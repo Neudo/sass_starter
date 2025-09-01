@@ -96,7 +96,7 @@ export function HowItWorks() {
           className="mt-16 bg-card rounded-lg border p-8 text-center"
         >
           <h3 className="text-2xl font-semibold mb-4">Installation Example</h3>
-          <div className="bg-muted rounded-md p-4 font-mono text-sm text-left max-w-2xl mx-auto">
+          <div className="bg-muted rounded-md p-4 font-mono overflow-scroll text-sm text-left max-w-2xl mx-auto">
             <span className="text-muted-foreground">
               &lt;!-- Add before &lt;/body&gt; tag --&gt;
             </span>

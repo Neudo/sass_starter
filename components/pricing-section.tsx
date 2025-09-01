@@ -70,7 +70,7 @@ export function PricingSection({
 
   return (
     <section className={`${showFullPage ? "py-24" : "py-16"} bg-background`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="text-center mb-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -137,38 +137,6 @@ export function PricingSection({
                 2 months free
               </Badge>
             </div>
-
-            {/* Event tier selector - Only affects Professional plan */}
-            <div className="max-w-2xl mx-auto mb-5 md:mb-16">
-              <label className="block text-sm font-medium text-muted-foreground mb-4 text-center">
-                Monthly page views (Professional plan)
-              </label>
-              <div className="relative px-4">
-                <Slider
-                  value={[eventTier]}
-                  onValueChange={(value) => setEventTier(value[0])}
-                  min={0}
-                  max={EVENT_TIERS.length - 1}
-                  step={1}
-                  className="mb-2"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                  {EVENT_TIERS.map((tier, index) => (
-                    <span
-                      key={tier.value}
-                      className={`cursor-pointer transition-all ${
-                        index === eventTier
-                          ? "text-primary font-semibold scale-110"
-                          : "hover:text-foreground"
-                      }`}
-                      onClick={() => setEventTier(index)}
-                    >
-                      {tier.label}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
           </motion.div>
         </div>
 
@@ -192,6 +160,9 @@ export function PricingSection({
                   <div className="flex items-baseline justify-center gap-1">
                     <span className="text-4xl font-bold text-white">Free</span>
                   </div>
+                  <div className="text-lg font-semibold text-primary">
+                    {PLAN_LIMITS.hobby.pageviews.toLocaleString()} events/month
+                  </div>
                 </div>
               </CardHeader>
 
@@ -206,12 +177,6 @@ export function PricingSection({
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
 
-                <div className="flex items-start gap-3">
-                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-secondary" />
-                  <span className="text-sm">
-                    {PLAN_LIMITS.hobby.pageviews.toLocaleString()} events/month
-                  </span>
-                </div>
                 <div className="flex items-start gap-3">
                   <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-secondary" />
                   <span className="text-sm">
@@ -248,13 +213,30 @@ export function PricingSection({
                 Most Popular
               </Badge>
 
-              <CardHeader className="text-center pb-8">
+              <CardHeader className="text-center pb-4">
                 <CardTitle className="text-xl mb-2">Professional</CardTitle>
                 <p className="text-muted-foreground mb-4">
                   For serious businesses
                 </p>
 
+                {/* Event tier selector */}
+                <div className="mb-4">
+                  <div className="relative px-2">
+                    <Slider
+                      value={[eventTier]}
+                      onValueChange={(value) => setEventTier(value[0])}
+                      min={0}
+                      max={EVENT_TIERS.length - 1}
+                      step={1}
+                      className="mb-2"
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
+                  <div className="text-lg font-semibold text-primary mb-2">
+                    {EVENT_TIERS[eventTier].label} events/month
+                  </div>
                   {isCustomTier ? (
                     <div className="flex items-baseline justify-center gap-1">
                       <span className="text-3xl font-bold text-primary">
@@ -304,12 +286,6 @@ export function PricingSection({
 
                 <div className="flex items-start gap-3">
                   <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
-                  <span className="text-sm">
-                    {EVENT_TIERS[eventTier].label} events/month
-                  </span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
                   <span className="text-sm">Unlimited websites</span>
                 </div>
                 <div className="flex items-start gap-3">
@@ -318,7 +294,11 @@ export function PricingSection({
                 </div>
                 <div className="flex items-start gap-3">
                   <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
-                  <span className="text-sm">Unlimited custom events</span>
+                  <span className="text-sm">Custom events</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
+                  <span className="text-sm">Funnels</span>
                 </div>
                 <div className="flex items-start gap-3">
                   <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
@@ -327,18 +307,6 @@ export function PricingSection({
                 <div className="flex items-start gap-3">
                   <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
                   <span className="text-sm">Google Analytics import</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
-                  <span className="text-sm">Teams (unlimited members)</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
-                  <span className="text-sm">Public dashboard</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
-                  <span className="text-sm">Funnels</span>
                 </div>
               </CardContent>
             </Card>

@@ -15,7 +15,7 @@ import Link from "next/link";
 // Import new sections
 import { HowItWorks } from "./sections/how-it-works";
 import { WhyPrivacyMatters } from "./sections/why-privacy-matters";
-import { UseCases } from "./sections/use-cases";
+// import { UseCases } from "./sections/use-cases";
 import { MigrationGuide } from "./sections/migration-guide";
 import { FinalCTA } from "./sections/final-cta";
 
@@ -28,7 +28,7 @@ export function HomePage() {
       <HowItWorks />
       {/* <FeaturesDeepDive /> */}
       <WhyPrivacyMatters />
-      <UseCases />
+      {/* <UseCases /> */}
       <MigrationGuide />
       {/* <Integrations /> */}
       {/* <CustomerSuccess /> */}
