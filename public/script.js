@@ -1,260 +1,122 @@
 (function () {
-  window.hectorAnalyticsLoaded = true;
-  
-  let heartbeatInterval, lastActivityTime = Date.now();
-  let trackedScrollEvents = new Set();
-  let funnelSteps = [], customEvents = [];
-  let clickEventsConfig = [], globalClickListenerAdded = false;
-  
-  // API URL helper
-  const getApiUrl = (path) => {
-    const hostname = window.location.hostname;
-    const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
-    
-    if (isLocal) {
-      return `http://localhost:3000/api/${path}`;
-    }
-    
-    // Always use Hector Analytics servers for production
-    return `https://hectoranalytics.com/api/${path}`;
-  };
-  
-  // Fetch helper with silent fail
-  const fetchApi = (url, data) => {
-    return fetch(url, {
+  if (window.h) return;
+  window.h = true;
+  let i,
+    t = Date.now(),
+    s = new Set(),
+    f = [],
+    e = [],
+    c = [],
+    g = false;
+  const u = (p) => `https://hectoranalytics.com/api/${p}`;
+  const r = (url, data) =>
+    fetch(url, {
       method: data ? "POST" : "GET",
       headers: { "Content-Type": "application/json" },
-      body: data ? JSON.stringify(data) : undefined,
-      keepalive: true
+      body: data ? JSON.stringify(data) : void 0,
+      keepalive: true,
     }).catch(() => {});
-  };
-  
-  // Get or create session ID
-  const getSessionId = () => {
-    let sessionId = localStorage.getItem("user_session_id");
-    if (!sessionId) {
-      sessionId = crypto.randomUUID();
-      localStorage.setItem("user_session_id", sessionId);
+  const d = () => {
+    let id = localStorage.getItem("user_session_id");
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem("user_session_id", id);
     }
-    return sessionId;
+    return id;
   };
-
-  // Get browser language
-  const getBrowserLanguage = () => {
-    // navigator.language est la langue active du navigateur
-    // navigator.languages[0] est la langue préférée
-    return navigator.language || navigator.languages?.[0] || 'en';
-  };
-  
-  // Main heartbeat function
-  function sendHeartbeat() {
+  const l = () => navigator.language || navigator.languages?.[0] || "en";
+  function h() {
     if (document.hidden) return;
-    
-    const sessionId = getSessionId();
-    const domain = window.location.hostname;
-    
-    fetchApi(getApiUrl('track'), {
-      sessionId,
+    const id = d(),
+      dom = location.hostname;
+    r(u("track"), {
+      sessionId: id,
       page: location.pathname,
-      domain,
+      domain: dom,
       referrer: document.referrer || null,
-      urlParams: window.location.search,
-      language: getBrowserLanguage()
+      urlParams: location.search,
+      language: l(),
     }).then(() => {
-      trackFunnels(sessionId);
-      trackCustomEvents(sessionId);
+      if (!f.length && !e.length) k(dom, id);
+      else o(dom, id);
     });
-    
-    lastActivityTime = Date.now();
+    t = Date.now();
   }
-  
-  // Track funnels - simplified approach
-  function trackFunnels(sessionId) {
-    const domain = window.location.hostname;
-    
-    if (!funnelSteps.length) {
-      fetchApi(getApiUrl('public-funnel-steps') + `?siteId=${domain}`)
-        .then(r => r?.ok ? r.json() : null)
-        .then(steps => {
-          if (steps && steps.length > 0) {
-            funnelSteps = steps;
-            setupFunnelListeners(domain, sessionId);
-          }
-        })
-        .catch(() => {});
-    } else {
-      setupFunnelListeners(domain, sessionId);
-    }
+  function k(dom, id) {
+    r(u(`tracking-config?siteId=${dom}`))
+      .then((res) => (res?.ok ? res.json() : null))
+      .then((config) => {
+        if (config) {
+          f = config.funnelSteps || [];
+          e = config.customEvents || [];
+          o(dom, id);
+        }
+      });
   }
-  
-  // Setup funnel event listeners
-  function setupFunnelListeners(domain, sessionId) {
-    const currentPage = window.location.pathname;
-    trackedScrollEvents = new Set();
-    
-    funnelSteps.forEach(step => {
-      // Handle page_view funnel steps
-      if (step.step_type === 'page_view') {
-        const shouldTrack = !step.url_pattern || 
-          (step.match_type === 'exact' ? currentPage === step.url_pattern : 
-           currentPage.includes(step.url_pattern));
-        
-        if (shouldTrack) {
-          trackFunnelEvent(step, domain, sessionId, 'page_view', {
-            page_url: window.location.href,
-            page_pattern: step.url_pattern || 'all'
+  function o(dom, id) {
+    const p = location.pathname;
+    s.clear();
+    f.forEach((step) => {
+      if (step.step_type === "page_view") {
+        const match =
+          !step.url_pattern ||
+          (step.match_type === "exact"
+            ? p === step.url_pattern
+            : p.includes(step.url_pattern));
+        if (match) {
+          r(u("track-funnel-step"), {
+            step_id: step.id,
+            session_id: id,
+            site_domain: dom,
           });
         }
         return;
       }
-      
-      // Handle custom_event funnel steps
-      if (step.step_type !== 'custom_event' || !step.event_config) return;
-      
-      const shouldTrack = !step.event_config.page_pattern || 
-        currentPage.includes(step.event_config.page_pattern);
-      
+      if (step.step_type !== "custom_event" || !step.event_config) return;
+      const shouldTrack =
+        !step.event_config.page_pattern ||
+        p.includes(step.event_config.page_pattern);
       if (!shouldTrack) return;
-      
       const { event_type, event_config } = step;
-      
-      if (event_type === 'click' && event_config.selector) {
-        setupClickHandler(event_config.selector, data => 
-          trackFunnelEvent(step, domain, sessionId, 'click', data));
-      } else if (event_type === 'scroll') {
-        setupScrollHandler(step, domain, sessionId, true);
-      } else if (event_type === 'click_link' && event_config.url_pattern) {
-        setupLinkHandler(event_config, data => 
-          trackFunnelEvent(step, domain, sessionId, 'click_link', data));
+      if (event_type === "click" && event_config.selector) {
+        m(event_config.selector, () =>
+          r(u("track-funnel-step"), {
+            step_id: step.id,
+            session_id: id,
+            site_domain: dom,
+          })
+        );
+      } else if (event_type === "scroll") {
+        n(step, dom, id, true);
+      } else if (event_type === "click_link" && event_config.url_pattern) {
+        v(event_config, () =>
+          r(u("track-funnel-step"), {
+            step_id: step.id,
+            session_id: id,
+            site_domain: dom,
+          })
+        );
       }
     });
-  }
-  
-  // Generic click handler
-  function setupClickHandler(selector, callback) {
-    document.addEventListener('click', e => {
-      try {
-        let target = e.target.matches?.(selector) ? e.target : 
-                    e.target.closest?.(selector);
-        if (target) {
-          callback({
-            selector,
-            element: target.tagName.toLowerCase(),
-            text: target.textContent?.trim().substring(0, 100) || ''
-          });
-        }
-      } catch {}
-    });
-  }
-  
-  // Generic scroll handler
-  function setupScrollHandler(config, domain, sessionId, isFunnel) {
-    const percentage = isFunnel ? config.event_config?.scroll_percentage : 
-                                 config.trigger_config?.scroll_percentage;
-    const eventKey = `scroll_${config.id}_${percentage || 'any'}`;
-    
-    if (trackedScrollEvents.has(eventKey)) return;
-    trackedScrollEvents.add(eventKey);
-    
-    let triggered = false;
-    const handleScroll = () => {
-      if (triggered) return;
-      
-      const scrollPct = (window.pageYOffset || document.documentElement.scrollTop) / 
-                       (document.documentElement.scrollHeight - window.innerHeight) * 100;
-      
-      if (!percentage || scrollPct >= percentage) {
-        triggered = true;
-        const data = {
-          scroll_percentage: percentage ? Math.round(scrollPct) : 'any',
-          target_percentage: percentage
-        };
-        
-        if (isFunnel) {
-          trackFunnelEvent(config, domain, sessionId, 'scroll', data);
-        } else {
-          triggerCustomEvent(config.name, domain, sessionId, data);
-        }
-        
-        window.removeEventListener('scroll', handleScroll);
-      }
-    };
-    
-    window.addEventListener('scroll', handleScroll, { passive: true });
-  }
-  
-  // Link click handler
-  function setupLinkHandler(config, callback) {
-    const { url_pattern, link_text, exact_match } = config;
-    
-    document.addEventListener('click', e => {
-      try {
-        const link = e.target.tagName === 'A' ? e.target : e.target.closest('a');
-        if (!link?.href) return;
-        
-        let linkPath;
-        try {
-          linkPath = new URL(link.href).pathname;
-        } catch {
-          linkPath = link.href;
-        }
-        
-        const urlMatches = exact_match ? linkPath === url_pattern : 
-                                        linkPath.includes(url_pattern);
-        
-        if (!urlMatches) return;
-        
-        if (link_text?.trim() && !link.textContent?.includes(link_text)) return;
-        
-        callback({
-          url_pattern,
-          link_href: link.href,
-          link_text: link.textContent?.trim() || '',
-          exact_match
-        });
-      } catch {}
-    });
-  }
-  
-  // Track custom events
-  function trackCustomEvents(sessionId) {
-    const domain = window.location.hostname;
-    
-    if (!customEvents.length) {
-      fetchApi(getApiUrl('public-custom-events') + `?siteId=${domain}`)
-        .then(r => r?.ok ? r.json() : null)
-        .then(events => {
-          if (events) {
-            customEvents = events.filter(e => e.is_active);
-            if (customEvents.length) setupCustomListeners(domain, sessionId);
-          }
-        });
-    } else {
-      setupCustomListeners(domain, sessionId);
-    }
-  }
-  
-  // Setup custom event listeners
-  function setupCustomListeners(domain, sessionId) {
-    clickEventsConfig = [];
-    
-    // Handle click events with single listener
-    const clickEvents = customEvents.filter(e => e.event_type === 'click' && e.event_selector);
-    if (clickEvents.length) {
-      clickEventsConfig = clickEvents.map(event => ({ event, domain, sessionId }));
-      
-      if (!globalClickListenerAdded) {
-        globalClickListenerAdded = true;
-        document.addEventListener('click', e => {
-          clickEventsConfig.forEach(({ event, domain, sessionId }) => {
+    c = [];
+    const clicks = e.filter(
+      (ev) => ev.event_type === "click" && ev.event_selector
+    );
+    if (clicks.length) {
+      c = clicks.map((ev) => ({ event: ev, domain: dom, sessionId: id }));
+      if (!g) {
+        g = true;
+        document.addEventListener("click", (ev) => {
+          c.forEach(({ event, domain, sessionId }) => {
             try {
-              let target = e.target.matches?.(event.event_selector) ? e.target : 
-                          e.target.closest?.(event.event_selector);
+              let target = ev.target.matches?.(event.event_selector)
+                ? ev.target
+                : ev.target.closest?.(event.event_selector);
               if (target) {
-                triggerCustomEvent(event.name, domain, sessionId, {
+                w(event.name, domain, sessionId, {
                   selector: event.event_selector,
                   element: target.tagName.toLowerCase(),
-                  text: target.textContent?.trim().substring(0, 100) || ''
+                  text: target.textContent?.trim().substring(0, 100) || "",
                 });
               }
             } catch {}
@@ -262,141 +124,183 @@
         });
       }
     }
-    
-    // Handle other event types
-    customEvents.forEach(event => {
-      const { event_type, event_selector, trigger_config } = event;
-      
-      if (event_type === 'form_submit') {
-        const selector = event_selector || 'form';
-        document.addEventListener('submit', e => {
+    e.forEach((ev) => {
+      const { event_type, event_selector, trigger_config } = ev;
+      if (event_type === "form_submit") {
+        const sel = event_selector || "form";
+        document.addEventListener("submit", (e) => {
           try {
-            if (e.target.matches?.(selector)) {
-              triggerCustomEvent(event.name, domain, sessionId, {
-                form_id: e.target.id || 'no-id',
-                form_action: e.target.action || window.location.href
+            if (e.target.matches?.(sel)) {
+              w(ev.name, dom, id, {
+                form_id: e.target.id || "no-id",
+                form_action: e.target.action || location.href,
               });
             }
           } catch {}
         });
-      } else if (event_type === 'scroll' && trigger_config?.scroll_percentage) {
-        // Check if scroll should be tracked on this page
+      } else if (event_type === "scroll" && trigger_config?.scroll_percentage) {
         const pattern = trigger_config?.page_pattern;
-        const currentPage = window.location.pathname;
-        
-        // Skip if pattern is defined and doesn't match current page
         if (pattern) {
-          // Handle exact match for homepage
-          if (pattern === '/' && currentPage !== '/') return;
-          // Handle wildcard patterns
-          else if (pattern.includes('*')) {
+          if (pattern === "/" && p !== "/") return;
+          else if (pattern.includes("*")) {
             try {
-              const escapedPattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/g, '.*');
-              const regex = new RegExp('^' + escapedPattern + '$');
-              if (!regex.test(currentPage)) return;
+              const escaped = pattern
+                .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+                .replace(/\\\*/g, ".*");
+              const regex = new RegExp("^" + escaped + "$");
+              if (!regex.test(p)) return;
             } catch {
-              // Fallback to simple includes if regex fails
-              if (!currentPage.includes(pattern.replace(/\*/g, ''))) return;
+              if (!p.includes(pattern.replace(/\*/g, ""))) return;
             }
-          }
-          // Handle simple includes
-          else if (!currentPage.includes(pattern)) return;
+          } else if (!p.includes(pattern)) return;
         }
-        
-        setupScrollHandler(event, domain, sessionId, false);
-      } else if (event_type === 'page_view') {
+        n(ev, dom, id, false);
+      } else if (event_type === "page_view") {
         const pattern = trigger_config?.page_pattern;
-        if (!pattern || window.location.pathname.includes(pattern)) {
-          triggerCustomEvent(event.name, domain, sessionId, {
-            page_url: window.location.href,
-            page_pattern: pattern || 'all'
+        if (!pattern || p.includes(pattern)) {
+          w(ev.name, dom, id, {
+            page_url: location.href,
+            page_pattern: pattern || "all",
           });
         }
       }
     });
   }
-  
-  // Send custom event
-  function triggerCustomEvent(eventName, domain, sessionId, metadata) {
-    fetchApi(getApiUrl('track-custom-event'), {
-      site_domain: domain,
-      event_name: eventName,
-      session_id: sessionId,
-      page_url: window.location.href,
-      metadata: metadata || {}
+  function m(sel, cb) {
+    document.addEventListener("click", (e) => {
+      try {
+        let target = e.target.matches?.(sel)
+          ? e.target
+          : e.target.closest?.(sel);
+        if (target) {
+          cb({
+            selector: sel,
+            element: target.tagName.toLowerCase(),
+            text: target.textContent?.trim().substring(0, 100) || "",
+          });
+        }
+      } catch {}
     });
   }
-  
-  // Track funnel event - simplified to just increment step count
-  function trackFunnelEvent(step, domain, sessionId, eventType, eventData) {
-    fetchApi(getApiUrl('track-funnel-step'), {
-      step_id: step.id,
-      session_id: sessionId,
-      site_domain: domain
-    }).catch(() => {});
-  }
-  
-  // Global API for programmatic tracking
-  window.hector = (action, eventName, data) => {
-    if (action === 'track' && eventName) {
-      const sessionId = localStorage.getItem("user_session_id");
-      if (sessionId) {
-        triggerCustomEvent(eventName, window.location.hostname, sessionId, data || {});
+  function n(config, dom, id, isFunnel) {
+    const pct = isFunnel
+      ? config.event_config?.scroll_percentage
+      : config.trigger_config?.scroll_percentage;
+    const key = `scroll_${config.id}_${pct || "any"}`;
+    if (s.has(key)) return;
+    s.add(key);
+    let triggered = false;
+    const handle = () => {
+      if (triggered) return;
+      const scrollPct =
+        ((window.pageYOffset || document.documentElement.scrollTop) /
+          (document.documentElement.scrollHeight - window.innerHeight)) *
+        100;
+      if (!pct || scrollPct >= pct) {
+        triggered = true;
+        const data = {
+          scroll_percentage: pct ? Math.round(scrollPct) : "any",
+          target_percentage: pct,
+        };
+        if (isFunnel) {
+          r(u("track-funnel-step"), {
+            step_id: config.id,
+            session_id: id,
+            site_domain: dom,
+          });
+        } else {
+          w(config.name, dom, id, data);
+        }
+        window.removeEventListener("scroll", handle);
       }
+    };
+    window.addEventListener("scroll", handle, { passive: true });
+  }
+  function v(config, cb) {
+    const { url_pattern, link_text, exact_match } = config;
+    document.addEventListener("click", (e) => {
+      try {
+        const link =
+          e.target.tagName === "A" ? e.target : e.target.closest("a");
+        if (!link?.href) return;
+        let linkPath;
+        try {
+          linkPath = new URL(link.href).pathname;
+        } catch {
+          linkPath = link.href;
+        }
+        const urlMatches = exact_match
+          ? linkPath === url_pattern
+          : linkPath.includes(url_pattern);
+        if (!urlMatches) return;
+        if (link_text?.trim() && !link.textContent?.includes(link_text)) return;
+        cb({
+          url_pattern,
+          link_href: link.href,
+          link_text: link.textContent?.trim() || "",
+          exact_match,
+        });
+      } catch {}
+    });
+  }
+  function w(name, dom, id, metadata) {
+    r(u("track-custom-event"), {
+      site_domain: dom,
+      event_name: name,
+      session_id: id,
+      page_url: location.href,
+      metadata: metadata || {},
+    });
+  }
+  window.hector = (action, eventName, data) => {
+    if (action === "track" && eventName) {
+      const id = localStorage.getItem("user_session_id");
+      if (id) w(eventName, location.hostname, id, data || {});
     }
   };
-  
-  // Heartbeat management
   function startHeartbeat() {
-    if (heartbeatInterval) clearInterval(heartbeatInterval);
-    if (!document.hidden) sendHeartbeat();
-    
-    heartbeatInterval = setInterval(() => {
-      if (Date.now() - lastActivityTime > 18e5) { // 30 min
+    if (i) clearInterval(i);
+    if (!document.hidden) h();
+    i = setInterval(() => {
+      if (Date.now() - t > 18e5) {
         stopHeartbeat();
       } else {
-        sendHeartbeat();
+        h();
       }
-    }, 6e4); // 60 sec
+    }, 6e4);
   }
-  
   function stopHeartbeat() {
-    if (heartbeatInterval) {
-      clearInterval(heartbeatInterval);
-      heartbeatInterval = null;
+    if (i) {
+      clearInterval(i);
+      i = null;
     }
   }
-  
-  // Event listeners
   document.addEventListener("visibilitychange", () => {
-    document.hidden ? stopHeartbeat() : startHeartbeat();
+    if (document.hidden) {
+      stopHeartbeat();
+    } else {
+      startHeartbeat();
+    }
   });
-  
-  // Activity tracking
-  ['mousemove', 'keypress', 'scroll', 'click', 'touchstart'].forEach(event => {
-    document.addEventListener(event, () => { lastActivityTime = Date.now(); });
+  ["mousemove", "keypress", "scroll", "click", "touchstart"].forEach((ev) => {
+    document.addEventListener(ev, () => {
+      t = Date.now();
+    });
   });
-  
-  // SPA navigation handling
-  let currentPath = window.location.pathname;
-  const checkPathChange = () => {
-    if (currentPath !== window.location.pathname) {
-      currentPath = window.location.pathname;
-      funnelSteps = [];
-      customEvents = [];
-      globalClickListenerAdded = false;
-      clickEventsConfig = [];
-      
-      const sessionId = getSessionId();
-      trackFunnels(sessionId);
-      trackCustomEvents(sessionId);
+  let currentPath = location.pathname;
+  const checkPath = () => {
+    if (currentPath !== location.pathname) {
+      currentPath = location.pathname;
+      f = [];
+      e = [];
+      g = false;
+      c = [];
+      const id = d();
+      k(location.hostname, id);
     }
   };
-  
-  setInterval(checkPathChange, 1000);
-  window.addEventListener('popstate', checkPathChange);
-  
-  // Initialize
+  setInterval(checkPath, 1000);
+  window.addEventListener("popstate", checkPath);
   if (document.readyState === "complete") {
     startHeartbeat();
   } else {
