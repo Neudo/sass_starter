@@ -141,7 +141,7 @@ export function CustomEventsClient({
                 Custom Events Not Available
               </h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Custom event tracking is available starting with the Hobby plan.
+                Custom event tracking is available starting with the Professional plan.
                 Upgrade to start tracking custom interactions on your website.
               </p>
               <div className="space-y-2">
@@ -151,7 +151,7 @@ export function CustomEventsClient({
                 </div>
                 <Button asChild>
                   <Link href="/settings/billing/plans">
-                    Upgrade to Hobby Plan
+                    Upgrade to Professional Plan
                   </Link>
                 </Button>
               </div>

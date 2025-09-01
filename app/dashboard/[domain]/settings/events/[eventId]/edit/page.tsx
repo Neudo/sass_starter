@@ -30,6 +30,21 @@ export default async function EditCustomEventPage({
     return notFound();
   }
 
+  // Check user subscription for custom events access
+  const { data: subscription } = await adminClient
+    .from("subscriptions")
+    .select("plan_tier, status")
+    .eq("user_id", user.id)
+    .single();
+
+  const hasCustomEventsAccess = subscription && 
+    (subscription.plan_tier === "professional" || subscription.plan_tier === "enterprise") &&
+    subscription.status === "active";
+
+  if (!hasCustomEventsAccess) {
+    return redirect(`/dashboard/${domain}/settings/events`);
+  }
+
   // Get the actual custom event data from database
   const { data: customEvent, error: eventError } = await adminClient
     .from("custom_events")

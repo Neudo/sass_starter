@@ -38,7 +38,7 @@ export default async function CustomEventsPage({
     .single();
 
   const hasCustomEventsAccess = subscription && 
-    (subscription.plan_tier === "hobby" || subscription.plan_tier === "professional" || subscription.plan_tier === "enterprise") &&
+    (subscription.plan_tier === "professional" || subscription.plan_tier === "enterprise") &&
     subscription.status === "active";
 
   return (
