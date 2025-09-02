@@ -12,7 +12,6 @@ import {
   Lock,
   Target,
   TrendingUp,
-  Database,
   Filter,
   Download,
   Share2,
@@ -20,10 +19,10 @@ import {
   Palette,
   Code,
   Activity,
-  Map,
   Calendar,
   FileText,
   Settings,
+  CheckCircle,
 } from "lucide-react";
 import { FinalCTA } from "@/components/sections/final-cta";
 import { Navigation } from "@/components/navigation";
@@ -63,10 +62,9 @@ export default function FeaturesPage() {
       icon: Zap,
       title: "Lightning-Fast Performance",
       description:
-        "Ultra-lightweight tracking script that won\t impact your site\s performance. Load times under 50ms guaranteed.",
+        "Ultra-lightweight tracking script that won't impact your site's performance.",
       details: [
         "Less than 2KB script size",
-        "Sub-50ms load times",
         "CDN-powered delivery",
         "Zero impact on PageSpeed",
         "Asynchronous loading",
@@ -133,7 +131,7 @@ export default function FeaturesPage() {
 
   const analyticsFeatures = [
     {
-      icon: TrendingUp,
+      icon: Globe,
       title: "Traffic Sources Analysis",
       description: "Understand where your visitors come from",
       details: [
@@ -152,12 +150,15 @@ export default function FeaturesPage() {
     {
       icon: Activity,
       title: "Custom Event Tracking",
-      description: "Track specific user interactions",
+      description:
+        "Track specific user actions beyond page views - like button clicks, form submissions, and downloads",
       details: [
-        "Button clicks",
-        "Form submissions",
-        "Downloads",
-        "Custom goals",
+        "Track button clicks (CTA, signup, purchase)",
+        "Monitor form submissions and completions",
+        "Measure file downloads and external links",
+        "Create custom conversion goals",
+        "Set up event triggers with JavaScript",
+        "Analyze event performance over time",
       ],
     },
     {
@@ -167,14 +168,17 @@ export default function FeaturesPage() {
       details: ["Date ranges", "Traffic sources", "Countries", "Devices"],
     },
     {
-      icon: Map,
-      title: "Heatmap Analytics",
-      description: "Visual representation of user behavior",
+      icon: TrendingUp,
+      title: "Funnel Analytics",
+      description:
+        "Track user journeys through multi-step processes like signup, checkout, or onboarding flows",
       details: [
-        "Click patterns",
-        "Scroll depth",
-        "Interaction zones",
-        "Hot spots",
+        "Create multi-step conversion funnels",
+        "Identify where users drop off in your process",
+        "Measure conversion rates at each step",
+        "Compare funnel performance over time",
+        "Optimize bottlenecks in user journeys",
+        "Track goal completions and revenue impact",
       ],
     },
     {
@@ -213,84 +217,40 @@ export default function FeaturesPage() {
         "Automated exports",
       ],
     },
-    {
-      icon: Share2,
-      title: "Team Collaboration",
-      description: "Share insights with your team",
-      details: [
-        "Multiple users",
-        "Role-based access",
-        "Shared dashboards",
-        "Team reports",
-      ],
-    },
-    {
-      icon: Bell,
-      title: "Smart Notifications",
-      description: "Stay informed about important changes",
-      details: [
-        "Traffic alerts",
-        "Goal notifications",
-        "Weekly reports",
-        "Custom alerts",
-      ],
-    },
-    {
-      icon: Palette,
-      title: "Customizable Dashboard",
-      description: "Tailor the interface to your needs",
-      details: [
-        "Custom widgets",
-        "Drag & drop",
-        "Personal layouts",
-        "Theme options",
-      ],
-    },
-    {
-      icon: Database,
-      title: "API Access",
-      description: "Programmatic access to your data",
-      details: [
-        "REST API",
-        "Webhooks",
-        "Real-time data",
-        "Custom integrations",
-      ],
-    },
   ];
 
   const complianceFeatures = [
     {
       icon: Lock,
-      title: "Enterprise Security",
-      description: "Bank-level security for your data",
+      title: "Data Security",
+      description: "Secure hosting and data encryption for your analytics data",
       details: [
-        "End-to-end encryption",
-        "SOC 2 compliance",
-        "Regular audits",
-        "Secure hosting",
+        "HTTPS data transmission",
+        "Encrypted data storage",
+        "Secure cloud hosting",
+        "Regular security updates",
       ],
     },
     {
       icon: FileText,
-      title: "Compliance Reports",
-      description: "Automated compliance documentation",
+      title: "Privacy Compliance",
+      description: "Built-in compliance with privacy regulations",
       details: [
-        "GDPR reports",
-        "Data processing logs",
-        "Audit trails",
-        "Compliance certificates",
+        "No personal data collection",
+        "No cookies required",
+        "GDPR compliant by design",
+        "Transparent data practices",
       ],
     },
     {
       icon: Settings,
       title: "Data Control",
-      description: "Complete control over your data",
+      description: "Complete control over your analytics data",
       details: [
-        "Data deletion",
-        "Export controls",
-        "Retention settings",
-        "Access management",
+        "Data export functionality",
+        "Data deletion on request",
+        "Configurable data retention",
+        "Full data ownership",
       ],
     },
   ];
@@ -364,27 +324,150 @@ export default function FeaturesPage() {
               variant="secondary"
               className="mb-6 bg-primary/10 text-primary border-primary/20"
             >
-              Complete Feature List
+              Features
             </Badge>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 text-foreground">
-              Powerful Analytics Features
+              Complete Feature List
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Discover everything Hector Analytics offers - from privacy-first
-              tracking to advanced insights, all designed to help you understand
-              your audience without compromising their privacy.
+              Discover everything Hector Analytics offers
             </p>
+          </div>
+        </section>
+
+        {/* Advanced Features Deep Dive */}
+        <section className="py-20 bg-muted/20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="mb-16">
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-foreground">
+                Understanding Advanced Features
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-3xl">
+                Learn how to use funnels and custom events to get deeper
+                insights into your user behavior.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              {/* Custom Events Explanation */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="p-3 rounded-lg bg-primary/10">
+                    <Activity className="w-8 h-8 text-primary" />
+                  </div>
+                  <h3 className="text-2xl font-bold">Custom Events</h3>
+                </div>
+                <p className="text-lg text-muted-foreground mb-6">
+                  Track specific user actions that matter to your business
+                  beyond simple page views.
+                </p>
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-lg">Common use cases:</h4>
+                  <ul className="space-y-2">
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                      <div>
+                        <strong>E-commerce:</strong> Track Add to Cart, Begin
+                        Checkout, Purchase Completed
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                      <div>
+                        <strong>SaaS:</strong> Monitor Trial Started, Feature
+                        Used, Subscription Upgraded
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                      <div>
+                        <strong>Content:</strong> Track Video Played, Newsletter
+                        Signup, Article Shared
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Funnels Explanation */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="p-3 rounded-lg bg-primary/10">
+                    <TrendingUp className="w-8 h-8 text-primary" />
+                  </div>
+                  <h3 className="text-2xl font-bold">Funnel Analytics</h3>
+                </div>
+                <p className="text-lg text-muted-foreground mb-6">
+                  Understand your user journey by tracking multi-step processes
+                  and identifying where users drop off.
+                </p>
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-lg">
+                    Example: E-commerce Funnel
+                  </h4>
+                  <div className="bg-card p-6 rounded-lg border space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span>1. Product Page Visit</span>
+                      <Badge variant="outline">100%</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>2. Add to Cart</span>
+                      <Badge variant="outline">65%</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>3. Begin Checkout</span>
+                      <Badge variant="outline">45%</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>4. Purchase Complete</span>
+                      <Badge variant="outline">38%</Badge>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-lg">
+                    What you can optimize:
+                  </h4>
+                  <ul className="space-y-2">
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                      <div>
+                        <strong>Identify bottlenecks:</strong> See where most
+                        users abandon the process
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                      <div>
+                        <strong>A/B test improvements:</strong> Test different
+                        checkout flows or CTAs
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                      <div>
+                        <strong>Measure impact:</strong> Track how changes
+                        affect conversion rates
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* Core Features */}
         <section className="py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
+            <div className="mb-16">
               <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-foreground">
                 Core Features
               </h2>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              <p className="text-xl text-muted-foreground max-w-3xl">
                 The foundation of privacy-first analytics with enterprise-grade
                 capabilities.
               </p>
@@ -400,11 +483,11 @@ export default function FeaturesPage() {
         {/* Analytics & Insights */}
         <section className="py-20 bg-muted/20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
+            <div className="mb-16">
               <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-foreground">
                 Analytics & Insights
               </h2>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              <p className="text-xl text-muted-foreground max-w-3xl">
                 Deep insights into your website performance and visitor
                 behavior.
               </p>
@@ -420,11 +503,11 @@ export default function FeaturesPage() {
         {/* Integration & Collaboration */}
         <section className="py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
+            <div className="mb-16">
               <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-foreground">
                 Integration & Collaboration
               </h2>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              <p className="text-xl text-muted-foreground max-w-3xl">
                 Seamlessly integrate with your workflow and collaborate with
                 your team.
               </p>
@@ -440,11 +523,11 @@ export default function FeaturesPage() {
         {/* Security & Compliance */}
         <section className="py-20 bg-muted/20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
+            <div className="mb-16">
               <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-foreground">
                 Security & Compliance
               </h2>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              <p className="text-xl text-muted-foreground max-w-3xl">
                 Enterprise-grade security and compliance features to protect
                 your data and meet regulations.
               </p>
@@ -453,73 +536,6 @@ export default function FeaturesPage() {
               {complianceFeatures.map((feature, index) => (
                 <FeatureCard key={index} feature={feature} />
               ))}
-            </div>
-          </div>
-        </section>
-
-        {/* All Metrics */}
-        <section className="py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-foreground">
-                30+ Detailed Metrics
-              </h2>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-                Track every aspect of your website performance with
-                comprehensive analytics.
-              </p>
-            </div>
-            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-lg p-8 sm:p-12 border border-border/50">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {[
-                  "Page Views",
-                  "Unique Visitors",
-                  "Sessions",
-                  "Bounce Rate",
-                  "Session Duration",
-                  "Traffic Sources",
-                  "Referrers",
-                  "Search Terms",
-                  "Countries",
-                  "Cities",
-                  "Languages",
-                  "Time Zones",
-                  "Devices",
-                  "Browsers",
-                  "Operating Systems",
-                  "Screen Resolutions",
-                  "Entry Pages",
-                  "Exit Pages",
-                  "Top Content",
-                  "Download Tracking",
-                  "External Links",
-                  "Custom Events",
-                  "Goal Conversions",
-                  "Funnel Analysis",
-                  "Real-time Visitors",
-                  "Historical Trends",
-                  "Growth Metrics",
-                  "Engagement Rate",
-                  "New vs Returning",
-                  "Mobile vs Desktop",
-                  "Peak Hours",
-                  "Seasonal Patterns",
-                ].map((metric, index) => (
-                  <Badge
-                    key={metric}
-                    variant="outline"
-                    className={`text-sm bg-transparent justify-center py-2 ${
-                      index % 3 === 0
-                        ? "bg-primary/5 text-primary border-primary/20"
-                        : index % 3 === 1
-                          ? "bg-secondary/5 text-secondary border-secondary/20"
-                          : "bg-muted text-muted-foreground border-border"
-                    }`}
-                  >
-                    {metric}
-                  </Badge>
-                ))}
-              </div>
             </div>
           </div>
         </section>
