@@ -3,13 +3,13 @@ import { motion } from "motion/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { 
+import {
   CreditCard,
   Check,
   Sparkles,
   TrendingUp,
   Building2,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
 
 export function Pricing() {
@@ -26,11 +26,11 @@ export function Pricing() {
         "Privacy-compliant tracking",
         "Basic geographic data",
         "7 days data retention",
-        "Community support"
+        "Community support",
       ],
       cta: "Start Free",
       href: "/auth/sign-up",
-      popular: false
+      popular: false,
     },
     {
       name: "Pro",
@@ -39,17 +39,17 @@ export function Pricing() {
       icon: TrendingUp,
       features: [
         "Up to 100,000 page views/month",
-        "Everything in Free",
+        "Everything in Hobby",
         "Custom events tracking",
         "Advanced geographic data",
         "1 year data retention",
         "API access",
         "Priority email support",
-        "CSV exports"
+        "CSV exports",
       ],
-      cta: "Start Free Trial",
+      cta: "Start",
       href: "/auth/sign-up",
-      popular: true
+      popular: true,
     },
     {
       name: "Business",
@@ -65,12 +65,12 @@ export function Pricing() {
         "Advanced API access",
         "Dedicated support",
         "Custom integrations",
-        "SLA guarantee"
+        "SLA guarantee",
       ],
       cta: "Contact Sales",
       href: "/contact",
-      popular: false
-    }
+      popular: false,
+    },
   ];
 
   return (
@@ -114,37 +114,37 @@ export function Pricing() {
                   </Badge>
                 </div>
               )}
-              <div className={`h-full rounded-lg ${
-                plan.popular 
-                  ? 'border-2 border-primary shadow-lg' 
-                  : 'border'
-              } bg-card p-8`}>
+              <div
+                className={`h-full rounded-lg ${
+                  plan.popular ? "border-2 border-primary shadow-lg" : "border"
+                } bg-card p-8`}
+              >
                 <div className="flex items-center gap-3 mb-4">
-                  <div className={`p-2 rounded-lg ${
-                    plan.popular ? 'bg-primary/10' : 'bg-muted'
-                  }`}>
-                    <plan.icon className={`w-6 h-6 ${
-                      plan.popular ? 'text-primary' : 'text-muted-foreground'
-                    }`} />
+                  <div
+                    className={`p-2 rounded-lg ${
+                      plan.popular ? "bg-primary/10" : "bg-muted"
+                    }`}
+                  >
+                    <plan.icon
+                      className={`w-6 h-6 ${
+                        plan.popular ? "text-primary" : "text-muted-foreground"
+                      }`}
+                    />
                   </div>
                   <h3 className="text-xl font-semibold">{plan.name}</h3>
                 </div>
-                
+
                 <div className="mb-4">
                   <span className="text-4xl font-bold">${plan.price}</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
-                
-                <p className="text-muted-foreground mb-6">
-                  {plan.description}
-                </p>
-                
+
+                <p className="text-muted-foreground mb-6">{plan.description}</p>
+
                 <Link href={plan.href}>
-                  <Button 
+                  <Button
                     className={`w-full mb-6 ${
-                      plan.popular 
-                        ? 'bg-primary hover:bg-primary/90' 
-                        : ''
+                      plan.popular ? "bg-primary hover:bg-primary/90" : ""
                     }`}
                     variant={plan.popular ? "default" : "outline"}
                   >
@@ -152,7 +152,7 @@ export function Pricing() {
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </Link>
-                
+
                 <ul className="space-y-3">
                   {plan.features.map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-3">
@@ -192,14 +192,22 @@ export function Pricing() {
         >
           <div className="p-4">
             <p className="text-2xl font-bold text-primary mb-2">30 days</p>
-            <p className="text-sm text-muted-foreground">Free trial on all paid plans</p>
+            <p className="text-sm text-muted-foreground">
+              Free trial on all paid plans
+            </p>
           </div>
           <div className="p-4">
-            <p className="text-2xl font-bold text-primary mb-2">No setup fees</p>
-            <p className="text-sm text-muted-foreground">Start tracking in minutes</p>
+            <p className="text-2xl font-bold text-primary mb-2">
+              No setup fees
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Start tracking in minutes
+            </p>
           </div>
           <div className="p-4">
-            <p className="text-2xl font-bold text-primary mb-2">Cancel anytime</p>
+            <p className="text-2xl font-bold text-primary mb-2">
+              Cancel anytime
+            </p>
             <p className="text-sm text-muted-foreground">No questions asked</p>
           </div>
         </motion.div>

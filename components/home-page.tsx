@@ -28,14 +28,16 @@ export function HomePage() {
       {/* New sections */}
       {/* <FeaturesDeepDive /> */}
       <WhyPrivacyMatters />
+      <MigrationGuide />
       <HowItWorks />
       {/* <UseCases /> */}
-      <MigrationGuide />
+
       {/* <Integrations /> */}
       {/* <CustomerSuccess /> */}
       {/* <ResourcesLearning /> */}
 
       {/* FAQ Preview */}
+      <PricingSection />
       <section className="py-24 bg-muted dark:bg-muted/40">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -95,8 +97,6 @@ export function HomePage() {
           </motion.div>
         </div>
       </section>
-
-      <PricingSection />
       <FinalCTA />
     </div>
   );

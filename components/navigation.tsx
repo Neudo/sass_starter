@@ -127,7 +127,7 @@ export function Navigation() {
                     className={`bg-primary hover:bg-primary/90 text-primary-foreground transition-colors duration-200`}
                     onClick={() => router.push("/auth/sign-up")}
                   >
-                    Start Free Trial
+                    Start For Free
                   </Button>
                   <ThemeToggle />
                 </>
@@ -236,7 +236,7 @@ export function Navigation() {
                           setIsMenuOpen(false);
                         }}
                       >
-                        Start free trial
+                        Start now
                       </Button>
                     </div>
                   )}

@@ -263,7 +263,7 @@ export function PricingSection({
                     ? "Contact us"
                     : showUpgradeButtons
                       ? "Upgrade"
-                      : "Start free trial"}
+                      : "Start now"}
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
 

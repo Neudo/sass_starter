@@ -31,22 +31,22 @@ export default function Footer() {
                   FAQ
                 </Link>
               </li>
-              {/* <li>
-                  <a
-                    href="/pricing"
-                    className="hover:text-primary transition-colors"
-                  >
-                    Pricing
-                  </a>
-                </li>
-                <li>
-                  <button
-                    onClick={onNavigateToDemo}
-                    className="hover:text-primary transition-colors text-left"
-                  >
-                    Live Demo
-                  </button>
-                </li> */}
+              <li>
+                <Link
+                  href="/pricing"
+                  className="hover:text-primary transition-colors"
+                >
+                  Pricing
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/hectoranalytics.com"
+                  className="hover:text-primary transition-colors"
+                >
+                  Live Demo
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -62,6 +62,29 @@ export default function Footer() {
                 </Link>
               </li>
             </ul>
+          </div>
+        </div>
+
+        <div className="mt-8 pt-8 border-t border-border">
+          <div className="flex flex-wrap gap-6 text-sm text-muted-foreground">
+            <Link
+              href="/legal"
+              className="hover:text-primary transition-colors"
+            >
+              Legal Notice
+            </Link>
+            <Link
+              href="/privacy"
+              className="hover:text-primary transition-colors"
+            >
+              Privacy Policy
+            </Link>
+            <Link
+              href="/terms"
+              className="hover:text-primary transition-colors"
+            >
+              Terms of Service
+            </Link>
           </div>
         </div>
       </div>
