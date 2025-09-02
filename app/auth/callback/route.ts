@@ -4,23 +4,28 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  const mode = searchParams.get("mode") || "login";
 
   if (code) {
-    console.log("here");
-
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      const forwardedHost = request.headers.get("x-forwarded-host"); // original origin before load balancer
-      const isLocalEnv = process.env.NODE_ENV === "development";
-      if (isLocalEnv) {
-        // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
-        return NextResponse.redirect(`${origin}/welcome`);
-      } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}/welcome`);
-      } else {
-        return NextResponse.redirect(`${origin}/welcome`);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (!error && data.session) {
+      // Check if this is a new user by looking at the user metadata
+      const isNewUser =
+        data.user?.user_metadata?.iss === "https://accounts.google.com" &&
+        new Date(data.user?.created_at || "").getTime() > Date.now() - 60000; // Created within last minute
+
+      let redirectPath = "/dashboard"; // Default for existing users
+
+      if (mode === "register" || isNewUser) {
+        redirectPath = "/welcome";
       }
+
+      console.log(
+        `Redirecting ${isNewUser ? "new" : "existing"} user to: ${origin}${redirectPath}`
+      );
+      return NextResponse.redirect(`${origin}${redirectPath}`);
     }
   }
 

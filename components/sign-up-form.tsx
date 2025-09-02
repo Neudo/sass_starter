@@ -68,7 +68,7 @@ export function SignUpForm({
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-6">
-            <GoogleSignIn className="w-full" text="Sign up with Google" />
+            <GoogleSignIn className="w-full" text="Sign up with Google" mode="register" />
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />

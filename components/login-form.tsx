@@ -59,7 +59,7 @@ export function LoginForm({
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-6">
-            <GoogleSignIn className="w-full" />
+            <GoogleSignIn className="w-full" mode="login" />
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />

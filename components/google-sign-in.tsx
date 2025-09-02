@@ -7,9 +7,10 @@ import { useState } from "react";
 interface GoogleSignInProps {
   className?: string;
   text?: string;
+  mode?: "login" | "register";
 }
 
-export function GoogleSignIn({ className, text = "Continue with Google" }: GoogleSignInProps) {
+export function GoogleSignIn({ className, text = "Continue with Google", mode = "login" }: GoogleSignInProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGoogleSignIn = async () => {
@@ -20,7 +21,7 @@ export function GoogleSignIn({ className, text = "Continue with Google" }: Googl
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/welcome`,
+          redirectTo: `${window.location.origin}/auth/callback?mode=${mode}`,
         },
       });
       if (error) throw error;
