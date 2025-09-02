@@ -22,6 +22,7 @@ export function Navigation() {
 
   // Navigation items definition
   const navItems = [
+    { name: "Features", path: "/features", id: "features" },
     { name: "Pricing", path: "/pricing", id: "pricing" },
     { name: "FAQ", path: "/faq", id: "faq" },
     // { name: "Blog", path: "/blog", id: "blog" },

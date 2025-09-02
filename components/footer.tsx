@@ -25,10 +25,10 @@ export default function Footer() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <Link
-                  href="/faq"
+                  href="/features"
                   className="hover:text-primary transition-colors"
                 >
-                  FAQ
+                  Features
                 </Link>
               </li>
               <li>
@@ -37,6 +37,14 @@ export default function Footer() {
                   className="hover:text-primary transition-colors"
                 >
                   Pricing
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/faq"
+                  className="hover:text-primary transition-colors"
+                >
+                  FAQ
                 </Link>
               </li>
               <li>
