@@ -176,7 +176,7 @@ export default function PrivacyPolicyPage() {
               <p>
                 <strong>CNIL</strong>
               </p>
-              <p>3 Place de Fontenoy, 75334 Paris Cedex 07, France</p>
+              <p>3 Place de Fontenoy,75334 Paris Cedex 07, France</p>
               <p>
                 <Link
                   href="https://www.cnil.fr"

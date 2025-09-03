@@ -447,7 +447,7 @@ export default function FeaturesPage() {
                       <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                       <div>
                         <strong>Measure impact:</strong> Track how changes
-                        affect conversion rates
+                        affect conversion rates on your website
                       </div>
                     </li>
                   </ul>

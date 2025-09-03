@@ -99,8 +99,8 @@ export default function LegalPage() {
           </h2>
           <p>
             In accordance with the General Data Protection Regulation (GDPR),
-            you have rights over your personal data. For more information, see
-            our{" "}
+            you have rights over your personal data. For more information,
+            please see our{" "}
             <Link href="/privacy" className="text-primary hover:underline">
               Privacy Policy
             </Link>
