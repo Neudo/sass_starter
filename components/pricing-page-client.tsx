@@ -109,8 +109,8 @@ export default function PricingPageClient() {
                 </CardHeader>
                 <CardContent className="p-8">
                   <p className="text-muted-foreground mb-6">
-                    If you have any additional questions, please don&apos;t
-                    hesitate to send us a mail.
+                    If you have any additional questions, feel free to send us a
+                    mail.
                   </p>
                   <Button asChild>
                     <Link href="mailto:contact@sassanalytics.com">
