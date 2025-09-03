@@ -144,7 +144,7 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          See who&apos;s browsing right now - no cookies
+                          See who's browsing right now - no cookies
                           required
                         </p>
                       </div>
@@ -200,7 +200,7 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          &lt;1KB script (vs 45KB+ for GA)
+                          Less than 1KB script (vs 45KB+ for GA)
                         </p>
                       </div>
 
