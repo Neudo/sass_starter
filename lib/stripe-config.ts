@@ -118,7 +118,7 @@ export const PRICING_TIERS = {
 // Configuration des limites par plan
 export const PLAN_LIMITS = {
   hobby: {
-    pageviews: 3000,
+    pageviews: "3K",
     websites: 2,
     retention: "60 days",
     goals: 1,

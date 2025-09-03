@@ -141,7 +141,7 @@ export function PricingSection({
 
                 <div className="space-y-2">
                   <div className="text-lg font-semibold text-primary">
-                    {PLAN_LIMITS.hobby.pageviews.toLocaleString()} events/month
+                    {PLAN_LIMITS.hobby.pageviews} events/month
                   </div>
                   <div className="flex items-baseline justify-center gap-1">
                     <span className="text-4xl font-bold text-white">$0</span>
