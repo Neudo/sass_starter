@@ -8,7 +8,14 @@
     e = [],
     c = [],
     g = false;
-  const u = (p) => `https://hectoranalytics.com/api/${p}`;
+  const u = (p) => {
+    // Use relative URL for local development, absolute for production
+    const host = location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1' || host.includes('localhost:')) {
+      return `/api/${p}`;
+    }
+    return `https://hectoranalytics.com/api/${p}`;
+  };
   const r = (url, data) =>
     fetch(url, {
       method: data ? "POST" : "GET",
@@ -43,20 +50,34 @@
     t = Date.now();
   }
   function k(dom, id) {
+    console.log('[Hector] Fetching tracking config for domain:', dom);
     r(u(`tracking-config?siteId=${dom}`))
-      .then((res) => (res?.ok ? res.json() : null))
+      .then((res) => {
+        console.log('[Hector] Config response status:', res?.status);
+        return res?.ok ? res.json() : null;
+      })
       .then((config) => {
         if (config) {
           f = config.funnelSteps || [];
           e = config.customEvents || [];
+          console.log('[Hector] Loaded config:', {
+            funnelSteps: f.length,
+            customEvents: e.length,
+            steps: f.map(s => ({ name: s.name, type: s.step_type, url: s.url_pattern }))
+          });
           o(dom, id);
+        } else {
+          console.log('[Hector] No config received');
         }
-      });
+      })
+      .catch(err => console.error('[Hector] Error fetching config:', err));
   }
   function o(dom, id) {
     const p = location.pathname;
+    console.log('[Hector] Processing steps for path:', p, 'domain:', dom, 'sessionId:', id);
     s.clear();
     f.forEach((step) => {
+      console.log('[Hector] Checking step:', step.name, 'type:', step.step_type, 'pattern:', step.url_pattern);
       if (step.step_type === "page_view") {
         const match =
           !step.url_pattern ||
@@ -64,11 +85,20 @@
             ? p === step.url_pattern
             : p.includes(step.url_pattern));
         if (match) {
+          console.log('[Hector] Page view match! Tracking step:', step.name, 'step_id:', step.id);
           r(u("track-funnel-step"), {
             step_id: step.id,
             session_id: id,
             site_domain: dom,
-          });
+          })
+          .then(res => {
+            console.log('[Hector] Funnel step tracked, response:', res?.status);
+            return res?.json();
+          })
+          .then(data => console.log('[Hector] Funnel step response data:', data))
+          .catch(err => console.error('[Hector] Error tracking funnel step:', err));
+        } else {
+          console.log('[Hector] No match for step:', step.name, 'url_pattern:', step.url_pattern, 'current path:', p);
         }
         return;
       }
@@ -87,6 +117,7 @@
           })
         );
       } else if (event_type === "scroll") {
+        console.log('[Hector] Setting up scroll tracking for funnel step:', step.name, 'config:', step.event_config);
         n(step, dom, id, true);
       } else if (event_type === "click_link" && event_config.url_pattern) {
         v(event_config, () =>
@@ -203,11 +234,18 @@
           target_percentage: pct,
         };
         if (isFunnel) {
+          console.log('[Hector] Scroll threshold reached! Tracking funnel step:', config.name, 'at', Math.round(scrollPct) + '%');
           r(u("track-funnel-step"), {
             step_id: config.id,
             session_id: id,
             site_domain: dom,
-          });
+          })
+          .then(res => {
+            console.log('[Hector] Scroll funnel step tracked, response:', res?.status);
+            return res?.json();
+          })
+          .then(data => console.log('[Hector] Scroll funnel response data:', data))
+          .catch(err => console.error('[Hector] Error tracking scroll funnel step:', err));
         } else {
           w(config.name, dom, id, data);
         }
