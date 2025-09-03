@@ -193,25 +193,25 @@ export function FunnelChart({
     );
   }
 
-  // Calculate proportional data based on first step
-  const firstStepEntries = data.steps[0]?.entered_count || 0;
-
+  // Calculate proportional data based on conversion rates
   const chartData = data.steps.map((step, index) => {
-    const proportionalEntered = firstStepEntries > 0 ? (step.entered_count / firstStepEntries) * 100 : 0;
-
     // Truncate step name if too long
     const truncatedName =
       step.step_name.length > 20
         ? step.step_name.substring(0, 17) + "..."
         : step.step_name;
 
-    // First step logic
+    // Use conversion rate directly as the height percentage
+    const conversionPercentage = step.conversion_rate || 0;
+    
+    // For first step, show full height if there are visitors, otherwise 0
     if (index === 0) {
       const displayPercentage = step.entered_count > 0 ? 100 : 0;
       return {
         name: truncatedName,
         fullName: step.step_name,
         stepNumber: step.step_number,
+        // First step is always 100% if it has visitors
         entered: displayPercentage,
         completed: displayPercentage,
         dropped: 0,
@@ -224,20 +224,15 @@ export function FunnelChart({
       };
     }
 
-    // For other steps, calculate drops from previous step
-    const prevStepEntries = data.steps[index - 1]?.entered_count || 0;
-    const actualDropped = prevStepEntries - step.entered_count;
-    const proportionalDropped = firstStepEntries > 0 ? (actualDropped / firstStepEntries) * 100 : 0;
-    const proportionalCompleted = proportionalEntered;
-
+    // For subsequent steps, use conversion rate as height
     return {
       name: truncatedName,
       fullName: step.step_name,
       stepNumber: step.step_number,
-      // Store both proportional (for display) and actual (for tooltip)
-      entered: proportionalEntered,
-      completed: proportionalCompleted,
-      dropped: proportionalDropped > 0 ? proportionalDropped : 0,
+      // Height based on conversion rate (0-100%)
+      entered: conversionPercentage,
+      completed: conversionPercentage,
+      dropped: 0, // No dropped visualization for now since we're showing completion rate
       // Keep actual numbers for tooltip
       actualEntered: step.entered_count,
       actualCompleted: step.completed_count,
@@ -248,32 +243,14 @@ export function FunnelChart({
     };
   });
 
-  // Custom bar shape to handle conditional radius
+  // Custom bar shape with rounded top corners
   const CustomBar = (props: any) => {
-    const { fill, x, y, width, height, payload, dataKey } = props;
+    const { fill, x, y, width, height } = props;
 
-    // Check if this bar has dropped value
-    const hasDropped = payload.dropped > 0;
-
-    // Determine radius based on bar type and whether there's a dropped value
-    let radius = 0;
-    if (dataKey === "completed") {
-      // If there's no dropped bar on top, add radius to top corners
-      radius = hasDropped ? 0 : 4;
-    } else if (dataKey === "dropped") {
-      // Dropped bars always have radius on top
-      radius = 4;
-    }
-
-    // Create path with conditional radius
-    const topLeftRadius =
-      dataKey === "dropped" || (!hasDropped && dataKey === "completed")
-        ? radius
-        : 0;
-    const topRightRadius =
-      dataKey === "dropped" || (!hasDropped && dataKey === "completed")
-        ? radius
-        : 0;
+    // Always add radius to top corners since we only have one bar type now
+    const radius = 4;
+    const topLeftRadius = radius;
+    const topRightRadius = radius;
     const bottomLeftRadius = 0;
     const bottomRightRadius = 0;
 
@@ -309,14 +286,11 @@ export function FunnelChart({
               {data.actualCompleted.toLocaleString()}
             </p>
             <p className="text-sm">
-              <span className="text-red-600">●</span> Dropped:{" "}
-              {data.actualDropped.toLocaleString()}
+              <span className="text-muted-foreground">●</span> Entered:{" "}
+              {data.actualEntered.toLocaleString()}
             </p>
             <p className="text-sm font-medium">
               Conversion: {data.conversionRate.toFixed(1)}%
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Relative to first step: {data.entered.toFixed(1)}%
             </p>
           </div>
 
@@ -427,16 +401,8 @@ export function FunnelChart({
             <Legend wrapperStyle={{ fontSize: "12px" }} />
             <Bar
               dataKey="completed"
-              stackId="a"
               fill={"var(--chart-1)"}
-              name="Completed"
-              shape={CustomBar}
-            />
-            <Bar
-              dataKey="dropped"
-              stackId="a"
-              fill="var(--chart-3)"
-              name="Dropped"
+              name="Conversion Rate"
               shape={CustomBar}
             />
           </BarChart>
