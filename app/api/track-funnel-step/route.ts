@@ -223,50 +223,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get current step count and increment it
-    const { data: currentStep, error: getCurrentError } = await adminClient
-      .from("funnel_steps")
-      .select("step_count")
-      .eq("id", step_id)
-      .single();
-
-    if (getCurrentError) {
-      console.error("Error getting current step count:", getCurrentError);
-      return NextResponse.json(
-        { error: "Failed to get current step count" },
-        { 
-          status: 500,
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
-          },
-        }
-      );
-    }
-
-    const newCount = (currentStep?.step_count || 0) + 1;
-
-    // Update the step count
-    const { error: updateError } = await adminClient
-      .from("funnel_steps")
-      .update({ step_count: newCount })
-      .eq("id", step_id);
-
-    if (updateError) {
-      console.error("Error updating step count:", updateError);
-      return NextResponse.json(
-        { error: "Failed to update step count" },
-        { 
-          status: 500,
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
-          },
-        }
-      );
-    }
+    // Note: Step count is calculated dynamically from funnel_step_completions table
 
     return NextResponse.json(
       {
