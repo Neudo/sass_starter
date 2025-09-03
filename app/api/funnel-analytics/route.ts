@@ -27,10 +27,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Verify site ownership
+    // Verify site ownership and get domain
     const { data: siteData, error: siteError } = await adminClient
       .from("sites")
-      .select("id")
+      .select("id, domain")
       .eq("id", siteId)
       .eq("user_id", user.id)
       .single();
@@ -93,7 +93,8 @@ export async function GET(request: NextRequest) {
         let completionsQuery = adminClient
           .from("funnel_step_completions")
           .select("session_id")
-          .eq("step_id", step.id);
+          .eq("step_id", step.id)
+          .eq("site_domain", siteData.domain);
 
         // Apply date filters if provided
         if (fromDate && toDate) {
@@ -109,6 +110,8 @@ export async function GET(request: NextRequest) {
           completions?.map((c) => c.session_id) || []
         );
         const completed_count = uniqueSessions.size;
+
+        console.log(`Step ${step.step_number} (${step.name}): ${completed_count} completions for domain ${siteData.domain}`);
 
         return {
           id: step.id,
@@ -131,10 +134,19 @@ export async function GET(request: NextRequest) {
         entered_count = step.completed_count;
       } else {
         // For subsequent steps: count sessions that completed ALL previous steps
-        // This is the proper funnel logic - progressive filtering
-        const previousStepSessions =
-          stepsWithAnalytics[index - 1].unique_sessions;
-        entered_count = previousStepSessions.size;
+        // Find sessions that have completed every single previous step
+        let previousStepsSessions = stepsWithAnalytics[0].unique_sessions;
+        
+        for (let i = 1; i < index; i++) {
+          const currentStepSessions = stepsWithAnalytics[i].unique_sessions;
+          previousStepsSessions = new Set(
+            [...previousStepsSessions].filter(sessionId => 
+              currentStepSessions.has(sessionId)
+            )
+          );
+        }
+        
+        entered_count = previousStepsSessions.size;
       }
 
       const completed_count = step.completed_count;

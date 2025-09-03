@@ -67,7 +67,7 @@ export function FunnelsAndEventsCard({
     const fetchFunnels = async () => {
       try {
         let url: string;
-        
+
         if (isPublic && domain) {
           // Use public endpoint for public dashboard
           url = `/api/public-funnels-analytics?domain=${domain}`;
@@ -147,7 +147,7 @@ export function FunnelsAndEventsCard({
     const fetchCustomEvents = async () => {
       try {
         let url: string;
-        
+
         if (isPublic && domain) {
           // Use public endpoint for public dashboard
           url = `/api/public-custom-events-analytics?domain=${domain}`;

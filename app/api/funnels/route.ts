@@ -31,10 +31,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Verify site ownership
+    // Verify site ownership and get domain
     const { data: site, error: siteError } = await adminClient
       .from("sites")
-      .select("id")
+      .select("id, domain")
       .eq("id", siteId)
       .eq("user_id", user.id)
       .single();
@@ -86,7 +86,8 @@ export async function GET(request: NextRequest) {
             let completionsQuery = adminClient
               .from("funnel_step_completions")
               .select("id, session_id")
-              .eq("step_id", step.id);
+              .eq("step_id", step.id)
+              .eq("site_domain", site.domain);
 
             // Apply date filters if provided
             if (fromDate && toDate) {
@@ -97,6 +98,8 @@ export async function GET(request: NextRequest) {
 
             const { data: completions } = await completionsQuery;
             const visitors = completions?.length || 0;
+            
+            console.log(`Funnel Step ${step.step_number} (${step.name}): ${visitors} completions for domain ${site.domain}`);
             
             // Get session data for source and country breakdown
             let sourceBreakdown: Array<{

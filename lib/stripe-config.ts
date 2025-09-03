@@ -71,13 +71,6 @@ export const STRIPE_PRICE_IDS = isDevelopment
   ? STRIPE_PRICE_IDS_TEST
   : STRIPE_PRICE_IDS_PROD;
 
-// Log pour debug (optionnel)
-if (typeof window !== "undefined") {
-  console.log(
-    `🔧 Stripe environment: ${isDevelopment ? "TEST" : "PRODUCTION"}`
-  );
-}
-
 // Map inverse : price ID -> plan info
 export const PRICE_TO_PLAN_MAP: Record<string, PlanInfo> = Object.entries(
   STRIPE_PRICE_IDS

@@ -74,7 +74,7 @@ export function FunnelChart({
 
       try {
         let url: string;
-        
+
         if (isPublic && domain) {
           // Use public endpoint for public dashboard
           url = `/api/public-funnels-analytics?domain=${domain}`;
@@ -108,21 +108,32 @@ export function FunnelChart({
             name: selectedFunnel.name,
             description: selectedFunnel.description || "",
           },
-          steps: selectedFunnel.steps.map((step: any, index: number) => ({
-            id: step.id,
-            step_number: step.step_number,
-            step_name: step.name,
-            step_type: step.step_type || "page_view",
-            entered_count: step.visitors,
-            completed_count: step.visitors,
-            dropped_count:
-              index > 0
-                ? selectedFunnel.steps[index - 1].visitors - step.visitors
-                : 0,
-            conversion_rate: step.conversion_rate,
-            source_breakdown: step.source_breakdown || [],
-            country_breakdown: step.country_breakdown || [],
-          })),
+          steps: selectedFunnel.steps.map((step: any, index: number) => {
+            const entered_count = index === 0 ? step.visitors : selectedFunnel.steps[index - 1].visitors;
+            const completed_count = step.visitors;
+            const dropped_count = entered_count - completed_count;
+            
+            console.log(`Step ${step.step_number} (${step.name}):`, {
+              visitors: step.visitors,
+              entered_count,
+              completed_count,
+              dropped_count,
+              conversion_rate: step.conversion_rate
+            });
+            
+            return {
+              id: step.id,
+              step_number: step.step_number,
+              step_name: step.name,
+              step_type: step.step_type || "page_view",
+              entered_count,
+              completed_count,
+              dropped_count,
+              conversion_rate: step.conversion_rate,
+              source_breakdown: step.source_breakdown || [],
+              country_breakdown: step.country_breakdown || [],
+            };
+          }),
           total_entered: selectedFunnel.total_visitors,
           total_completed:
             selectedFunnel.steps[selectedFunnel.steps.length - 1]?.visitors ||
@@ -152,6 +163,13 @@ export function FunnelChart({
     };
   }, [funnelId, siteId, dateRange, isRealtimeMode, isPublic, domain]);
 
+  console.log("domain", domain);
+  console.log("funnelId", funnelId);
+  console.log("siteId", siteId);
+  console.log("dateRange", dateRange);
+  console.log("isRealtimeMode", isRealtimeMode);
+  console.log("isPublic", isPublic);
+
   if (loading) {
     return (
       <div className="text-sm text-muted-foreground">
@@ -175,11 +193,11 @@ export function FunnelChart({
     );
   }
 
-  // Calculate proportional data based on first step (100%)
-  const firstStepEntries = data.steps[0]?.entered_count || 1;
+  // Calculate proportional data based on first step
+  const firstStepEntries = data.steps[0]?.entered_count || 0;
 
   const chartData = data.steps.map((step, index) => {
-    const proportionalEntered = (step.entered_count / firstStepEntries) * 100;
+    const proportionalEntered = firstStepEntries > 0 ? (step.entered_count / firstStepEntries) * 100 : 0;
 
     // Truncate step name if too long
     const truncatedName =
@@ -187,19 +205,20 @@ export function FunnelChart({
         ? step.step_name.substring(0, 17) + "..."
         : step.step_name;
 
-    // First step is always 100% complete (no drops)
+    // First step logic
     if (index === 0) {
+      const displayPercentage = step.entered_count > 0 ? 100 : 0;
       return {
         name: truncatedName,
         fullName: step.step_name,
         stepNumber: step.step_number,
-        entered: 100,
-        completed: 100,
+        entered: displayPercentage,
+        completed: displayPercentage,
         dropped: 0,
         actualEntered: step.entered_count,
-        actualCompleted: step.entered_count,
-        actualDropped: 0,
-        conversionRate: 100,
+        actualCompleted: step.completed_count,
+        actualDropped: step.dropped_count,
+        conversionRate: step.conversion_rate,
         sourceBreakdown: step.source_breakdown,
         countryBreakdown: step.country_breakdown,
       };
@@ -208,7 +227,7 @@ export function FunnelChart({
     // For other steps, calculate drops from previous step
     const prevStepEntries = data.steps[index - 1]?.entered_count || 0;
     const actualDropped = prevStepEntries - step.entered_count;
-    const proportionalDropped = (actualDropped / firstStepEntries) * 100;
+    const proportionalDropped = firstStepEntries > 0 ? (actualDropped / firstStepEntries) * 100 : 0;
     const proportionalCompleted = proportionalEntered;
 
     return {
@@ -221,8 +240,8 @@ export function FunnelChart({
       dropped: proportionalDropped > 0 ? proportionalDropped : 0,
       // Keep actual numbers for tooltip
       actualEntered: step.entered_count,
-      actualCompleted: step.entered_count,
-      actualDropped: actualDropped > 0 ? actualDropped : 0,
+      actualCompleted: step.completed_count,
+      actualDropped: step.dropped_count,
       conversionRate: step.conversion_rate,
       sourceBreakdown: step.source_breakdown,
       countryBreakdown: step.country_breakdown,
@@ -232,10 +251,10 @@ export function FunnelChart({
   // Custom bar shape to handle conditional radius
   const CustomBar = (props: any) => {
     const { fill, x, y, width, height, payload, dataKey } = props;
-    
+
     // Check if this bar has dropped value
     const hasDropped = payload.dropped > 0;
-    
+
     // Determine radius based on bar type and whether there's a dropped value
     let radius = 0;
     if (dataKey === "completed") {
@@ -245,13 +264,19 @@ export function FunnelChart({
       // Dropped bars always have radius on top
       radius = 4;
     }
-    
+
     // Create path with conditional radius
-    const topLeftRadius = dataKey === "dropped" || (!hasDropped && dataKey === "completed") ? radius : 0;
-    const topRightRadius = dataKey === "dropped" || (!hasDropped && dataKey === "completed") ? radius : 0;
+    const topLeftRadius =
+      dataKey === "dropped" || (!hasDropped && dataKey === "completed")
+        ? radius
+        : 0;
+    const topRightRadius =
+      dataKey === "dropped" || (!hasDropped && dataKey === "completed")
+        ? radius
+        : 0;
     const bottomLeftRadius = 0;
     const bottomRightRadius = 0;
-    
+
     const path = `
       M ${x + topLeftRadius} ${y}
       L ${x + width - topRightRadius} ${y}
@@ -264,7 +289,7 @@ export function FunnelChart({
       Q ${x} ${y} ${x + topLeftRadius} ${y}
       Z
     `;
-    
+
     return <path d={path} fill={fill} />;
   };
 
@@ -294,9 +319,10 @@ export function FunnelChart({
               Relative to first step: {data.entered.toFixed(1)}%
             </p>
           </div>
-          
+
           {/* Breakdowns if data exists */}
-          {(data.sourceBreakdown?.length > 0 || data.countryBreakdown?.length > 0) && (
+          {(data.sourceBreakdown?.length > 0 ||
+            data.countryBreakdown?.length > 0) && (
             <div className="grid grid-cols-2 gap-4 pt-2 mt-2 border-t border-border/50">
               {/* Source Breakdown */}
               {data.sourceBreakdown?.length > 0 && (
@@ -304,21 +330,17 @@ export function FunnelChart({
                   <p className="text-xs font-medium text-muted-foreground">
                     Top Sources
                   </p>
-                  {data.sourceBreakdown
-                    .slice(0, 3)
-                    .map((source: any) => (
-                      <div
-                        key={source.source}
-                        className="flex justify-between text-xs gap-2"
-                      >
-                        <span className="truncate">
-                          {source.source}
-                        </span>
-                        <span className="text-muted-foreground">
-                          {source.percentage}%
-                        </span>
-                      </div>
-                    ))}
+                  {data.sourceBreakdown.slice(0, 3).map((source: any) => (
+                    <div
+                      key={source.source}
+                      className="flex justify-between text-xs gap-2"
+                    >
+                      <span className="truncate">{source.source}</span>
+                      <span className="text-muted-foreground">
+                        {source.percentage}%
+                      </span>
+                    </div>
+                  ))}
                 </div>
               )}
 
@@ -328,21 +350,17 @@ export function FunnelChart({
                   <p className="text-xs font-medium text-muted-foreground">
                     Top Countries
                   </p>
-                  {data.countryBreakdown
-                    .slice(0, 3)
-                    .map((country: any) => (
-                      <div
-                        key={country.country}
-                        className="flex justify-between text-xs gap-2"
-                      >
-                        <span className="truncate">
-                          {country.country}
-                        </span>
-                        <span className="text-muted-foreground">
-                          {country.percentage}%
-                        </span>
-                      </div>
-                    ))}
+                  {data.countryBreakdown.slice(0, 3).map((country: any) => (
+                    <div
+                      key={country.country}
+                      className="flex justify-between text-xs gap-2"
+                    >
+                      <span className="truncate">{country.country}</span>
+                      <span className="text-muted-foreground">
+                        {country.percentage}%
+                      </span>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
