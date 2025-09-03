@@ -144,7 +144,7 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          See who's browsing right now - no cookies
+                          See who&apos;s browsing right now - no cookies
                           required
                         </p>
                       </div>

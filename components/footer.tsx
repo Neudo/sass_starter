@@ -33,6 +33,14 @@ export default function Footer() {
               </li>
               <li>
                 <Link
+                  href="/use-cases"
+                  className="hover:text-primary transition-colors"
+                >
+                  Use Cases
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/pricing"
                   className="hover:text-primary transition-colors"
                 >
