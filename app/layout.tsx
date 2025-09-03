@@ -23,7 +23,8 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Hector Analytics | Privacy-First Web Analytics",
-    description: "Cookie-free, GDPR compliant analytics that respects user privacy while delivering powerful insights.",
+    description:
+      "Cookie-free, GDPR compliant analytics that respects user privacy while delivering powerful insights.",
     url: "https://www.hectoranalytics.com",
     siteName: "Hector Analytics",
     type: "website",
@@ -31,7 +32,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Hector Analytics | Privacy-First Web Analytics",
-    description: "Cookie-free, GDPR compliant analytics that respects user privacy while delivering powerful insights.",
+    description:
+      "Cookie-free, GDPR compliant analytics that respects user privacy while delivering powerful insights.",
   },
 };
 
@@ -48,7 +50,7 @@ export default function RootLayout({
 }>) {
   return (
     <html suppressHydrationWarning lang="en" className={geistSans.variable}>
-      <body className="antialiased">
+      <body suppressHydrationWarning className="antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
@@ -57,11 +59,11 @@ export default function RootLayout({
           {children}
           <Toaster />
         </ThemeProvider>
-        <Script 
-          id="schema-org" 
+        <Script
+          id="schema-org"
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(combinedHomeSchema)
+            __html: JSON.stringify(combinedHomeSchema),
           }}
         />
         <Script src="/script.js" />
