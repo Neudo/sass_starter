@@ -2,7 +2,7 @@
 import { Button } from "./ui/button";
 import { ThemeToggle } from "./theme-toggle";
 import { Logo } from "./logo";
-import { Menu, X, LogOut, User } from "lucide-react";
+import { Menu, X, LogOut, User, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -23,11 +23,15 @@ export function Navigation() {
   // Navigation items definition
   const navItems = [
     { name: "Features", path: "/features", id: "features" },
-    { name: "Use Cases", path: "/use-cases", id: "use-cases" },
     { name: "Pricing", path: "/pricing", id: "pricing" },
     { name: "FAQ", path: "/faq", id: "faq" },
-    // { name: "Blog", path: "/blog", id: "blog" },
     { name: "Contact", path: "/contact", id: "contact" },
+  ];
+
+  // Resources dropdown items
+  const resourcesItems = [
+    { name: "Use Cases", path: "/use-cases", id: "use-cases" },
+    { name: "Blog", path: "/blog", id: "blog" },
   ];
   return (
     <>
@@ -53,7 +57,6 @@ export function Navigation() {
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8 text-xl">
               {navItems.map((item) => {
-                // External links (like docs, support)
                 if (item) {
                   return (
                     <a
@@ -66,6 +69,31 @@ export function Navigation() {
                   );
                 }
               })}
+
+              {/* Resources Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="text-xl text-muted-foreground hover:text-primary transition-colors duration-200 p-0 h-auto font-normal"
+                  >
+                    Resources
+                    <ChevronDown className="ml-1 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48">
+                  {resourcesItems.map((item) => (
+                    <DropdownMenuItem key={item.id} asChild>
+                      <a
+                        href={item.path}
+                        className="cursor-pointer w-full px-6 py-4 md:text-xl"
+                      >
+                        {item.name}
+                      </a>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             {/* CTA Buttons + Theme Toggle */}
@@ -159,7 +187,6 @@ export function Navigation() {
             <div className="md:hidden">
               <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-border mt-4">
                 {navItems.map((item) => {
-                  // External links (like docs, support)
                   if (item) {
                     return (
                       <a
@@ -172,6 +199,22 @@ export function Navigation() {
                     );
                   }
                 })}
+
+                {/* Resources section for mobile */}
+                <div className="px-3 py-2">
+                  <div className="text-base font-medium text-foreground mb-2">
+                    Resources
+                  </div>
+                  {resourcesItems.map((item) => (
+                    <a
+                      key={item.id}
+                      href={item.path}
+                      className="block px-3 py-2 rounded-md text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 ml-2"
+                    >
+                      {item.name}
+                    </a>
+                  ))}
+                </div>
 
                 <div className="pt-4 pb-3 md:border-t md:border-border">
                   {isLoggedIn ? (

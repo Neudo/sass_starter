@@ -14,9 +14,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlertCircle, Eye, Edit, Bot, Clock, CheckCircle, Trash2, ExternalLink } from "lucide-react";
+import {
+  AlertCircle,
+  Eye,
+  Edit,
+  Bot,
+  Clock,
+  CheckCircle,
+  Trash2,
+  ExternalLink,
+  Plus,
+  Copy,
+} from "lucide-react";
 import BlogPreviewModal from "./blog-preview-modal";
 import BlogEditModal from "./blog-edit-modal";
+import BlogRewriteModal from "./blog-rewrite-modal";
 
 interface GenerateArticleOptions {
   topic: string;
@@ -46,7 +58,8 @@ interface BlogPost {
 export default function BlogAdminDashboard() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [topics, setTopics] = useState<GenerateArticleOptions[]>([]);
-  const [selectedTopic, setSelectedTopic] = useState<GenerateArticleOptions | null>(null);
+  const [selectedTopic, setSelectedTopic] =
+    useState<GenerateArticleOptions | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +69,7 @@ export default function BlogAdminDashboard() {
   const [editPost, setEditPost] = useState<BlogPost | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isRewriteOpen, setIsRewriteOpen] = useState(false);
 
   // Custom article form
   const [customTopic, setCustomTopic] = useState("");
@@ -169,9 +183,11 @@ export default function BlogAdminDashboard() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           status,
-          ...(status === "published" && { published_at: new Date().toISOString() })
+          ...(status === "published" && {
+            published_at: new Date().toISOString(),
+          }),
         }),
       });
 
@@ -185,7 +201,9 @@ export default function BlogAdminDashboard() {
       setError(null);
     } catch (error) {
       console.error("Failed to update post status:", error);
-      setError(error instanceof Error ? error.message : "Erreur lors de la mise à jour");
+      setError(
+        error instanceof Error ? error.message : "Erreur lors de la mise à jour"
+      );
     }
   };
 
@@ -199,12 +217,68 @@ export default function BlogAdminDashboard() {
     setIsEditOpen(true);
   };
 
+  const handleCreateNew = () => {
+    // Create a new empty post template
+    const newPost: BlogPost = {
+      id: "new",
+      title: "",
+      slug: "",
+      content: "",
+      excerpt: "",
+      meta_description: "",
+      keywords: [],
+      status: "draft",
+      generated_by_ai: false,
+      reading_time: 1,
+      seo_score: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      view_count: 0,
+    };
+    setEditPost(newPost);
+    setIsEditOpen(true);
+  };
+
+  const handleOpenRewrite = () => {
+    setIsRewriteOpen(true);
+  };
+
+  const handleRewrite = (rewrittenArticle: {
+    title: string;
+    content: string;
+    keywords: string[];
+  }) => {
+    // Create a new post with the rewritten content
+    const newPost: BlogPost = {
+      id: "new",
+      title: rewrittenArticle.title,
+      slug: "",
+      content: rewrittenArticle.content,
+      excerpt: "",
+      meta_description: "",
+      keywords: rewrittenArticle.keywords,
+      status: "draft",
+      generated_by_ai: true, // Mark as AI-generated
+      reading_time: Math.ceil(rewrittenArticle.content.split(" ").length / 200),
+      seo_score: 75, // Default score for rewritten articles
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      view_count: 0,
+    };
+    setEditPost(newPost);
+    setIsEditOpen(true);
+  };
+
   const handleSave = async (updatedData: Partial<BlogPost>) => {
     if (!editPost) return;
 
     try {
-      const response = await fetch(`/api/blog/${editPost.id}`, {
-        method: "PATCH",
+      const isNewPost = editPost.id === "new";
+      const url = isNewPost ? "/api/blog" : `/api/blog/${editPost.id}`;
+      const method = isNewPost ? "POST" : "PATCH";
+
+      const response = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -221,7 +295,9 @@ export default function BlogAdminDashboard() {
       setError(null);
     } catch (error) {
       console.error("Failed to save post:", error);
-      throw new Error(error instanceof Error ? error.message : "Erreur lors de la sauvegarde");
+      throw new Error(
+        error instanceof Error ? error.message : "Erreur lors de la sauvegarde"
+      );
     }
   };
 
@@ -245,7 +321,9 @@ export default function BlogAdminDashboard() {
       setError(null);
     } catch (error) {
       console.error("Failed to delete post:", error);
-      setError(error instanceof Error ? error.message : "Erreur lors de la suppression");
+      setError(
+        error instanceof Error ? error.message : "Erreur lors de la suppression"
+      );
     }
   };
 
@@ -404,7 +482,9 @@ export default function BlogAdminDashboard() {
                 <Label>Ton</Label>
                 <Select
                   value={customTone}
-                  onValueChange={(value: "professional" | "friendly" | "technical") => setCustomTone(value)}
+                  onValueChange={(
+                    value: "professional" | "friendly" | "technical"
+                  ) => setCustomTone(value)}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -420,7 +500,9 @@ export default function BlogAdminDashboard() {
                 <Label>Longueur</Label>
                 <Select
                   value={customLength}
-                  onValueChange={(value: "short" | "medium" | "long") => setCustomLength(value)}
+                  onValueChange={(value: "short" | "medium" | "long") =>
+                    setCustomLength(value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -461,7 +543,23 @@ export default function BlogAdminDashboard() {
       {/* Articles List */}
       <Card>
         <CardHeader>
-          <CardTitle>Articles Récents</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle>Articles Récents</CardTitle>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleOpenRewrite} 
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Copy className="h-4 w-4" />
+                À partir d&apos;un article
+              </Button>
+              <Button onClick={handleCreateNew} className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Nouvel Article
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -477,7 +575,7 @@ export default function BlogAdminDashboard() {
               posts.map((post) => (
                 <div
                   key={post.id}
-                  className="flex items-start justify-between p-4 border rounded-lg hover:bg-gray-50"
+                  className="flex items-start justify-between p-4 border rounded-lg"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
@@ -585,6 +683,12 @@ export default function BlogAdminDashboard() {
           setEditPost(null);
         }}
         onSave={handleSave}
+      />
+
+      <BlogRewriteModal
+        isOpen={isRewriteOpen}
+        onClose={() => setIsRewriteOpen(false)}
+        onRewrite={handleRewrite}
       />
     </div>
   );

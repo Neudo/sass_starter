@@ -75,43 +75,6 @@ export default function NotFound() {
               Go Back
             </Button>
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-            className="mt-16 pt-8 border-t border-border"
-          >
-            {/* <p className="text-sm text-muted-foreground mb-4">
-              Quick links to help you navigate:
-            </p> */}
-            {/* <div className="flex flex-wrap gap-4 justify-center">
-              <Link
-                href="/pricing"
-                className="text-primary hover:underline flex items-center gap-1"
-              >
-                Pricing
-              </Link>
-              <Link
-                href="/demo"
-                className="text-primary hover:underline flex items-center gap-1"
-              >
-                Live Demo
-              </Link>
-              <Link
-                href="/faq"
-                className="text-primary hover:underline flex items-center gap-1"
-              >
-                FAQ
-              </Link>
-              <Link
-                href="/contact"
-                className="text-primary hover:underline flex items-center gap-1"
-              >
-                Contact
-              </Link>
-            </div> */}
-          </motion.div>
         </div>
       </main>
 

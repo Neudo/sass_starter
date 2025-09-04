@@ -6,6 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateArticleSchema } from "@/lib/schema";
 import { Clock, Calendar, Eye, ArrowLeft, Share2 } from "lucide-react";
+import { Navigation } from "@/components/navigation";
+import { sanitizeHtml } from "@/lib/markdown-utils";
 
 interface BlogPostProps {
   params: Promise<{ slug: string }>;
@@ -70,27 +72,28 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
     keywords: post.keywords,
     readingTime: post.reading_time,
     viewCount: post.view_count + 1, // +1 because we incremented it
-    featuredImage: post.featured_image
+    featuredImage: post.featured_image,
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Script
         id="article-schema"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(articleSchema)
+          __html: JSON.stringify(articleSchema),
         }}
       />
       {/* Header */}
-      <div className="bg-white border-b">
+      <Navigation />
+      <div className="border-b">
         <div className="container mx-auto px-4 py-8">
           <Link
             href="/blog"
             className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour au blog
+            Return to blog
           </Link>
 
           <div className="max-w-4xl">
@@ -105,11 +108,11 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
               </span>
               <span className="flex items-center gap-1">
                 <Clock className="h-4 w-4" />
-                {post.reading_time} min de lecture
+                {post.reading_time} min read
               </span>
               <span className="flex items-center gap-1">
                 <Eye className="h-4 w-4" />
-                {post.view_count} vues
+                {post.view_count} views
               </span>
             </div>
 
@@ -132,7 +135,7 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
 
               <button className="flex items-center gap-2 text-gray-500 hover:text-gray-700">
                 <Share2 className="h-4 w-4" />
-                Partager
+                Share
               </button>
             </div>
           </div>
@@ -142,34 +145,35 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
       {/* Article Content */}
       <article className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-sm p-8 lg:p-12">
+          <div className="rounded-lg shadow-sm p-8 lg:p-12">
             <div
-              className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-relaxed prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-ul:text-gray-700 prose-ol:text-gray-700 prose-code:text-blue-600 prose-code:bg-blue-50 prose-code:px-1 prose-code:rounded prose-pre:bg-gray-900 prose-pre:text-gray-100"
-              dangerouslySetInnerHTML={{ __html: post.content }}
+              className="blogPost prose prose-lg max-w-none prose-headings:text-gray-900 prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-relaxed prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-ul:text-gray-700 prose-ol:text-gray-700 prose-code:text-blue-600 prose-code:bg-blue-50 prose-code:px-1 prose-code:rounded prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-blockquote:border-blue-200 prose-blockquote:bg-blue-50 prose-blockquote:not-italic prose-img:rounded-lg prose-img:shadow-md"
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
             />
 
             {/* Article Footer */}
             <div className="mt-12 pt-8 border-t border-gray-200">
               <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Découvrez Hector Analytics
+                  Discover Hector Analytics
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  L&apos;analytics web privacy-first qui respecte vos
-                  utilisateurs et simplifie votre conformité RGPD.
+                  The web analytics privacy-first that respects your users and
+                  simplifies your GDPR compliance.
                 </p>
                 <div className="flex gap-4">
                   <Link
-                    href="/#waitlist"
+                    href="/auth/sign-up"
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
                   >
-                    Rejoindre la waitlist
+                    Sign-up for free
                   </Link>
                   <Link
-                    href="/#demo"
+                    target="_blank"
+                    href="/hectoranalytics.com"
                     className="bg-white hover:bg-gray-50 text-gray-900 px-4 py-2 rounded-lg font-medium border transition-colors text-sm"
                   >
-                    Voir la démo
+                    See the demo
                   </Link>
                 </div>
               </div>

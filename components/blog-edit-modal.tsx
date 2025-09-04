@@ -21,6 +21,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AlertCircle, Save, X } from "lucide-react";
+import MarkdownEditor from "@/components/MarkdownEditor";
+import { calculateReadingTime, generateSlug, extractExcerpt } from "@/lib/markdown-utils";
 
 interface BlogPost {
   id: string;
@@ -57,6 +59,7 @@ export default function BlogEditModal({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [keywordsInput, setKeywordsInput] = useState("");
+  const [markdownContent, setMarkdownContent] = useState("");
 
   useEffect(() => {
     if (post) {
@@ -70,6 +73,7 @@ export default function BlogEditModal({
         status: post.status,
       });
       setKeywordsInput(post.keywords.join(", "));
+      setMarkdownContent(post.content || "");
     }
   }, [post]);
 
@@ -92,6 +96,8 @@ export default function BlogEditModal({
         keywords,
         // Auto-generate slug if title changed
         slug: formData.slug || generateSlug(formData.title || ""),
+        // For new posts, ensure we have the HTML content
+        content: formData.content || "",
       };
 
       await onSave(updateData);
@@ -103,29 +109,26 @@ export default function BlogEditModal({
     }
   };
 
-  const generateSlug = (title: string): string => {
-    return title
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
-  };
-
-  const calculateReadingTime = (content: string): number => {
-    const wordsPerMinute = 200;
-    const wordCount = content.replace(/<[^>]*>/g, "").split(/\s+/).length;
-    return Math.ceil(wordCount / wordsPerMinute);
+  // Handle content changes from Markdown editor
+  const handleContentChange = (markdown: string, html: string) => {
+    setMarkdownContent(markdown);
+    const newReadingTime = calculateReadingTime(markdown);
+    
+    setFormData((prev) => ({
+      ...prev,
+      content: html, // Store HTML for rendering
+      reading_time: newReadingTime,
+      // Auto-generate excerpt if not set or if it matches previous auto-generated one
+      ...((!prev.excerpt || prev.excerpt === extractExcerpt(prev.content || "")) && {
+        excerpt: extractExcerpt(markdown),
+      }),
+    }));
   };
 
   const handleInputChange = (field: keyof BlogPost, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-      // Auto-calculate reading time when content changes
-      ...(field === "content" && {
-        reading_time: calculateReadingTime(value),
-      }),
     }));
 
     // Auto-generate slug when title changes
@@ -143,10 +146,14 @@ export default function BlogEditModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl">Éditer l&apos;article</DialogTitle>
+          <DialogTitle className="text-xl">
+            {post?.id === "new" ? "Créer un nouvel article" : "Éditer l'article"}
+          </DialogTitle>
           <DialogDescription>
-            Modifiez les informations de l&apos;article et sauvegardez les
-            changements.
+            {post?.id === "new" 
+              ? "Créez un nouvel article de blog avec l'éditeur Markdown."
+              : "Modifiez les informations de l'article et sauvegardez les changements."
+            }
           </DialogDescription>
         </DialogHeader>
 
@@ -257,25 +264,13 @@ export default function BlogEditModal({
           </div>
 
           {/* Content */}
-          <div>
-            <Label htmlFor="content">Contenu HTML</Label>
-            <Textarea
-              id="content"
-              value={formData.content || ""}
-              onChange={(e) => handleInputChange("content", e.target.value)}
-              placeholder="Contenu HTML de l'article"
-              rows={15}
-              className="font-mono text-sm"
-            />
-            <div className="text-xs text-gray-500 mt-1 flex justify-between">
-              <span>
-                Temps de lecture estimé : {calculateReadingTime(formData.content || "")} minutes
-              </span>
-              <span>
-                {formData.content?.length || 0} caractères
-              </span>
-            </div>
-          </div>
+          <MarkdownEditor
+            value={markdownContent}
+            onChange={handleContentChange}
+            label="Contenu de l'article"
+            placeholder="Écrivez votre article en Markdown..."
+            initialMode="markdown"
+          />
 
           {/* Current Keywords Preview */}
           {keywordsInput && (
@@ -308,7 +303,10 @@ export default function BlogEditModal({
             </Button>
             <Button type="submit" disabled={isSaving}>
               <Save className="h-4 w-4 mr-2" />
-              {isSaving ? "Sauvegarde..." : "Sauvegarder"}
+              {isSaving 
+                ? (post?.id === "new" ? "Création..." : "Sauvegarde...")
+                : (post?.id === "new" ? "Créer l'article" : "Sauvegarder")
+              }
             </Button>
           </div>
         </form>

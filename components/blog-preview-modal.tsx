@@ -66,7 +66,8 @@ export default function BlogPreviewModal({
             </div>
           </div>
           <DialogDescription>
-            Prévisualisation de l&apos;article tel qu&apos;il apparaîtra sur le blog
+            Prévisualisation de l&apos;article tel qu&apos;il apparaîtra sur le
+            blog
           </DialogDescription>
         </DialogHeader>
 
@@ -95,15 +96,15 @@ export default function BlogPreviewModal({
                   post.status === "published"
                     ? "default"
                     : post.status === "draft"
-                    ? "secondary"
-                    : "outline"
+                      ? "secondary"
+                      : "outline"
                 }
               >
                 {post.status === "published"
                   ? "Publié"
                   : post.status === "draft"
-                  ? "Brouillon"
-                  : "Programmé"}
+                    ? "Brouillon"
+                    : "Programmé"}
               </Badge>
             </div>
 
@@ -146,7 +147,7 @@ export default function BlogPreviewModal({
           </div>
 
           {/* Article Content */}
-          <div className="bg-white border rounded-lg p-6">
+          <div className="border rounded-lg p-6">
             <div
               className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-relaxed prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-ul:text-gray-700 prose-ol:text-gray-700 prose-code:text-blue-600 prose-code:bg-blue-50 prose-code:px-1 prose-code:rounded prose-pre:bg-gray-900 prose-pre:text-gray-100"
               dangerouslySetInnerHTML={{ __html: post.content }}
