@@ -12,3 +12,19 @@ export interface DebounceSettings {
 export interface PrivateWindow {
   ResizeObserver: ResizeObserverPolyfill;
 }
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt: string;
+  meta_description: string;
+  keywords: string[];
+  status: "draft" | "published" | "scheduled";
+  generated_by_ai: boolean;
+  created_at: string;
+  updated_at: string;
+  published_at?: string;
+  featured_image?: string;
+}

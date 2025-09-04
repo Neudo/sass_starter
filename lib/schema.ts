@@ -122,8 +122,6 @@ export function generateArticleSchema(article: {
   content: string;
   publishedAt: string;
   keywords: string[];
-  readingTime: number;
-  viewCount: number;
   featuredImage?: string;
 }) {
   return {
@@ -144,12 +142,6 @@ export function generateArticleSchema(article: {
     "articleSection": "Web Analytics",
     "keywords": article.keywords.join(", "),
     "wordCount": Math.ceil(article.content.length / 5),
-    "timeRequired": `PT${article.readingTime}M`,
-    "interactionStatistic": {
-      "@type": "InteractionCounter",
-      "interactionType": "https://schema.org/ReadAction",
-      "userInteractionCount": article.viewCount
-    },
     "about": [
       {
         "@type": "Thing",
@@ -307,7 +299,7 @@ export const blogSchema = {
   "url": `${BASE_URL}/blog`,
   "author": organizationSchema,
   "publisher": organizationSchema,
-  "inLanguage": "fr-FR",
+  "inLanguage": "en-US",
   "about": [
     {
       "@type": "Thing",

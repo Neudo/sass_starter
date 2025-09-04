@@ -75,7 +75,7 @@ export function Navigation() {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="text-xl text-muted-foreground hover:text-primary transition-colors duration-200 p-0 h-auto font-normal"
+                    className="text-xl text-muted-foreground p-2 hover:text-primary transition-colors duration-200 h-auto font-normal"
                   >
                     Resources
                     <ChevronDown className="ml-1 h-4 w-4" />

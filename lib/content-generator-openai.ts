@@ -4,16 +4,15 @@
  */
 
 import { createAdminClient } from "./supabase/admin";
+import { BlogPost } from "@/types";
 
-interface BlogPost {
+export interface BlogPostContent {
   title: string;
   content: string;
   excerpt: string;
   keywords: string[];
-  metaDescription: string;
+  meta_description: string;
   slug: string;
-  readingTime: number;
-  seoScore: number;
 }
 
 interface GenerateArticleOptions {
@@ -36,39 +35,43 @@ export class ContentGeneratorOpenAI {
 
   async generateArticle(options: GenerateArticleOptions): Promise<BlogPost> {
     const prompt = this.createPrompt(options);
-    
+
     console.log("Generating article with OpenAI API...");
-    
+
     try {
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${this.openaiApiKey}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4-turbo-preview",
-          messages: [
-            {
-              role: "system",
-              content: "Tu es un expert en rédaction SEO spécialisé dans les analytics web et la privacy. Tu génères des articles de blog optimisés pour le SEO en format JSON structuré."
-            },
-            {
-              role: "user",
-              content: prompt,
-            },
-          ],
-          temperature: 0.7,
-          max_tokens: 4000,
-        }),
-      });
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${this.openaiApiKey}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4-turbo-preview",
+            messages: [
+              {
+                role: "system",
+                content:
+                  "Tu es un expert en rédaction SEO spécialisé dans les analytics web et la privacy. Tu génères des articles de blog optimisés pour le SEO en format JSON structuré.",
+              },
+              {
+                role: "user",
+                content: prompt,
+              },
+            ],
+            temperature: 0.7,
+            max_tokens: 4000,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.text();
         console.error("OpenAI API error:", {
           status: response.status,
           statusText: response.statusText,
-          error: errorData
+          error: errorData,
         });
         throw new Error(`API request failed: ${response.statusText}`);
       }
@@ -87,8 +90,8 @@ export class ContentGeneratorOpenAI {
   private createPrompt(options: GenerateArticleOptions): string {
     const lengthWords = {
       short: "1000-1500",
-      medium: "2000-2500", 
-      long: "3000-4000"
+      medium: "2000-2500",
+      long: "3000-4000",
     };
 
     return `Tu es un expert en rédaction SEO et marketing digital spécialisé dans les analytics web et la privacy. 
@@ -133,9 +136,7 @@ RÉPONSE ATTENDUE (FORMAT JSON):
   "content": "Contenu HTML complet avec balises <h1>, <h2>, <h3>, <p>, <ul>, <li>, etc.",
   "excerpt": "Résumé engageant de 150-160 caractères",
   "metaDescription": "Meta description SEO de 150-155 caractères",
-  "keywords": ["mot-clé principal", "mot-clé secondaire 1", "mot-clé secondaire 2", "etc"],
-  "readingTime": 8,
-  "seoScore": 85
+  "keywords": ["mot-clé principal", "mot-clé secondaire 1", "mot-clé secondaire 2", "etc"]
 }
 \`\`\`
 
@@ -151,16 +152,19 @@ L'article doit être informatif, engageant et naturellement mentionner Hector An
       }
 
       const parsed = JSON.parse(jsonMatch[1]);
-      
+
       return {
+        id: "temp-id",
         title: parsed.title,
         content: parsed.content,
         excerpt: parsed.excerpt,
         keywords: parsed.keywords || [],
-        metaDescription: parsed.metaDescription,
+        meta_description: parsed.metaDescription,
         slug: parsed.slug,
-        readingTime: parsed.readingTime || this.calculateReadingTime(parsed.content),
-        seoScore: parsed.seoScore || 75,
+        status: "draft",
+        generated_by_ai: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
     } catch (error) {
       console.error("Error parsing response:", error);
@@ -168,15 +172,9 @@ L'article doit être informatif, engageant et naturellement mentionner Hector An
     }
   }
 
-  private calculateReadingTime(content: string): number {
-    const wordsPerMinute = 200;
-    const wordCount = content.split(/\s+/).length;
-    return Math.ceil(wordCount / wordsPerMinute);
-  }
-
   async saveToBlog(blogPost: BlogPost, authorId?: string): Promise<string> {
     const supabase = createAdminClient();
-    
+
     const { data, error } = await supabase
       .from("blog_posts")
       .insert({
@@ -184,10 +182,8 @@ L'article doit être informatif, engageant et naturellement mentionner Hector An
         slug: blogPost.slug,
         content: blogPost.content,
         excerpt: blogPost.excerpt,
-        meta_description: blogPost.metaDescription,
+        meta_description: blogPost.meta_description,
         keywords: blogPost.keywords,
-        reading_time: blogPost.readingTime,
-        seo_score: blogPost.seoScore,
         author_id: authorId,
         generated_by_ai: true,
         status: "draft",
@@ -215,7 +211,7 @@ L'article doit être informatif, engageant et naturellement mentionner Hector An
       {
         topic: "RGPD et analytics web : guide de conformité",
         keyword: "RGPD analytics",
-        tone: "professional", 
+        tone: "professional",
         length: "medium",
         includeCode: false,
       },

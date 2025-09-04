@@ -11,8 +11,11 @@ export async function POST(req: NextRequest) {
 
     if (!(apiKey && apiKey === process.env.CONTENT_GENERATION_API_KEY)) {
       const supabase = await createClient();
-      const { data: { user }, error } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+
       if (error || !user) {
         return NextResponse.json(
           { error: "Unauthorized - Please login" },
@@ -56,10 +59,6 @@ export async function POST(req: NextRequest) {
       meta_description: postData.meta_description || "",
       keywords: postData.keywords || [],
       status: postData.status || "draft",
-      generated_by_ai: postData.generated_by_ai || false,
-      reading_time: postData.reading_time || 1,
-      seo_score: postData.seo_score || 0,
-      view_count: 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       ...(postData.status === "published" && {
@@ -79,10 +78,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       post: data,
-      message: "Article created successfully" 
+      message: "Article created successfully",
     });
   } catch (error) {
     console.error("Error creating post:", error);

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Script from "next/script";
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -10,23 +9,11 @@ import {
 } from "@/components/ui/card";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { blogSchema } from "@/lib/schema";
-import { Clock, Eye, Calendar } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { Navigation } from "@/components/navigation";
-import { FinalCTA } from "@/components/sections/final-cta";
 import Image from "next/image";
-
-interface BlogPost {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string;
-  meta_description: string;
-  keywords: string[];
-  reading_time: number;
-  view_count: number;
-  published_at: string;
-  featured_image?: string;
-}
+import Footer from "@/components/footer";
+import { BlogPost } from "@/types";
 
 export default async function BlogPage() {
   const supabase = createAdminClient();
@@ -78,9 +65,12 @@ export default async function BlogPage() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+          <div className="grid grid-cols-1 gap-8 mb-16 max-w-[660px] mx-auto">
             {blogPosts.map((post) => (
-              <Card key={post.id} className="hover:shadow-lg transition-shadow">
+              <Card
+                key={post.id}
+                className="hover:shadow-lg transition-shadow relative group"
+              >
                 {post.featured_image && (
                   <div className="aspect-video bg-gray-200 rounded-t-lg overflow-hidden">
                     <Image
@@ -95,46 +85,25 @@ export default async function BlogPage() {
                 <CardHeader>
                   <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
                     <Calendar className="h-4 w-4" />
-                    {new Date(post.published_at).toLocaleDateString("fr-FR", {
+                    {post.published_at && new Date(post.published_at).toLocaleDateString("en-US", {
                       day: "numeric",
                       month: "long",
                       year: "numeric",
                     })}
                   </div>
-                  <CardTitle className="line-clamp-2 hover:text-blue-600 transition-colors">
-                    <Link href={`/blog/${post.slug}`}>{post.title}</Link>
+                  <CardTitle className="line-clamp-2 hover:text-primary transition-colors">
+                    <h2 className="text-xl group-hover:text-primary transition-colors">
+                      {post.title}
+                    </h2>
                   </CardTitle>
                   <CardDescription className="line-clamp-3">
                     {post.excerpt}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                    <div className="flex items-center gap-4">
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {post.reading_time} min
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Eye className="h-4 w-4" />
-                        {post.view_count}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {post.keywords.slice(0, 2).map((keyword, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="text-xs"
-                      >
-                        {keyword}
-                      </Badge>
-                    ))}
-                  </div>
                   <Link
                     href={`/blog/${post.slug}`}
-                    className="text-blue-600 hover:text-blue-800 font-medium text-sm inline-flex items-center"
+                    className="font-medium text-sm inline-flex items-center after:content-[''] after:inset-0 after:absolute"
                   >
                     Read more →
                   </Link>
@@ -143,10 +112,8 @@ export default async function BlogPage() {
             ))}
           </div>
         )}
-
-        {/* Call to Action */}
-        <FinalCTA />
       </div>
+      <Footer />
     </div>
   );
 }

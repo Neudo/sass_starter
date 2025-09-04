@@ -25,11 +25,15 @@ export function getCanonicalUrl(path: string): string {
 /**
  * Generate metadata with canonical URL for pages
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+interface MetadataOptions {
+  alternates?: Record<string, unknown>;
+  openGraph?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
 export function generateCanonicalMetadata(
   path: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  additionalMetadata: any = {}
+  additionalMetadata: MetadataOptions = {}
 ) {
   const canonicalUrl = getCanonicalUrl(path);
 
@@ -37,11 +41,11 @@ export function generateCanonicalMetadata(
     ...additionalMetadata,
     alternates: {
       canonical: canonicalUrl,
-      ...additionalMetadata.alternates,
+      ...(additionalMetadata.alternates || {}),
     },
     openGraph: {
       url: canonicalUrl,
-      ...additionalMetadata.openGraph,
+      ...(additionalMetadata.openGraph || {}),
     },
   };
 }

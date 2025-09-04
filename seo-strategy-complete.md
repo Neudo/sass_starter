@@ -8,24 +8,27 @@ Cette stratégie SEO vise à positionner Hector Analytics comme la référence e
 
 ### Positionnement Actuel des Concurrents
 
-| Concurrent | DA | Trafic Mensuel | Mots-clés Top | Forces | Faiblesses |
-|------------|----|-----------|--------------|---------|-----------| 
-| **Plausible** | 68 | ~180k | "plausible analytics", "google analytics alternative" | Open source, blog fort | Technique, prix élevé |
-| **Simple Analytics** | 55 | ~45k | "simple analytics", "privacy analytics" | UX simple | Fonctionnalités limitées |
-| **Fathom** | 62 | ~35k | "fathom analytics" | Marketing fort | Prix premium |
-| **Umami** | 48 | ~25k | "open source analytics" | Gratuit, dev community | Technique pur |
+| Concurrent           | DA  | Trafic Mensuel | Mots-clés Top                                         | Forces                 | Faiblesses               |
+| -------------------- | --- | -------------- | ----------------------------------------------------- | ---------------------- | ------------------------ |
+| **Plausible**        | 68  | ~180k          | "plausible analytics", "google analytics alternative" | Open source, blog fort | Technique, prix élevé    |
+| **Simple Analytics** | 55  | ~45k           | "simple analytics", "privacy analytics"               | UX simple              | Fonctionnalités limitées |
+| **Fathom**           | 62  | ~35k           | "fathom analytics"                                    | Marketing fort         | Prix premium             |
+| **Umami**            | 48  | ~25k           | "open source analytics"                               | Gratuit, dev community | Technique pur            |
 
 ### Opportunités SEO Identifiées
 
 **1. Gap "débutants" :**
+
 - Concurrents s'adressent aux développeurs
 - Opportunité : contenu pour marketeurs non-techniques
 
 **2. Gap "français" :**
+
 - Peu de contenu SEO en français sur ce secteur
 - Opportunité : dominer les requêtes françaises
 
 **3. Gap "e-commerce" :**
+
 - Focus général, peu spécialisé e-commerce
 - Opportunité : analytics e-commerce privacy-first
 
@@ -35,67 +38,69 @@ Cette stratégie SEO vise à positionner Hector Analytics comme la référence e
 
 #### **Cluster 1 : Alternative Analytics (Priorité MAX)**
 
-| Mot-clé | Volume/mois | Difficulté | Intention | CPC |
-|---------|-------------|------------|-----------|-----|
-| alternative google analytics | 1,500 | 65 | Commercial | €2.80 |
-| remplacer google analytics | 800 | 45 | Commercial | €2.20 |
-| alternative GA4 | 400 | 55 | Commercial | €3.10 |
-| analytics privacy-first | 300 | 35 | Commercial | €2.90 |
-| analytics sans google | 250 | 40 | Commercial | €2.15 |
+| Mot-clé                      | Volume/mois | Difficulté | Intention  | CPC   |
+| ---------------------------- | ----------- | ---------- | ---------- | ----- |
+| alternative google analytics | 1,500       | 65         | Commercial | €2.80 |
+| remplacer google analytics   | 800         | 45         | Commercial | €2.20 |
+| alternative GA4              | 400         | 55         | Commercial | €3.10 |
+| analytics privacy-first      | 300         | 35         | Commercial | €2.90 |
+| analytics sans google        | 250         | 40         | Commercial | €2.15 |
 
 **Articles ciblés :**
+
 - "7 Meilleures Alternatives à Google Analytics en 2025"
 - "Pourquoi Remplacer Google Analytics : Guide Complet"
 - "GA4 vs Analytics Privacy-First : Comparaison Détaillée"
 
 #### **Cluster 2 : Conformité RGPD (Priorité ÉLEVÉE)**
 
-| Mot-clé | Volume/mois | Difficulté | Intention | CPC |
-|---------|-------------|------------|-----------|-----|
-| RGPD analytics | 900 | 50 | Informatif | €1.85 |
-| analytics conforme RGPD | 450 | 40 | Commercial | €2.30 |
-| GDPR compliance analytics | 380 | 55 | Informatif | €2.80 |
-| analytics sans consentement | 200 | 30 | Commercial | €2.90 |
+| Mot-clé                     | Volume/mois | Difficulté | Intention  | CPC   |
+| --------------------------- | ----------- | ---------- | ---------- | ----- |
+| RGPD analytics              | 900         | 50         | Informatif | €1.85 |
+| analytics conforme RGPD     | 450         | 40         | Commercial | €2.30 |
+| GDPR compliance analytics   | 380         | 55         | Informatif | €2.80 |
+| analytics sans consentement | 200         | 30         | Commercial | €2.90 |
 
 **Articles ciblés :**
+
 - "RGPD et Analytics : Guide de Conformité 2025"
 - "Analytics Sans Consentement : Est-ce Légal ?"
 - "Checklist RGPD pour Choisir son Outil Analytics"
 
 #### **Cluster 3 : Technologies Sans Cookies (Priorité ÉLEVÉE)**
 
-| Mot-clé | Volume/mois | Difficulté | Intention | CPC |
-|---------|-------------|------------|-----------|-----|
-| analytics sans cookies | 400 | 45 | Commercial | €2.60 |
-| cookieless analytics | 350 | 50 | Informatif | €3.20 |
-| web analytics sans cookies | 250 | 35 | Commercial | €2.40 |
-| tracking sans cookies | 200 | 40 | Informatif | €2.10 |
+| Mot-clé                    | Volume/mois | Difficulté | Intention  | CPC   |
+| -------------------------- | ----------- | ---------- | ---------- | ----- |
+| analytics sans cookies     | 400         | 45         | Commercial | €2.60 |
+| cookieless analytics       | 350         | 50         | Informatif | €3.20 |
+| web analytics sans cookies | 250         | 35         | Commercial | €2.40 |
+| tracking sans cookies      | 200         | 40         | Informatif | €2.10 |
 
 #### **Cluster 4 : Performance & Technique (Priorité MOYENNE)**
 
-| Mot-clé | Volume/mois | Difficulté | Intention | CPC |
-|---------|-------------|------------|-----------|-----|
-| script analytics léger | 180 | 25 | Informatif | €1.90 |
-| analytics performance web | 150 | 35 | Informatif | €2.50 |
-| analytics temps réel | 320 | 40 | Commercial | €2.20 |
+| Mot-clé                   | Volume/mois | Difficulté | Intention  | CPC   |
+| ------------------------- | ----------- | ---------- | ---------- | ----- |
+| script analytics léger    | 180         | 25         | Informatif | €1.90 |
+| analytics performance web | 150         | 35         | Informatif | €2.50 |
+| analytics temps réel      | 320         | 40         | Commercial | €2.20 |
 
 #### **Cluster 5 : Utilisateurs Débutants (Priorité ÉLEVÉE)**
 
-| Mot-clé | Volume/mois | Difficulté | Intention | CPC |
-|---------|-------------|------------|-----------|-----|
-| analytics pour débutants | 550 | 30 | Informatif | €1.80 |
-| comprendre analytics web | 400 | 25 | Informatif | €1.50 |
-| analytics simple | 300 | 35 | Commercial | €2.10 |
-| débuter analytics website | 180 | 20 | Informatif | €1.40 |
+| Mot-clé                   | Volume/mois | Difficulté | Intention  | CPC   |
+| ------------------------- | ----------- | ---------- | ---------- | ----- |
+| analytics pour débutants  | 550         | 30         | Informatif | €1.80 |
+| comprendre analytics web  | 400         | 25         | Informatif | €1.50 |
+| analytics simple          | 300         | 35         | Commercial | €2.10 |
+| débuter analytics website | 180         | 20         | Informatif | €1.40 |
 
 ### Mots-Clés Long-Tail (Haute Conversion)
 
-| Long-tail | Volume/mois | Difficulté | Commercial Intent |
-|-----------|-------------|------------|-------------------|
-| "meilleure alternative privacy google analytics" | 90 | 25 | 95% |
-| "comment migrer de GA vers analytics privacy" | 70 | 20 | 85% |
-| "analytics e-commerce sans cookies RGPD" | 60 | 15 | 90% |
-| "script analytics 1kb sans impact performance" | 45 | 10 | 75% |
+| Long-tail                                        | Volume/mois | Difficulté | Commercial Intent |
+| ------------------------------------------------ | ----------- | ---------- | ----------------- |
+| "meilleure alternative privacy google analytics" | 90          | 25         | 95%               |
+| "comment migrer de GA vers analytics privacy"    | 70          | 20         | 85%               |
+| "analytics e-commerce sans cookies RGPD"         | 60          | 15         | 90%               |
+| "script analytics 1kb sans impact performance"   | 45          | 10         | 75%               |
 
 ## 3. Calendrier Editorial SEO (12 mois)
 
@@ -104,7 +109,7 @@ Cette stratégie SEO vise à positionner Hector Analytics comme la référence e
 **Semaine 1 :** Guide Analytics Sans Cookies 2025 (2500 mots)  
 **Semaine 2 :** RGPD Analytics Guide Conformité (2200 mots)  
 **Semaine 3 :** 7 Alternatives Google Analytics (2800 mots)  
-**Semaine 4 :** Analytics Débutants Guide Simple (2000 mots)  
+**Semaine 4 :** Analytics Débutants Guide Simple (2000 mots)
 
 **Semaine 5 :** Migration GA4 vers Privacy Analytics (2400 mots)  
 **Semaine 6 :** Bannières Cookies : S'en Passer (1800 mots)  
@@ -114,6 +119,7 @@ Cette stratégie SEO vise à positionner Hector Analytics comme la référence e
 ### Mois 4-6 : Expansion Thématique
 
 **Focus :** Sujets spécialisés et comparaisons détaillées
+
 - Hector vs Google Analytics (comparaison détaillée)
 - Hector vs Plausible (battle direct)
 - Analytics E-commerce Privacy-First
@@ -124,6 +130,7 @@ Cette stratégie SEO vise à positionner Hector Analytics comme la référence e
 ### Mois 7-9 : Autorité Sectorielle
 
 **Focus :** Thought leadership et sujets avancés
+
 - L'Avenir des Analytics en 2026
 - Privacy by Design : Principes et Applications
 - Analytics et IA : Respecter la Vie Privée
@@ -133,6 +140,7 @@ Cette stratégie SEO vise à positionner Hector Analytics comme la référence e
 ### Mois 10-12 : Optimisation et Expansion
 
 **Focus :** Optimisation contenu existant + nouveaux formats
+
 - Mise à jour articles top performers
 - Guides visuels et infographies
 - Webinaires et contenu vidéo SEO
@@ -159,61 +167,64 @@ Cette stratégie SEO vise à positionner Hector Analytics comme la référence e
 ```html
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-  <!-- Meta SEO -->
-  <title>{{title}} | Hector Analytics</title>
-  <meta name="description" content="{{metaDescription}}">
-  <meta name="keywords" content="{{keywords}}">
-  
-  <!-- Open Graph -->
-  <meta property="og:title" content="{{title}}">
-  <meta property="og:description" content="{{metaDescription}}">
-  <meta property="og:image" content="{{featuredImage}}">
-  <meta property="og:url" content="https://hectoranalytics.com{{url}}">
-  
-  <!-- Schema.org -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    "headline": "{{title}}",
-    "author": {
-      "@type": "Organization",
-      "name": "Hector Analytics",
-      "url": "https://hectoranalytics.com"
-    },
-    "publisher": {
-      "@type": "Organization",
-      "name": "Hector Analytics",
-      "logo": {
-        "@type": "ImageObject",
-        "url": "https://hectoranalytics.com/logo.png"
+  <head>
+    <!-- Meta SEO -->
+    <title>{{title}} | Hector Analytics</title>
+    <meta name="description" content="{{metaDescription}}" />
+    <meta name="keywords" content="{{keywords}}" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="{{title}}" />
+    <meta property="og:description" content="{{metaDescription}}" />
+    <meta property="og:image" content="{{featuredImage}}" />
+    <meta property="og:url" content="https://hectoranalytics.com{{url}}" />
+
+    <!-- Schema.org -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "{{title}}",
+        "author": {
+          "@type": "Organization",
+          "name": "Hector Analytics",
+          "url": "https://hectoranalytics.com"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Hector Analytics",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://hectoranalytics.com/logo.png"
+          }
+        },
+        "datePublished": "{{publishDate}}",
+        "dateModified": "{{modifiedDate}}",
+        "image": "{{featuredImage}}",
+        "url": "https://hectoranalytics.com{{url}}",
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": "https://hectoranalytics.com{{url}}"
+        }
       }
-    },
-    "datePublished": "{{publishDate}}",
-    "dateModified": "{{modifiedDate}}",
-    "image": "{{featuredImage}}",
-    "url": "https://hectoranalytics.com{{url}}",
-    "mainEntityOfPage": {
-      "@type": "WebPage",
-      "@id": "https://hectoranalytics.com{{url}}"
-    }
-  }
-  </script>
-  
-  <!-- Canonical -->
-  <link rel="canonical" href="https://hectoranalytics.com{{url}}">
-</head>
+    </script>
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://hectoranalytics.com{{url}}" />
+  </head>
+</html>
 ```
 
 ### Internal Linking Strategy
 
 **Hub Pages (Pages Piliers) :**
+
 - `/blog/analytics-sans-cookies/` → Reçoit liens de tous articles cookies
 - `/blog/rgpd-conformite/` → Reçoit liens de tous articles RGPD
 - `/blog/alternatives-google-analytics/` → Reçoit liens de tous comparatifs
 
 **Linking Pattern :**
+
 ```
 Article spécialisé → Page pilier → Page produit
 ↓
@@ -225,6 +236,7 @@ Exemple : "Migration GA4" → "Alternatives GA" → "Hector Analytics Pricing"
 ### Architecture Système Recommandée
 
 #### **Composant 1 : Content Generator API**
+
 ```typescript
 // /app/api/generate-content/route.ts (déjà créé)
 // Fonctionnalités :
@@ -235,6 +247,7 @@ Exemple : "Migration GA4" → "Alternatives GA" → "Hector Analytics Pricing"
 ```
 
 #### **Composant 2 : Content Quality Checker**
+
 ```typescript
 // /lib/seo-analyzer.ts
 interface SEOAnalysis {
@@ -247,13 +260,14 @@ interface SEOAnalysis {
 }
 
 export class SEOAnalyzer {
-  analyzeContent(content: string, targetKeywords: string[]): SEOAnalysis
-  generateOptimizationSuggestions(analysis: SEOAnalysis): string[]
-  validateSEORequirements(analysis: SEOAnalysis): boolean
+  analyzeContent(content: string, targetKeywords: string[]): SEOAnalysis;
+  generateOptimizationSuggestions(analysis: SEOAnalysis): string[];
+  validateSEORequirements(analysis: SEOAnalysis): boolean;
 }
 ```
 
 #### **Composant 3 : Publishing Workflow**
+
 ```typescript
 // Workflow automatisé :
 1. Génération article via Claude
@@ -267,6 +281,7 @@ export class SEOAnalyzer {
 ### Prompts Claude Optimisés
 
 #### **Prompt Génération Article Principal**
+
 ```
 Tu es un expert SEO Content Strategist pour Hector Analytics, alternative privacy-first à Google Analytics.
 
@@ -287,7 +302,7 @@ Longueur : {{targetLength}} mots
 
 EXIGENCES SEO :
 - Titre H1 : 50-60 caractères, inclut mot-clé principal
-- Meta description : 150-160 caractères, CTA inclus  
+- Meta description : 150-160 caractères, CTA inclus
 - Structure : Introduction + 4-6 H2 + conclusion CTA
 - Densité mot-clé principal : 1-2%
 - Ton : Professionnel mais accessible
@@ -302,12 +317,13 @@ DIFFÉRENCIATEURS VS CONCURRENTS :
 - Alternative française vs solutions US/UK
 
 FORMAT RÉPONSE :
-JSON avec champs : title, metaDescription, slug, content (markdown), keywords, internalLinks, readingTime
+JSON avec champs : title, metaDescription, slug, content (markdown), keywords, internalLinks
 
 IMPORTANT : Contenu 100% original, pas de copie concurrents. Focus bénéfices business, pas features techniques.
 ```
 
 #### **Prompt Optimisation SEO Existant**
+
 ```
 Optimise cet article existant pour améliorer son SEO sans changer le fond :
 
@@ -337,12 +353,14 @@ Retourne l'article optimisé en markdown.
 Le composant `/components/content-generator-admin.tsx` (déjà créé) inclut :
 
 **Fonctionnalités actuelles :**
+
 - Génération d'articles à partir des topics prédéfinis
 - Interface pour personnaliser mots-clés
 - Aperçu des articles générés
 - Génération de calendrier éditorial
 
 **Extensions recommandées :**
+
 ```typescript
 // Nouvelles fonctionnalités à ajouter :
 
@@ -365,23 +383,25 @@ interface ContentOptimization {
 
 ### KPIs Principaux (12 mois)
 
-| Métrique | Baseline | 3 mois | 6 mois | 12 mois |
-|----------|----------|--------|--------|---------|
-| **Trafic Organique Mensuel** | 500 | 5,000 | 20,000 | 50,000 |
-| **Mots-clés Top 10** | 2 | 15 | 45 | 100 |
-| **Authority Score (DA)** | 25 | 35 | 45 | 55 |
-| **Articles Indexés** | 5 | 25 | 50 | 80 |
-| **Leads Organiques/Mois** | 10 | 100 | 400 | 800 |
+| Métrique                     | Baseline | 3 mois | 6 mois | 12 mois |
+| ---------------------------- | -------- | ------ | ------ | ------- |
+| **Trafic Organique Mensuel** | 500      | 5,000  | 20,000 | 50,000  |
+| **Mots-clés Top 10**         | 2        | 15     | 45     | 100     |
+| **Authority Score (DA)**     | 25       | 35     | 45     | 55      |
+| **Articles Indexés**         | 5        | 25     | 50     | 80      |
+| **Leads Organiques/Mois**    | 10       | 100    | 400    | 800     |
 
 ### KPIs Secondaires
 
 **Engagement Contenu :**
+
 - Temps sur page : >4 minutes
 - Taux de rebond : <40%
 - Pages/session : >2.5
 - Partages sociaux : >50/article
 
 **Conversion :**
+
 - CTR blog → landing : >5%
 - Conversion trial : >15%
 - Trial → payant : >25%
@@ -397,23 +417,25 @@ interface ContentOptimization {
 
 ### Budget Mensuel Recommandé
 
-| Poste | Coût Mensuel | Justification |
-|-------|-------------|---------------|
-| **Outils SEO** (Ahrefs Pro) | €90 | Research mots-clés, suivi rankings |
-| **API Claude** | €200 | Génération contenu (20 articles/mois) |
-| **Création visuelle** | €150 | Images, infographies, schémas |
-| **Révision/édition** | €800 | 2 jours/semaine content editor |
-| **Promotion contenu** | €300 | Outreach, guest posts |
-| **TOTAL** | **€1,540/mois** | ROI attendu : 10x après 6 mois |
+| Poste                       | Coût Mensuel    | Justification                         |
+| --------------------------- | --------------- | ------------------------------------- |
+| **Outils SEO** (Ahrefs Pro) | €90             | Research mots-clés, suivi rankings    |
+| **API Claude**              | €200            | Génération contenu (20 articles/mois) |
+| **Création visuelle**       | €150            | Images, infographies, schémas         |
+| **Révision/édition**        | €800            | 2 jours/semaine content editor        |
+| **Promotion contenu**       | €300            | Outreach, guest posts                 |
+| **TOTAL**                   | **€1,540/mois** | ROI attendu : 10x après 6 mois        |
 
 ### Équipe Recommandée
 
 **Minimum viable :**
+
 - 1 Content Editor (révision articles Claude) : 2j/semaine
-- 1 SEO Manager (stratégie, suivi) : 1j/semaine  
+- 1 SEO Manager (stratégie, suivi) : 1j/semaine
 - 1 Developer (intégrations techniques) : 0.5j/semaine
 
 **Équipe optimale :**
+
 - 1 Content Manager temps plein
 - 1 SEO Specialist 3j/semaine
 - 1 Graphic Designer 1j/semaine
@@ -424,36 +446,43 @@ interface ContentOptimization {
 ### Risques Identifiés
 
 **1. Concurrence agressive**
-- *Risque :* Plausible/Fathom renforcent leur SEO
-- *Mitigation :* Focus niches spécifiques (débutants, français, e-commerce)
+
+- _Risque :_ Plausible/Fathom renforcent leur SEO
+- _Mitigation :_ Focus niches spécifiques (débutants, français, e-commerce)
 
 **2. Changements algorithme Google**
-- *Risque :* Baisse rankings soudaine
-- *Mitigation :* Diversification canaux (direct, social, email)
+
+- _Risque :_ Baisse rankings soudaine
+- _Mitigation :_ Diversification canaux (direct, social, email)
 
 **3. Qualité contenu généré IA**
-- *Risque :* Contenu détecté comme IA, pénalisé
-- *Mitigation :* Révision humaine systématique, personnalisation
+
+- _Risque :_ Contenu détecté comme IA, pénalisé
+- _Mitigation :_ Révision humaine systématique, personnalisation
 
 **4. Sur-optimisation SEO**
-- *Risque :* Contenu trop orienté robots vs humains
-- *Mitigation :* Tests A/B, focus user experience
+
+- _Risque :_ Contenu trop orienté robots vs humains
+- _Mitigation :_ Tests A/B, focus user experience
 
 ## 9. Phase d'Implémentation (90 jours)
 
 ### Jours 1-30 : Setup et Fondations
 
 **Semaine 1 :**
+
 - [x] Mise en place outils SEO (Search Console, Ahrefs)
 - [x] Configuration API Claude pour génération contenu
 - [x] Création dashboard admin génération
 
 **Semaine 2-3 :**
+
 - [ ] Génération 4 articles piliers (analytics sans cookies, RGPD, alternatives GA, débutants)
 - [ ] Optimisation technique pages existantes
 - [ ] Mise en place tracking performance
 
 **Semaine 4 :**
+
 - [ ] Publication premiers articles
 - [ ] Configuration internal linking
 - [ ] Lancement promotion contenu
@@ -461,6 +490,7 @@ interface ContentOptimization {
 ### Jours 31-60 : Production et Optimisation
 
 **Objectifs :**
+
 - 8 articles supplémentaires publiés
 - Premiers rankings dans top 50
 - Trafic organique x5
@@ -468,6 +498,7 @@ interface ContentOptimization {
 ### Jours 61-90 : Scale et Expansion
 
 **Objectifs :**
+
 - 12 articles totaux publiés
 - 5 mots-clés dans top 20
 - Trafic organique x10
@@ -487,30 +518,35 @@ interface ContentOptimization {
 ### 🎯 Top 5 des Axes d'Amélioration SEO à Implémenter
 
 #### 1. **Open Graph et Twitter Cards Améliorés** (Priorité: HAUTE)
+
 - Ajouter des images OG spécifiques par page
 - Format optimal : 1200x630px
 - Texte overlay avec titre et branding
 - Locale : fr_FR pour marché français
 
 #### 2. **Fil d'Ariane (Breadcrumbs)** (Priorité: HAUTE)
+
 - Important pour l'UX et le SEO
 - Structure : Accueil > Blog > Catégorie > Article
 - Schéma BreadcrumbList pour rich snippets
 - Navigation contextuelle améliorée
 
 #### 3. **Optimisation des Images** (Priorité: MOYENNE)
+
 - Formats modernes : WebP/AVIF avec fallback
 - Attributs : loading="lazy", sizes responsive
 - Compression : 80% qualité max
 - CDN pour performance globale
 
 #### 4. **Liens Internes Structurés** (Priorité: MOYENNE)
+
 - Maillage interne automatique du blog
 - Liens contextuels vers pricing/features
 - Articles "Similaires" en fin de post
 - Hub pages thématiques
 
 #### 5. **Données Structurées Avancées** (Priorité: BASSE)
+
 - LocalBusiness (si applicable)
 - HowTo pour guides techniques
 - VideoObject pour démos
@@ -519,17 +555,20 @@ interface ContentOptimization {
 ### 🔧 Améliorations Techniques Additionnelles
 
 #### Performance & Core Web Vitals
+
 - Preconnect aux domaines externes
 - Font-display: swap pour polices
 - Critical CSS inline
 - Resource hints (prefetch/preload)
 
 #### Internationalisation SEO
+
 - Hreflang tags pour multilingue
 - Sous-domaines ou dossiers par langue
 - Content localisé (FR prioritaire)
 
-#### Sécurité & Trust Signals  
+#### Sécurité & Trust Signals
+
 - SSL/HTTPS (déjà en place)
 - Security headers (CSP, HSTS)
 - Privacy page mise en avant
@@ -559,8 +598,9 @@ La réussite de cette stratégie repose sur l'exécution consistante et l'adapta
 ---
 
 **Fichiers créés pour implémentation :**
+
 - `/lib/content-generator.ts` - Logique génération contenu
-- `/app/api/generate-content/route.ts` - API endpoint génération  
+- `/app/api/generate-content/route.ts` - API endpoint génération
 - `/components/content-generator-admin.tsx` - Interface admin
 - `/blog-example-article.md` - Exemple article optimisé SEO
 - `/lib/schema.ts` - Schémas structurés Schema.org

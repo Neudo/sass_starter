@@ -16,10 +16,8 @@ import {
 } from "@/components/ui/select";
 import {
   AlertCircle,
-  Eye,
   Edit,
   Bot,
-  Clock,
   CheckCircle,
   Trash2,
   ExternalLink,
@@ -29,6 +27,7 @@ import {
 import BlogPreviewModal from "./blog-preview-modal";
 import BlogEditModal from "./blog-edit-modal";
 import BlogRewriteModal from "./blog-rewrite-modal";
+import { BlogPost } from "@/types";
 
 interface GenerateArticleOptions {
   topic: string;
@@ -36,23 +35,6 @@ interface GenerateArticleOptions {
   tone?: "professional" | "friendly" | "technical";
   length?: "short" | "medium" | "long";
   includeCode?: boolean;
-}
-
-interface BlogPost {
-  id: string;
-  title: string;
-  slug: string;
-  content: string;
-  excerpt: string;
-  meta_description: string;
-  keywords: string[];
-  status: "draft" | "published" | "scheduled";
-  generated_by_ai: boolean;
-  reading_time: number;
-  seo_score: number;
-  created_at: string;
-  updated_at: string;
-  view_count: number;
 }
 
 export default function BlogAdminDashboard() {
@@ -229,11 +211,8 @@ export default function BlogAdminDashboard() {
       keywords: [],
       status: "draft",
       generated_by_ai: false,
-      reading_time: 1,
-      seo_score: 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      view_count: 0,
     };
     setEditPost(newPost);
     setIsEditOpen(true);
@@ -259,11 +238,8 @@ export default function BlogAdminDashboard() {
       keywords: rewrittenArticle.keywords,
       status: "draft",
       generated_by_ai: true, // Mark as AI-generated
-      reading_time: Math.ceil(rewrittenArticle.content.split(" ").length / 200),
-      seo_score: 75, // Default score for rewritten articles
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      view_count: 0,
     };
     setEditPost(newPost);
     setIsEditOpen(true);
@@ -331,7 +307,7 @@ export default function BlogAdminDashboard() {
     if (status === "published")
       return <CheckCircle className="h-4 w-4 text-green-500" />;
     if (status === "scheduled")
-      return <Clock className="h-4 w-4 text-blue-500" />;
+      return <Edit className="h-4 w-4 text-blue-500" />;
     return <Edit className="h-4 w-4 text-yellow-500" />;
   };
 
@@ -546,15 +522,17 @@ export default function BlogAdminDashboard() {
           <div className="flex justify-between items-center">
             <CardTitle>Articles Récents</CardTitle>
             <div className="flex gap-2">
-              <Button 
-                onClick={handleOpenRewrite} 
+              <Button
+                onClick={handleOpenRewrite}
                 variant="outline"
                 className="flex items-center gap-2"
               >
-                <Copy className="h-4 w-4" />
-                À partir d&apos;un article
+                <Copy className="h-4 w-4" />À partir d&apos;un article
               </Button>
-              <Button onClick={handleCreateNew} className="flex items-center gap-2">
+              <Button
+                onClick={handleCreateNew}
+                className="flex items-center gap-2"
+              >
                 <Plus className="h-4 w-4" />
                 Nouvel Article
               </Button>
@@ -590,12 +568,9 @@ export default function BlogAdminDashboard() {
                     </div>
                     <p className="text-gray-600 text-sm mb-2">{post.excerpt}</p>
                     <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span>📖 {post.reading_time} min de lecture</span>
-                      <span>🎯 SEO: {post.seo_score}/100</span>
-                      <span>👁️ {post.view_count} vues</span>
                       <span>
                         📅{" "}
-                        {new Date(post.created_at).toLocaleDateString("fr-FR")}
+                        {new Date(post.created_at).toLocaleDateString("en-US")}
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-1 mt-2">
@@ -617,7 +592,7 @@ export default function BlogAdminDashboard() {
                       onClick={() => handlePreview(post)}
                       title="Prévisualiser"
                     >
-                      <Eye className="h-4 w-4" />
+                      👁️
                     </Button>
                     <Button
                       variant="outline"

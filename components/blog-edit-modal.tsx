@@ -22,25 +22,8 @@ import {
 } from "@/components/ui/select";
 import { AlertCircle, Save, X } from "lucide-react";
 import MarkdownEditor from "@/components/MarkdownEditor";
-import { calculateReadingTime, generateSlug, extractExcerpt } from "@/lib/markdown-utils";
-
-interface BlogPost {
-  id: string;
-  title: string;
-  slug: string;
-  content: string;
-  excerpt: string;
-  meta_description: string;
-  keywords: string[];
-  status: "draft" | "published" | "scheduled";
-  generated_by_ai: boolean;
-  reading_time: number;
-  seo_score: number;
-  created_at: string;
-  updated_at: string;
-  view_count: number;
-  published_at?: string;
-}
+import { generateSlug, extractExcerpt } from "@/lib/markdown-utils";
+import { BlogPost } from "@/types";
 
 interface BlogEditModalProps {
   post: BlogPost | null;
@@ -103,7 +86,9 @@ export default function BlogEditModal({
       await onSave(updateData);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur lors de la sauvegarde");
+      setError(
+        err instanceof Error ? err.message : "Erreur lors de la sauvegarde"
+      );
     } finally {
       setIsSaving(false);
     }
@@ -112,14 +97,12 @@ export default function BlogEditModal({
   // Handle content changes from Markdown editor
   const handleContentChange = (markdown: string, html: string) => {
     setMarkdownContent(markdown);
-    const newReadingTime = calculateReadingTime(markdown);
-    
     setFormData((prev) => ({
       ...prev,
       content: html, // Store HTML for rendering
-      reading_time: newReadingTime,
       // Auto-generate excerpt if not set or if it matches previous auto-generated one
-      ...((!prev.excerpt || prev.excerpt === extractExcerpt(prev.content || "")) && {
+      ...((!prev.excerpt ||
+        prev.excerpt === extractExcerpt(prev.content || "")) && {
         excerpt: extractExcerpt(markdown),
       }),
     }));
@@ -147,13 +130,14 @@ export default function BlogEditModal({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl">
-            {post?.id === "new" ? "Créer un nouvel article" : "Éditer l'article"}
+            {post?.id === "new"
+              ? "Créer un nouvel article"
+              : "Éditer l'article"}
           </DialogTitle>
           <DialogDescription>
-            {post?.id === "new" 
+            {post?.id === "new"
               ? "Créez un nouvel article de blog avec l'éditeur Markdown."
-              : "Modifiez les informations de l'article et sauvegardez les changements."
-            }
+              : "Modifiez les informations de l'article et sauvegardez les changements."}
           </DialogDescription>
         </DialogHeader>
 
@@ -303,10 +287,13 @@ export default function BlogEditModal({
             </Button>
             <Button type="submit" disabled={isSaving}>
               <Save className="h-4 w-4 mr-2" />
-              {isSaving 
-                ? (post?.id === "new" ? "Création..." : "Sauvegarde...")
-                : (post?.id === "new" ? "Créer l'article" : "Sauvegarder")
-              }
+              {isSaving
+                ? post?.id === "new"
+                  ? "Création..."
+                  : "Sauvegarde..."
+                : post?.id === "new"
+                  ? "Créer l'article"
+                  : "Sauvegarder"}
             </Button>
           </div>
         </form>

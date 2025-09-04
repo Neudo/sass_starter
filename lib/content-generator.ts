@@ -4,17 +4,7 @@
  */
 
 import { createAdminClient } from "./supabase/admin";
-
-interface BlogPost {
-  title: string;
-  content: string;
-  excerpt: string;
-  keywords: string[];
-  metaDescription: string;
-  slug: string;
-  readingTime: number;
-  seoScore: number;
-}
+import { BlogPost } from "@/types";
 
 interface GenerateArticleOptions {
   topic: string;
@@ -36,11 +26,11 @@ export class ContentGenerator {
 
   async generateArticle(options: GenerateArticleOptions): Promise<BlogPost> {
     const prompt = this.createPrompt(options);
-    
+
     console.log("Generating article with Claude API...");
     console.log("API Key present:", !!this.anthropicApiKey);
     console.log("API Key length:", this.anthropicApiKey?.length);
-    
+
     try {
       const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
@@ -66,14 +56,16 @@ export class ContentGenerator {
         console.error("Claude API error:", {
           status: response.status,
           statusText: response.statusText,
-          error: errorData
+          error: errorData,
         });
-        throw new Error(`API request failed: ${response.statusText} - ${errorData}`);
+        throw new Error(
+          `API request failed: ${response.statusText} - ${errorData}`
+        );
       }
 
       const data = await response.json();
       console.log("Claude response structure:", JSON.stringify(data, null, 2));
-      
+
       const content = data.content[0].text;
       console.log("Claude response content:", content.substring(0, 500));
 
@@ -88,8 +80,8 @@ export class ContentGenerator {
   private createPrompt(options: GenerateArticleOptions): string {
     const lengthWords = {
       short: "1000-1500",
-      medium: "2000-2500", 
-      long: "3000-4000"
+      medium: "2000-2500",
+      long: "3000-4000",
     };
 
     // Load blog writing rules from the agent file
@@ -159,8 +151,6 @@ IMPORTANT: For the "content" field, write the HTML as a proper JSON string witho
   "excerpt": "Engaging summary of 150-160 characters",
   "metaDescription": "Natural meta description of 150-155 characters",
   "keywords": ["main keyword", "secondary keyword 1", "secondary keyword 2"],
-  "readingTime": 8,
-  "seoScore": 85
 }
 
 CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWords[options.length || "medium"]} words) and is properly formatted as a JSON string.`;
@@ -169,10 +159,10 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
   private parseResponse(content: string): BlogPost {
     try {
       console.log("Parsing response, looking for JSON...");
-      
+
       // Clean up the content first
       const cleanContent = content.trim();
-      
+
       // First, try to parse the entire content as JSON
       try {
         const parsed = JSON.parse(cleanContent);
@@ -181,7 +171,7 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
       } catch {
         console.log("Not direct JSON, trying other patterns...");
       }
-      
+
       // Try to extract JSON from code blocks
       const codeBlockMatch = cleanContent.match(/```(?:json)?\s*([\s\S]*?)```/);
       if (codeBlockMatch) {
@@ -193,11 +183,11 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
           console.log("Failed to parse code block content");
         }
       }
-      
+
       // Try to find a JSON object in the content
-      const jsonStart = cleanContent.indexOf('{');
-      const jsonEnd = cleanContent.lastIndexOf('}');
-      
+      const jsonStart = cleanContent.indexOf("{");
+      const jsonEnd = cleanContent.lastIndexOf("}");
+
       if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
         const possibleJson = cleanContent.substring(jsonStart, jsonEnd + 1);
         try {
@@ -208,7 +198,7 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
           console.error("Failed to parse extracted JSON:", e);
         }
       }
-      
+
       console.error("No valid JSON found in response");
       console.error("Response was:", cleanContent.substring(0, 500));
       throw new Error("No valid JSON found in response");
@@ -221,64 +211,77 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
   private formatBlogPost(parsed: Record<string, unknown>): BlogPost {
     const content = parsed.content as string;
     const title = parsed.title as string;
-    
+
     // Validate content length
     if (!content || content.length < 500) {
-      console.warn("Generated content seems too short:", content?.length || 0, "characters");
-      console.warn("Content preview:", content?.substring(0, 200) || "No content");
+      console.warn(
+        "Generated content seems too short:",
+        content?.length || 0,
+        "characters"
+      );
+      console.warn(
+        "Content preview:",
+        content?.substring(0, 200) || "No content"
+      );
     }
-    
+
     // Validate that content contains proper HTML structure
-    if (content && !content.includes('<') && !content.includes('>')) {
+    if (content && !content.includes("<") && !content.includes(">")) {
       console.warn("Generated content doesn't appear to contain HTML tags");
     }
-    
+
     return {
+      id: "temp-id",
       title: title || "Generated Article",
       content: content || "<p>Article content not generated properly</p>",
       excerpt: (parsed.excerpt as string) || "",
       keywords: (parsed.keywords as string[]) || [],
-      metaDescription: (parsed.metaDescription as string) || (parsed.meta_description as string) || "",
-      slug: (parsed.slug as string) || this.generateSlug(title || "generated-article"),
-      readingTime: (parsed.readingTime as number) || (parsed.reading_time as number) || this.calculateReadingTime(content || ""),
-      seoScore: (parsed.seoScore as number) || (parsed.seo_score as number) || 75,
+      meta_description:
+        (parsed.metaDescription as string) ||
+        (parsed.meta_description as string) ||
+        "",
+      slug:
+        (parsed.slug as string) ||
+        this.generateSlug(title || "generated-article"),
+      status: "draft",
+      generated_by_ai: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
-  }
-
-  private calculateReadingTime(content: string): number {
-    const wordsPerMinute = 200;
-    const wordCount = content.split(/\s+/).length;
-    return Math.ceil(wordCount / wordsPerMinute);
   }
 
   private parseRewriteResponse(content: string): Record<string, unknown> {
     try {
       console.log("Parsing rewrite response, looking for JSON...");
       console.log("Raw content first 500 chars:", content.substring(0, 500));
-      
+
       // Clean up the content first
       let cleanContent = content.trim();
-      
+
       // Remove any potential markdown formatting
-      cleanContent = cleanContent.replace(/^```json\s*/g, '').replace(/```\s*$/g, '');
-      cleanContent = cleanContent.replace(/^```\s*/g, '').replace(/```\s*$/g, '');
-      
+      cleanContent = cleanContent
+        .replace(/^```json\s*/g, "")
+        .replace(/```\s*$/g, "");
+      cleanContent = cleanContent
+        .replace(/^```\s*/g, "")
+        .replace(/```\s*$/g, "");
+
       // First, try to parse the entire content as JSON
       try {
         const parsed = JSON.parse(cleanContent);
         console.log("Direct JSON parse successful for rewrite");
         return parsed;
       } catch (directError) {
-        console.log("Direct JSON parse failed:", directError.message);
+        console.log("Direct JSON parse failed:", (directError as Error).message);
       }
-      
+
       // Try to extract JSON from code blocks (more patterns)
       const codeBlockPatterns = [
         /```(?:json)?\s*([\s\S]*?)```/,
         /```\s*([\s\S]*?)```/,
-        /`([\s\S]*?)`/
+        /`([\s\S]*?)`/,
       ];
-      
+
       for (const pattern of codeBlockPatterns) {
         const match = cleanContent.match(pattern);
         if (match) {
@@ -287,21 +290,24 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
             console.log("Found JSON in code block for rewrite");
             return parsed;
           } catch (blockError) {
-            console.log("Failed to parse code block content:", blockError.message);
+            console.log(
+              "Failed to parse code block content:",
+              (blockError as Error).message
+            );
           }
         }
       }
-      
+
       // Try to find a JSON object in the content (more robust)
       let jsonStart = -1;
       let jsonEnd = -1;
       let braceCount = 0;
-      
+
       for (let i = 0; i < cleanContent.length; i++) {
-        if (cleanContent[i] === '{') {
+        if (cleanContent[i] === "{") {
           if (jsonStart === -1) jsonStart = i;
           braceCount++;
-        } else if (cleanContent[i] === '}') {
+        } else if (cleanContent[i] === "}") {
           braceCount--;
           if (braceCount === 0 && jsonStart !== -1) {
             jsonEnd = i;
@@ -309,36 +315,51 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
           }
         }
       }
-      
+
       if (jsonStart !== -1 && jsonEnd !== -1) {
         const possibleJson = cleanContent.substring(jsonStart, jsonEnd + 1);
         try {
           const parsed = JSON.parse(possibleJson);
-          console.log("Found JSON object in rewrite content using brace counting");
+          console.log(
+            "Found JSON object in rewrite content using brace counting"
+          );
           return parsed;
         } catch (extractError) {
-          console.error("Failed to parse extracted JSON for rewrite:", extractError.message);
+          console.error(
+            "Failed to parse extracted JSON for rewrite:",
+            (extractError as Error).message
+          );
         }
       }
-      
+
       // Last resort: try to extract key-value pairs manually if it looks like JSON-ish content
-      if (cleanContent.includes('"title"') && cleanContent.includes('"content"')) {
+      if (
+        cleanContent.includes('"title"') &&
+        cleanContent.includes('"content"')
+      ) {
         console.log("Attempting manual JSON reconstruction...");
         // This is a fallback - we'll try to reconstruct based on common patterns
         // Use more flexible patterns to handle escaped content
-        const titleMatch = cleanContent.match(/"title"\s*:\s*"([^"\\]*(\\.[^"\\]*)*)"/);
-        const excerptMatch = cleanContent.match(/"excerpt"\s*:\s*"([^"\\]*(\\.[^"\\]*)*)"/);
-        const metaMatch = cleanContent.match(/"metaDescription"\s*:\s*"([^"\\]*(\\.[^"\\]*)*)"/);
-        
+        const titleMatch = cleanContent.match(
+          /"title"\s*:\s*"([^"\\]*(\\.[^"\\]*)*)"/
+        );
+        const excerptMatch = cleanContent.match(
+          /"excerpt"\s*:\s*"([^"\\]*(\\.[^"\\]*)*)"/
+        );
+        const metaMatch = cleanContent.match(
+          /"metaDescription"\s*:\s*"([^"\\]*(\\.[^"\\]*)*)"/
+        );
+
         // For content, we need to be more careful as it can contain HTML with quotes
         let contentMatch = null;
         const contentStartMatch = cleanContent.match(/"content"\s*:\s*"/);
-        if (contentStartMatch) {
-          let startIndex = contentStartMatch.index + contentStartMatch[0].length;
+        if (contentStartMatch && contentStartMatch.index !== undefined) {
+          const startIndex =
+            contentStartMatch.index + contentStartMatch[0].length;
           let endIndex = startIndex;
           let escaping = false;
-          let depth = 0;
-          
+          const depth = 0;
+
           // Find the end of the content string, accounting for escaped quotes
           for (let i = startIndex; i < cleanContent.length; i++) {
             const char = cleanContent[i];
@@ -346,7 +367,7 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
               escaping = false;
               continue;
             }
-            if (char === '\\') {
+            if (char === "\\") {
               escaping = true;
               continue;
             }
@@ -355,31 +376,43 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
               break;
             }
           }
-          
+
           if (endIndex > startIndex) {
             const contentText = cleanContent.substring(startIndex, endIndex);
             // Unescape the content
-            const unescapedContent = contentText.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+            const unescapedContent = contentText
+              .replace(/\\"/g, '"')
+              .replace(/\\\\/g, "\\");
             contentMatch = [null, unescapedContent];
           }
         }
-        
+
         const keywordsMatch = cleanContent.match(/"keywords"\s*:\s*\[(.*?)\]/);
-        
+
         if (titleMatch && contentMatch) {
           const reconstructed = {
-            title: titleMatch[1].replace(/\\"/g, '"').replace(/\\\\/g, '\\'),
+            title: titleMatch[1].replace(/\\"/g, '"').replace(/\\\\/g, "\\"),
             content: contentMatch[1],
-            keywords: keywordsMatch ? keywordsMatch[1].split(',').map(k => k.trim().replace(/"/g, '')) : [],
-            excerpt: excerptMatch ? excerptMatch[1].replace(/\\"/g, '"').replace(/\\\\/g, '\\') : "",
-            metaDescription: metaMatch ? metaMatch[1].replace(/\\"/g, '"').replace(/\\\\/g, '\\') : ""
+            keywords: keywordsMatch
+              ? keywordsMatch[1]
+                  .split(",")
+                  .map((k) => k.trim().replace(/"/g, ""))
+              : [],
+            excerpt: excerptMatch
+              ? excerptMatch[1].replace(/\\"/g, '"').replace(/\\\\/g, "\\")
+              : "",
+            meta_description: metaMatch
+              ? metaMatch[1].replace(/\\"/g, '"').replace(/\\\\/g, "\\")
+              : "",
           };
-          console.log("Successfully reconstructed JSON manually with proper unescaping");
-          console.log("Content length:", reconstructed.content.length);
+          console.log(
+            "Successfully reconstructed JSON manually with proper unescaping"
+          );
+          console.log("Content length:", reconstructed.content?.length || 0);
           return reconstructed;
         }
       }
-      
+
       console.error("No valid JSON found in rewrite response");
       console.error("Rewrite response was:", cleanContent.substring(0, 1000));
       throw new Error("No valid JSON found in rewrite response");
@@ -391,7 +424,7 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
 
   async saveToBlog(blogPost: BlogPost, authorId?: string): Promise<string> {
     const supabase = createAdminClient();
-    
+
     const { data, error } = await supabase
       .from("blog_posts")
       .insert({
@@ -399,10 +432,8 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
         slug: blogPost.slug,
         content: blogPost.content,
         excerpt: blogPost.excerpt,
-        meta_description: blogPost.metaDescription,
+        meta_description: blogPost.meta_description,
         keywords: blogPost.keywords,
-        reading_time: blogPost.readingTime,
-        seo_score: blogPost.seoScore,
         author_id: authorId,
         generated_by_ai: true,
         status: "draft",
@@ -423,7 +454,7 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
     targetService: string;
     style?: "professional" | "friendly" | "technical";
   }): Promise<BlogPost> {
-    const { originalTitle, originalContent, targetService, style = "professional" } = options;
+    const { originalTitle, originalContent, targetService } = options;
 
     const prompt = `You are a web writing expert with a conversational and educational style (like Plausible Analytics). You will rewrite this article for "${targetService}" following strict natural tone rules.
 
@@ -514,19 +545,22 @@ CRITICAL:
       const content = data.content[0].text;
       console.log("Claude rewrite response full content:", content);
       console.log("Claude rewrite response length:", content.length);
-      
+
       // Parse the JSON response using the same robust method
       const parsedContent = this.parseRewriteResponse(content);
 
       const blogPost: BlogPost = {
-        title: parsedContent.title,
-        content: parsedContent.content,
-        excerpt: parsedContent.excerpt,
-        keywords: parsedContent.keywords,
-        metaDescription: parsedContent.metaDescription,
+        id: "temp-id",
+        title: parsedContent.title as string,
+        content: parsedContent.content as string,
+        excerpt: parsedContent.excerpt as string,
+        keywords: parsedContent.keywords as string[],
+        meta_description: parsedContent.metaDescription as string,
         slug: this.generateSlug(parsedContent.title as string),
-        readingTime: Math.ceil((parsedContent.content as string).split(" ").length / 200),
-        seoScore: this.calculateSeoScore(parsedContent as Record<string, unknown>),
+        status: "draft",
+        generated_by_ai: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
 
       return blogPost;
@@ -539,56 +573,60 @@ CRITICAL:
   private generateSlug(title: string): string {
     return title
       .toLowerCase()
-      .replace(/[àáâãäå]/g, 'a')
-      .replace(/[èéêë]/g, 'e')
-      .replace(/[ìíîï]/g, 'i')
-      .replace(/[òóôõö]/g, 'o')
-      .replace(/[ùúûü]/g, 'u')
-      .replace(/[ç]/g, 'c')
-      .replace(/[ñ]/g, 'n')
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '')
+      .replace(/[àáâãäå]/g, "a")
+      .replace(/[èéêë]/g, "e")
+      .replace(/[ìíîï]/g, "i")
+      .replace(/[òóôõö]/g, "o")
+      .replace(/[ùúûü]/g, "u")
+      .replace(/[ç]/g, "c")
+      .replace(/[ñ]/g, "n")
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
       .substring(0, 60);
   }
 
   private calculateSeoScore(parsedContent: Record<string, unknown>): number {
     let score = 60; // Base score
-    
+
     const title = parsedContent.title as string;
     const content = parsedContent.content as string;
-    const keywords = parsedContent.keywords as string[] || [];
+    const keywords = (parsedContent.keywords as string[]) || [];
     const metaDescription = parsedContent.metaDescription as string;
-    
+
     // Title optimization (10 points)
     if (title && title.length >= 30 && title.length <= 60) {
       score += 10;
     } else if (title && title.length > 0) {
       score += 5;
     }
-    
+
     // Content length (10 points)
     if (content && content.length >= 1500) {
       score += 10;
     } else if (content && content.length >= 800) {
       score += 5;
     }
-    
+
     // Keywords (10 points)
     if (keywords && keywords.length >= 3) {
       score += 10;
     } else if (keywords && keywords.length > 0) {
       score += 5;
     }
-    
+
     // Meta description (10 points)
-    if (metaDescription && metaDescription.length >= 140 && metaDescription.length <= 155) {
+    if (
+      metaDescription &&
+      metaDescription.length >= 140 &&
+      metaDescription.length <= 155
+    ) {
       score += 10;
     } else if (metaDescription && metaDescription.length > 0) {
       score += 5;
     }
-    
+
     return Math.min(score, 100); // Cap at 100
   }
 
@@ -605,7 +643,7 @@ CRITICAL:
       {
         topic: "GDPR and web analytics: what has really changed?",
         keyword: "GDPR web analytics",
-        tone: "professional", 
+        tone: "professional",
         length: "medium",
         includeCode: false,
       },
@@ -617,7 +655,8 @@ CRITICAL:
         includeCode: false,
       },
       {
-        topic: "Understanding your visitors without spying on them: is it possible?",
+        topic:
+          "Understanding your visitors without spying on them: is it possible?",
         keyword: "privacy-respecting analytics",
         tone: "friendly",
         length: "medium",
@@ -631,7 +670,8 @@ CRITICAL:
         includeCode: true,
       },
       {
-        topic: "Analytics and web performance: the real impact of tracking scripts",
+        topic:
+          "Analytics and web performance: the real impact of tracking scripts",
         keyword: "analytics performance impact",
         tone: "technical",
         length: "medium",

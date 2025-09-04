@@ -14,14 +14,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Copy, 
-  Loader2, 
-  AlertCircle, 
-  FileText, 
+import {
+  Copy,
+  Loader2,
+  AlertCircle,
+  FileText,
   ArrowRight,
   Link,
-  Wand2
+  Wand2,
 } from "lucide-react";
 
 interface BlogRewriteModalProps {
@@ -93,7 +93,7 @@ export default function BlogRewriteModal({
 
   const handleRewrite = async () => {
     if (!extractedContent) return;
-    
+
     setError(null);
     setIsRewriting(true);
 
@@ -118,17 +118,19 @@ export default function BlogRewriteModal({
       }
 
       const data = await response.json();
-      
+
       // Pass the rewritten article to the parent component
       onRewrite({
         title: data.article.title,
         content: data.article.content,
         keywords: data.article.keywords || [],
       });
-      
+
       handleClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur lors de la réécriture");
+      setError(
+        err instanceof Error ? err.message : "Erreur lors de la réécriture"
+      );
     } finally {
       setIsRewriting(false);
     }
@@ -149,11 +151,12 @@ export default function BlogRewriteModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Copy className="h-5 w-5" />
-            Créer un article à partir d'un autre article
+            Créer un article à partir d&apos;un autre article
           </DialogTitle>
           <DialogDescription>
-            Importez un article existant et réécrivez-le automatiquement pour Hector Analytics.
-            Le contenu sera adapté tout en conservant le message principal.
+            Importez un article existant et réécrivez-le automatiquement pour
+            Hector Analytics. Le contenu sera adapté tout en conservant le
+            message principal.
           </DialogDescription>
         </DialogHeader>
 
@@ -183,7 +186,7 @@ export default function BlogRewriteModal({
           {/* Input Based on Source Type */}
           {sourceType === "url" ? (
             <div className="space-y-2">
-              <Label htmlFor="source-url">URL de l'article source</Label>
+              <Label htmlFor="source-url">URL de l&apos;article source</Label>
               <Input
                 id="source-url"
                 type="url"
@@ -193,22 +196,25 @@ export default function BlogRewriteModal({
                 disabled={isAnalyzing || isRewriting}
               />
               <p className="text-xs text-muted-foreground">
-                Entrez l'URL complète de l'article que vous voulez réécrire
+                Entrez l&apos;URL complète de l&apos;article que vous voulez
+                réécrire
               </p>
             </div>
           ) : (
             <div className="space-y-2">
-              <Label htmlFor="source-text">Contenu de l'article source</Label>
+              <Label htmlFor="source-text">
+                Contenu de l&apos;article source
+              </Label>
               <Textarea
                 id="source-text"
-                placeholder="Collez ici le contenu de l'article à réécrire..."
+                placeholder="Collez ici le contenu de l&apos;article à réécrire..."
                 value={sourceText}
                 onChange={(e) => setSourceText(e.target.value)}
                 rows={8}
                 disabled={isAnalyzing || isRewriting}
               />
               <p className="text-xs text-muted-foreground">
-                Copiez-collez le texte complet de l'article source
+                Copiez-collez le texte complet de l&apos;article source
               </p>
             </div>
           )}
@@ -281,7 +287,7 @@ export default function BlogRewriteModal({
               ) : (
                 <>
                   <ArrowRight className="h-4 w-4 mr-2" />
-                  Analyser l'article
+                  Analyser l&apos;article
                 </>
               )}
             </Button>

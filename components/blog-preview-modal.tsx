@@ -9,25 +9,8 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Calendar, Eye, ExternalLink } from "lucide-react";
-
-interface BlogPost {
-  id: string;
-  title: string;
-  slug: string;
-  content: string;
-  excerpt: string;
-  meta_description: string;
-  keywords: string[];
-  status: "draft" | "published" | "scheduled";
-  generated_by_ai: boolean;
-  reading_time: number;
-  seo_score: number;
-  created_at: string;
-  updated_at: string;
-  view_count: number;
-  published_at?: string;
-}
+import { Calendar, ExternalLink } from "lucide-react";
+import { BlogPost } from "@/types";
 
 interface BlogPreviewModalProps {
   post: BlogPost | null;
@@ -77,19 +60,11 @@ export default function BlogPreviewModal({
             <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
               <span className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                {new Date(post.created_at).toLocaleDateString("fr-FR", {
+                {new Date(post.created_at).toLocaleDateString("en-US", {
                   day: "numeric",
                   month: "long",
                   year: "numeric",
                 })}
-              </span>
-              <span className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
-                {post.reading_time} min de lecture
-              </span>
-              <span className="flex items-center gap-1">
-                <Eye className="h-4 w-4" />
-                {post.view_count} vues
               </span>
               <Badge
                 variant={
@@ -138,10 +113,6 @@ export default function BlogPreviewModal({
                   Meta description :{" "}
                 </span>
                 <span className="text-blue-600">{post.meta_description}</span>
-              </div>
-              <div>
-                <span className="font-medium text-blue-800">Score SEO : </span>
-                <span className="text-blue-600">{post.seo_score}/100</span>
               </div>
             </div>
           </div>

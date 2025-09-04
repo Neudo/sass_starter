@@ -34,19 +34,19 @@ export async function POST(req: NextRequest) {
     if (body.action === "extract") {
       try {
         const { source, sourceType } = body;
-        
+
         if (sourceType === "url") {
           // Fetch content from URL
           const response = await fetch(source);
           if (!response.ok) {
             throw new Error("Impossible de récupérer l'article depuis l'URL");
           }
-          
+
           const html = await response.text();
           // Extract title and content from HTML (simplified extraction)
           const titleMatch = html.match(/<title>([^<]+)<\/title>/i);
           const title = titleMatch ? titleMatch[1] : "Article sans titre";
-          
+
           // Remove HTML tags for content
           const contentMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
           const rawContent = contentMatch ? contentMatch[1] : html;
@@ -57,19 +57,24 @@ export async function POST(req: NextRequest) {
             .replace(/\s+/g, " ")
             .trim()
             .substring(0, 5000); // Limit content length
-          
+
           return NextResponse.json({ title, content });
         } else {
           // Direct text input
           const lines = source.split("\n");
           const title = lines[0] || "Article sans titre";
           const content = lines.slice(1).join("\n");
-          
+
           return NextResponse.json({ title, content });
         }
       } catch (error) {
         return NextResponse.json(
-          { error: error instanceof Error ? error.message : "Erreur lors de l'extraction" },
+          {
+            error:
+              error instanceof Error
+                ? error.message
+                : "Erreur lors de l'extraction",
+          },
           { status: 500 }
         );
       }
@@ -79,18 +84,18 @@ export async function POST(req: NextRequest) {
     if (body.action === "rewrite") {
       try {
         const { originalTitle, originalContent, targetService } = body;
-        
+
         if (!originalContent) {
           throw new Error("Contenu original requis pour la réécriture");
         }
 
         // Initialize content generator
         const generator = new ContentGenerator();
-        
+
         console.log("Starting article rewriting process...");
         console.log("Original title:", originalTitle);
         console.log("Original content length:", originalContent?.length || 0);
-        
+
         // Rewrite the article for Hector Analytics
         const rewrittenPost = await generator.rewriteArticle({
           originalTitle,
@@ -98,7 +103,7 @@ export async function POST(req: NextRequest) {
           targetService: targetService || "Hector Analytics",
           style: body.style || "professional",
         });
-        
+
         console.log("Article rewriting completed successfully");
 
         // Save to database as draft
@@ -112,19 +117,21 @@ export async function POST(req: NextRequest) {
             content: rewrittenPost.content,
             keywords: rewrittenPost.keywords,
             slug: rewrittenPost.slug,
-            readingTime: rewrittenPost.readingTime,
-            seoScore: rewrittenPost.seoScore,
           },
         });
       } catch (error) {
         console.error("Detailed rewrite error:", error);
-        const errorMessage = error instanceof Error ? error.message : "Erreur lors de la réécriture";
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Erreur lors de la réécriture";
         console.error("Rewrite error message:", errorMessage);
-        
+
         return NextResponse.json(
-          { 
+          {
             error: errorMessage,
-            details: error instanceof Error ? error.stack : "No stack trace available"
+            details:
+              error instanceof Error ? error.stack : "No stack trace available",
           },
           { status: 500 }
         );
@@ -177,8 +184,6 @@ export async function POST(req: NextRequest) {
                 
                 <p><strong>Titre :</strong> ${blogPost.title}</p>
                 <p><strong>Mot-clé :</strong> ${keyword}</p>
-                <p><strong>Temps de lecture :</strong> ${blogPost.readingTime} minutes</p>
-                <p><strong>Score SEO :</strong> ${blogPost.seoScore}/100</p>
                 <p><strong>Status :</strong> Draft (nécessite révision)</p>
                 
                 <p style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-left: 4px solid #3d9dbd;">
@@ -202,8 +207,6 @@ export async function POST(req: NextRequest) {
       article: {
         title: blogPost.title,
         slug: blogPost.slug,
-        readingTime: blogPost.readingTime,
-        seoScore: blogPost.seoScore,
         wordCount: blogPost.content.split(/\s+/).length,
       },
     });
