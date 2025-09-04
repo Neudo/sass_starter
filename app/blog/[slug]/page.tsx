@@ -88,7 +88,7 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
           </Link>
 
           <div className="max-w-4xl">
-            <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+            <div className="flex items-center gap-4 text-sm mb-4">
               <span className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
                 {new Date(post.published_at).toLocaleDateString("en-US", {
@@ -103,7 +103,7 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
               {post.title}
             </h1>
 
-            <p className="text-xl text-gray-600 mb-6">{post.excerpt}</p>
+            <p className="text-xl  mb-6">{post.excerpt}</p>
           </div>
         </div>
       </div>
@@ -168,7 +168,7 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
                         {relatedPost.title}
                       </Link>
                     </h3>
-                    <p className="text-gray-600 text-sm line-clamp-3 mb-4">
+                    <p className="text-sm line-clamp-3 mb-4">
                       {relatedPost.excerpt}
                     </p>
                     <div className="flex items-center justify-end text-xs text-gray-500">
