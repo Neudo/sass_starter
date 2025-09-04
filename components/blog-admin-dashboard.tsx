@@ -114,8 +114,7 @@ export default function BlogAdminDashboard() {
         throw new Error(errorData.error || "Échec de la génération");
       }
 
-      const data = await response.json();
-      console.log("Article généré:", data.article);
+      await response.json();
 
       // Reload posts to show the new one
       await loadPosts();

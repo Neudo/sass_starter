@@ -39,7 +39,6 @@ export async function GET(request: NextRequest) {
     const siteData = sites && sites.length > 0 ? sites[0] : null;
 
     if (siteError || !siteData) {
-      console.log("[API Debug] Site not found for domain:", siteDomain);
       return NextResponse.json([], {
         headers: {
           "Access-Control-Allow-Origin": "*",
@@ -77,12 +76,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    console.log(
-      "[API Debug] Returning custom events for site:",
-      siteDomain,
-      "count:",
-      customEvents?.length
-    );
     return NextResponse.json(customEvents || [], {
       headers: {
         "Access-Control-Allow-Origin": "*",

@@ -28,8 +28,6 @@ export async function POST(req: NextRequest) {
 
     // Skip tracking for dashboard pages
     if (page && page.startsWith("/dashboard/")) {
-      console.log("Skipping tracking for dashboard page");
-
       return new NextResponse(null, {
         status: 204,
         headers: {
@@ -90,7 +88,6 @@ export async function POST(req: NextRequest) {
 
     if (blockCheck.blocked) {
       // Return success but don't track the data
-      console.log(`Blocked bot request - Reason: ${blockCheck.reason}`);
       return new NextResponse(null, {
         status: 204,
         headers: {
@@ -107,9 +104,6 @@ export async function POST(req: NextRequest) {
       locationData.region === null ||
       locationData.city === null
     ) {
-      console.log(
-        `Blocked suspicious session - Missing geolocation: Country=${locationData.country}, Region=${locationData.region}, City=${locationData.city}`
-      );
       return new NextResponse(null, {
         status: 204,
         headers: {
@@ -120,20 +114,31 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Check if this is a new session
-    const { data: existingSession } = await supabase
+    // Check if this is a new session - use a more robust approach to prevent race conditions
+    let existingSession = null;
+    let isNewSession = false;
+
+    // First, try to get existing session
+    const { data: sessionData } = await supabase
       .from("sessions")
-      .select("id, visited_pages")
+      .select("id, visited_pages, created_at")
       .eq("id", sessionId)
       .single();
 
-    const isNewSession = !existingSession;
+    if (sessionData) {
+      existingSession = sessionData;
+    } else {
+      // If no session exists, this is potentially a new session
+      // But we need to handle race conditions where multiple requests 
+      // try to create the same session simultaneously
+      isNewSession = true;
+    }
 
     // Calculate page data
     const pageData = calculatePageData(page, existingSession);
 
-    // Upsert session data
-    const { error } = await supabase.from("sessions").upsert({
+    // Prepare base session data that's always updated
+    const baseSessionData = {
       id: sessionId,
       site_id: siteId,
       last_seen: new Date().toISOString(),
@@ -151,17 +156,30 @@ export async function POST(req: NextRequest) {
       language: language || "en",
       // Page tracking
       visited_pages: pageData.visitedPages,
-      // Source tracking - only set on new sessions
-      ...(isNewSession && {
-        referrer: trafficSource.referrer,
-        referrer_domain: trafficSource.referrerDomain,
-        utm_source: trafficSource.utmParams.utm_source,
-        utm_medium: trafficSource.utmParams.utm_medium,
-        utm_campaign: trafficSource.utmParams.utm_campaign,
-        utm_term: trafficSource.utmParams.utm_term,
-        utm_content: trafficSource.utmParams.utm_content,
-      }),
-    });
+    };
+
+    // Add source tracking data only for new sessions
+    const sessionDataWithSource = isNewSession 
+      ? {
+          ...baseSessionData,
+          referrer: trafficSource.referrer,
+          referrer_domain: trafficSource.referrerDomain,
+          utm_source: trafficSource.utmParams.utm_source,
+          utm_medium: trafficSource.utmParams.utm_medium,
+          utm_campaign: trafficSource.utmParams.utm_campaign,
+          utm_term: trafficSource.utmParams.utm_term,
+          utm_content: trafficSource.utmParams.utm_content,
+          created_at: new Date().toISOString(),
+        }
+      : baseSessionData;
+
+    // Use upsert with onConflict to handle race conditions properly
+    const { error } = await supabase
+      .from("sessions")
+      .upsert(sessionDataWithSource, { 
+        onConflict: 'id',
+        ignoreDuplicates: false 
+      });
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

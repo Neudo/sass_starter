@@ -27,9 +27,6 @@ export class ContentGenerator {
   async generateArticle(options: GenerateArticleOptions): Promise<BlogPost> {
     const prompt = this.createPrompt(options);
 
-    console.log("Generating article with Claude API...");
-    console.log("API Key present:", !!this.anthropicApiKey);
-    console.log("API Key length:", this.anthropicApiKey?.length);
 
     try {
       const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -64,10 +61,8 @@ export class ContentGenerator {
       }
 
       const data = await response.json();
-      console.log("Claude response structure:", JSON.stringify(data, null, 2));
 
       const content = data.content[0].text;
-      console.log("Claude response content:", content.substring(0, 500));
 
       // Parse the structured response
       return this.parseResponse(content);
@@ -158,7 +153,6 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
 
   private parseResponse(content: string): BlogPost {
     try {
-      console.log("Parsing response, looking for JSON...");
 
       // Clean up the content first
       const cleanContent = content.trim();
@@ -166,10 +160,8 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
       // First, try to parse the entire content as JSON
       try {
         const parsed = JSON.parse(cleanContent);
-        console.log("Direct JSON parse successful");
         return this.formatBlogPost(parsed);
       } catch {
-        console.log("Not direct JSON, trying other patterns...");
       }
 
       // Try to extract JSON from code blocks
@@ -177,10 +169,8 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
       if (codeBlockMatch) {
         try {
           const parsed = JSON.parse(codeBlockMatch[1].trim());
-          console.log("Found JSON in code block");
           return this.formatBlogPost(parsed);
         } catch {
-          console.log("Failed to parse code block content");
         }
       }
 
@@ -192,7 +182,6 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
         const possibleJson = cleanContent.substring(jsonStart, jsonEnd + 1);
         try {
           const parsed = JSON.parse(possibleJson);
-          console.log("Found JSON object in content");
           return this.formatBlogPost(parsed);
         } catch (e) {
           console.error("Failed to parse extracted JSON:", e);
@@ -252,8 +241,6 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
 
   private parseRewriteResponse(content: string): Record<string, unknown> {
     try {
-      console.log("Parsing rewrite response, looking for JSON...");
-      console.log("Raw content first 500 chars:", content.substring(0, 500));
 
       // Clean up the content first
       let cleanContent = content.trim();
@@ -269,10 +256,8 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
       // First, try to parse the entire content as JSON
       try {
         const parsed = JSON.parse(cleanContent);
-        console.log("Direct JSON parse successful for rewrite");
         return parsed;
-      } catch (directError) {
-        console.log("Direct JSON parse failed:", (directError as Error).message);
+      } catch {
       }
 
       // Try to extract JSON from code blocks (more patterns)
@@ -287,13 +272,9 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
         if (match) {
           try {
             const parsed = JSON.parse(match[1].trim());
-            console.log("Found JSON in code block for rewrite");
             return parsed;
-          } catch (blockError) {
-            console.log(
-              "Failed to parse code block content:",
-              (blockError as Error).message
-            );
+          } catch {
+            // Continue to next pattern
           }
         }
       }
@@ -337,7 +318,6 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
         cleanContent.includes('"title"') &&
         cleanContent.includes('"content"')
       ) {
-        console.log("Attempting manual JSON reconstruction...");
         // This is a fallback - we'll try to reconstruct based on common patterns
         // Use more flexible patterns to handle escaped content
         const titleMatch = cleanContent.match(
@@ -405,10 +385,6 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
               ? metaMatch[1].replace(/\\"/g, '"').replace(/\\\\/g, "\\")
               : "",
           };
-          console.log(
-            "Successfully reconstructed JSON manually with proper unescaping"
-          );
-          console.log("Content length:", reconstructed.content?.length || 0);
           return reconstructed;
         }
       }
@@ -543,8 +519,6 @@ CRITICAL:
 
       const data = await response.json();
       const content = data.content[0].text;
-      console.log("Claude rewrite response full content:", content);
-      console.log("Claude rewrite response length:", content.length);
 
       // Parse the JSON response using the same robust method
       const parsedContent = this.parseRewriteResponse(content);

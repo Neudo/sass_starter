@@ -36,23 +36,19 @@ export default async function BillingPage() {
 
   if (userSites && userSites.length > 0) {
     const siteIds = userSites.map((site) => site.id);
-    console.log("User sites IDs:", siteIds);
 
     // Récupérer les dates du mois en cours
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
-    console.log("Start of month:", startOfMonth.toISOString());
 
     // 1. Compter les sessions (1 session = 1 événement minimum)
-    const { data: sessions, error: sessionsError } = await adminClient
+    const { data: sessions } = await adminClient
       .from("sessions")
       .select("id")
       .in("site_id", siteIds)
       .gte("created_at", startOfMonth.toISOString());
 
-    console.log("Sessions data:", sessions);
-    console.log("Sessions error:", sessionsError);
 
     const totalPageViews = sessions?.length || 0;
 
@@ -67,7 +63,6 @@ export default async function BillingPage() {
       .gte("triggered_at", startOfMonth.toISOString());
 
     if (eventsError) {
-      console.log("Trying alternative table names...");
 
       // Essayer event_triggers
       const { data: altTriggers, error: altError } = await adminClient
@@ -78,30 +73,23 @@ export default async function BillingPage() {
 
       if (altError) {
         // Essayer events
-        const { data: events, error: evError } = await adminClient
+        const { data: events } = await adminClient
           .from("events")
           .select("id")
           .in("site_id", siteIds)
           .gte("created_at", startOfMonth.toISOString());
 
         totalCustomEvents = events?.length || 0;
-        console.log("Events table data:", events);
-        console.log("Events table error:", evError);
       } else {
         totalCustomEvents = altTriggers?.length || 0;
-        console.log("Event triggers alt data:", altTriggers);
       }
     } else {
       totalCustomEvents = eventTriggers?.length || 0;
-      console.log("Event triggers data:", eventTriggers);
     }
 
-    console.log("Total pageviews:", totalPageViews);
-    console.log("Total custom events:", totalCustomEvents);
 
     // Total events = pageviews + custom events
     totalEvents = totalPageViews + totalCustomEvents;
-    console.log("Total events:", totalEvents);
   }
   // Récupérer les informations de subscription avec la nouvelle logique
   const subscriptionInfo = user?.id

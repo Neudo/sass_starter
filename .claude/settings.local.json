@@ -23,7 +23,9 @@
       "Bash(curl:*)",
       "Bash(pnpm dev:*)",
       "Bash(pnpm build:*)",
-      "Bash(pnpm lint:*)"
+      "Bash(pnpm lint:*)",
+      "Bash(sed:*)",
+      "Bash(grep:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

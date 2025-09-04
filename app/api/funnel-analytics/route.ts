@@ -111,8 +111,6 @@ export async function GET(request: NextRequest) {
         );
         const completed_count = uniqueSessions.size;
 
-        console.log(`Step ${step.step_number} (${step.name}): ${completed_count} completions for domain ${siteData.domain}`);
-
         return {
           id: step.id,
           step_number: step.step_number,
@@ -136,16 +134,16 @@ export async function GET(request: NextRequest) {
         // For subsequent steps: count sessions that completed ALL previous steps
         // Find sessions that have completed every single previous step
         let previousStepsSessions = stepsWithAnalytics[0].unique_sessions;
-        
+
         for (let i = 1; i < index; i++) {
           const currentStepSessions = stepsWithAnalytics[i].unique_sessions;
           previousStepsSessions = new Set(
-            [...previousStepsSessions].filter(sessionId => 
+            [...previousStepsSessions].filter((sessionId) =>
               currentStepSessions.has(sessionId)
             )
           );
         }
-        
+
         entered_count = previousStepsSessions.size;
       }
 

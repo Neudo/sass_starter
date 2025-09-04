@@ -98,9 +98,7 @@ export async function GET(request: NextRequest) {
 
             const { data: completions } = await completionsQuery;
             const visitors = completions?.length || 0;
-            
-            console.log(`Funnel Step ${step.step_number} (${step.name}): ${visitors} completions for domain ${site.domain}`);
-            
+
             // Get session data for source and country breakdown
             let sourceBreakdown: Array<{
               source: string;
@@ -112,17 +110,19 @@ export async function GET(request: NextRequest) {
               count: number;
               percentage: number;
             }> = [];
-            
+
             if (completions && completions.length > 0) {
-              const sessionIds = completions.map(c => c.session_id).filter(Boolean);
-              
+              const sessionIds = completions
+                .map((c) => c.session_id)
+                .filter(Boolean);
+
               if (sessionIds.length > 0) {
                 // Get sessions data
                 const { data: sessions } = await adminClient
                   .from("sessions")
                   .select("referrer, country")
                   .in("id", sessionIds);
-                
+
                 if (sessions) {
                   // Source breakdown
                   const sourceCounts: Record<string, number> = {};
@@ -130,7 +130,7 @@ export async function GET(request: NextRequest) {
                     const source = session.referrer || "Direct";
                     sourceCounts[source] = (sourceCounts[source] || 0) + 1;
                   });
-                  
+
                   sourceBreakdown = Object.entries(sourceCounts)
                     .map(([source, count]) => ({
                       source,
@@ -139,14 +139,14 @@ export async function GET(request: NextRequest) {
                     }))
                     .sort((a, b) => b.count - a.count)
                     .slice(0, 3);
-                  
+
                   // Country breakdown
                   const countryCounts: Record<string, number> = {};
                   sessions.forEach((session) => {
                     const country = session.country || "Unknown";
                     countryCounts[country] = (countryCounts[country] || 0) + 1;
                   });
-                  
+
                   countryBreakdown = Object.entries(countryCounts)
                     .map(([country, count]) => ({
                       country,

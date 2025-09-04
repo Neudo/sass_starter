@@ -8,13 +8,6 @@ export async function POST(request: NextRequest) {
     const headersList = headers();
     const ip = (await headersList).get("x-forwarded-for") || "unknown";
 
-    // Log que le fallback est utilisé (pour monitoring)
-    console.log("Fallback tracking utilisé - Bloqueur détecté", {
-      domain: body.domain,
-      page: body.page,
-      blocked: true,
-    });
-
     // Si vous voulez quand même tracker (optionnel)
     // Vous pouvez utiliser une approche server-side
     if (body.domain && body.page) {

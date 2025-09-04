@@ -36,7 +36,6 @@ export class ContentGeneratorOpenAI {
   async generateArticle(options: GenerateArticleOptions): Promise<BlogPost> {
     const prompt = this.createPrompt(options);
 
-    console.log("Generating article with OpenAI API...");
 
     try {
       const response = await fetch(
