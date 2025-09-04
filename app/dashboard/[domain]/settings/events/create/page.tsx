@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect, notFound } from "next/navigation";
 import { CustomEventCreateForm } from "./CustomEventCreateForm";
+import { Breadcrumb } from "@/components/breadcrumb";
 
 export default async function CreateCustomEventPage({
   params,
@@ -46,9 +47,21 @@ export default async function CreateCustomEventPage({
   }
 
   return (
-    <CustomEventCreateForm
-      siteId={siteData.id}
-      domain={siteData.domain}
-    />
+    <div className="space-y-6">
+      <Breadcrumb 
+        items={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: domain, href: `/dashboard/${domain}` },
+          { label: "Settings", href: `/dashboard/${domain}/settings` },
+          { label: "Custom events", href: `/dashboard/${domain}/settings/events` },
+          { label: "Create event" }
+        ]}
+        className="mb-6"
+      />
+      <CustomEventCreateForm
+        siteId={siteData.id}
+        domain={siteData.domain}
+      />
+    </div>
   );
 }

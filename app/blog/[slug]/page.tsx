@@ -4,8 +4,9 @@ import Script from "next/script";
 import { Card, CardContent } from "@/components/ui/card";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateArticleSchema } from "@/lib/schema";
-import { Calendar, ArrowLeft } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { Navigation } from "@/components/navigation";
+import { Breadcrumb } from "@/components/breadcrumb";
 import { sanitizeHtml } from "@/lib/markdown-utils";
 
 interface BlogPostProps {
@@ -79,16 +80,16 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
       <Navigation />
       <div className="border-b">
         <div className="container mx-auto px-4 py-8">
-          <Link
-            href="/blog"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Return to blog
-          </Link>
+          <Breadcrumb 
+            items={[
+              { label: "Blog", href: "/blog" },
+              { label: post.title }
+            ]}
+            className="mb-6"
+          />
 
           <div className="max-w-4xl">
-            <div className="flex items-center gap-4 text-sm mb-4">
+            <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
               <span className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
                 {new Date(post.published_at).toLocaleDateString("en-US", {
@@ -103,7 +104,7 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
               {post.title}
             </h1>
 
-            <p className="text-xl  mb-6">{post.excerpt}</p>
+            <p className="text-xl text-gray-600 mb-6">{post.excerpt}</p>
           </div>
         </div>
       </div>

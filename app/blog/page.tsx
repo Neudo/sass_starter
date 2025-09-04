@@ -11,6 +11,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { blogSchema } from "@/lib/schema";
 import { Calendar } from "lucide-react";
 import { Navigation } from "@/components/navigation";
+import { Breadcrumb } from "@/components/breadcrumb";
 import Image from "next/image";
 import Footer from "@/components/footer";
 import { BlogPost } from "@/types";
@@ -45,6 +46,18 @@ export default async function BlogPage() {
 
       {/* Blog Posts Grid */}
       <div className="container mx-auto px-4 py-16">
+        <Breadcrumb 
+          items={[{ label: "Blog" }]}
+          className="mb-8"
+        />
+        
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-4">Blog</h1>
+          <p className="text-xl text-gray-600">
+            Expert insights on privacy-respecting web analytics and GDPR compliance
+          </p>
+        </div>
+
         {blogPosts.length === 0 ? (
           <div className="max-w-md mx-auto text-center">
             <div className="rounded-lg p-8 shadow-sm mb-16">

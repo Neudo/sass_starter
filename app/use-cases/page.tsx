@@ -451,23 +451,25 @@ export default function UseCasesPage() {
       <div className="min-h-screen bg-background">
         {/* Hero Section */}
         <section className="py-24 bg-gradient-to-b from-background to-muted/20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <Badge
-              variant="secondary"
-              className="mb-6 bg-primary/10 text-primary border-primary/20"
-            >
-              <Target className="w-4 h-4 mr-2" />
-              Use Cases & Industries
-            </Badge>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 text-foreground">
-              Analytics for Every Industry
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-4xl mx-auto">
-              Discover how businesses across different industries use Hector
-              Analytics to gain insights while maintaining privacy. From
-              e-commerce to education, find the perfect analytics solution for
-              your sector.
-            </p>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <Badge
+                variant="secondary"
+                className="mb-6 bg-primary/10 text-primary border-primary/20"
+              >
+                <Target className="w-4 h-4 mr-2" />
+                Use Cases & Industries
+              </Badge>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 text-foreground">
+                Analytics for Every Industry
+              </h1>
+              <p className="text-xl text-muted-foreground max-w-4xl mx-auto">
+                Discover how businesses across different industries use Hector
+                Analytics to gain insights while maintaining privacy. From
+                e-commerce to education, find the perfect analytics solution for
+                your sector.
+              </p>
+            </div>
           </div>
         </section>
 

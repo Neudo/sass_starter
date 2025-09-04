@@ -9,10 +9,9 @@ import {
   TrendingUp,
   Download,
   AlertTriangle,
-  ArrowLeft,
   Activity,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Breadcrumb } from "@/components/breadcrumb";
 
 const siteSettingsNavItems = [
   {
@@ -81,12 +80,14 @@ export default async function SiteSettingsLayout({
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="mb-8">
-        <Link href={`/dashboard/${domain}`}>
-          <Button variant="ghost" className="mb-4 gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Button>
-        </Link>
+        <Breadcrumb 
+          items={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: domain, href: `/dashboard/${domain}` },
+            { label: "Settings" }
+          ]}
+          className="mb-6"
+        />
         <h1 className="text-3xl font-bold">{domain}</h1>
         <p className="text-muted-foreground mt-2">
           Manage your website settings and preferences
