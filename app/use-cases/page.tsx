@@ -432,14 +432,14 @@ export default function UseCasesPage() {
             </div>
           </div>
 
-          <div className="pt-4">
+          {/* <div className="pt-4">
             <Link href={useCase.link}>
               <Button variant="outline" size="sm" className="w-full group">
                 Learn More
                 <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
-          </div>
+          </div> */}
         </div>
       </CardContent>
     </Card>
@@ -474,11 +474,11 @@ export default function UseCasesPage() {
         {/* Why Privacy-First */}
         <section className="py-20 bg-muted/20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
+            <div className="mb-12">
               <h2 className="text-3xl font-bold mb-4 text-foreground">
                 Why choose Privacy-First Analytics?
               </h2>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              <p className="text-xl text-muted-foreground max-w-3xl">
                 Traditional analytics create compliance challenges and data
                 quality issues. Hector Analytics solves these problems across
                 all industries.
@@ -505,12 +505,12 @@ export default function UseCasesPage() {
         {/* Use Cases Grid */}
         <section className="py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
+            <div className="mb-16">
               <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-foreground">
                 Trusted by Every Industry
               </h2>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-                Whether you\re running a blog, an online store, or a SaaS
+              <p className="text-xl text-muted-foreground max-w-3xl">
+                Whether you&apos;re running a blog, an online store, or a SaaS
                 platform, Hector Analytics provides the insights you need while
                 respecting user privacy.
               </p>
@@ -529,11 +529,11 @@ export default function UseCasesPage() {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-lg p-8 sm:p-12 border border-border/50 text-center">
               <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-foreground">
-                Don\t See Your Industry?
+                Don&apos;t See Your Industry?
               </h2>
               <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
                 Hector Analytics is flexible and adapts to any business model.
-                Whether you\re in healthcare, finance, retail, or any other
+                Whether you&apos;re in healthcare, finance, retail, or any other
                 sector, we can help you implement privacy-first analytics.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -541,11 +541,6 @@ export default function UseCasesPage() {
                   <Button size="lg">
                     Discuss Your Use Case
                     <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-                <Link href="/auth/sign-up">
-                  <Button variant="outline" size="lg">
-                    Start Free Trial
                   </Button>
                 </Link>
               </div>

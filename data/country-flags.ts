@@ -212,10 +212,123 @@ export const countryFlags: Record<string, string> = {
 };
 
 /**
+ * Detect if the user is on Windows
+ */
+function isWindows(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return navigator.userAgent.toLowerCase().includes('windows');
+}
+
+/**
+ * Get country code from country name for fallback display
+ */
+function getCountryCode(countryName: string): string | null {
+  const countryToCodes: Record<string, string> = {
+    "United States": "US",
+    "USA": "US", 
+    "US": "US",
+    "France": "FR",
+    "Germany": "DE", 
+    "Spain": "ES",
+    "Italy": "IT",
+    "United Kingdom": "GB",
+    "UK": "GB",
+    "Canada": "CA",
+    "Mexico": "MX",
+    "Brazil": "BR",
+    "Argentina": "AR",
+    "Chile": "CL",
+    "Colombia": "CO",
+    "Peru": "PE",
+    "Venezuela": "VE",
+    "Netherlands": "NL",
+    "The Netherlands": "NL",
+    "Belgium": "BE",
+    "Switzerland": "CH",
+    "Austria": "AT",
+    "Sweden": "SE",
+    "Norway": "NO",
+    "Denmark": "DK",
+    "Finland": "FI",
+    "Poland": "PL",
+    "Portugal": "PT",
+    "Ireland": "IE",
+    "Greece": "GR",
+    "Czech Republic": "CZ",
+    "Hungary": "HU",
+    "Romania": "RO",
+    "Bulgaria": "BG",
+    "Croatia": "HR",
+    "Serbia": "RS",
+    "Ukraine": "UA",
+    "Belarus": "BY",
+    "Lithuania": "LT",
+    "Latvia": "LV",
+    "Estonia": "EE",
+    "Slovenia": "SI",
+    "Slovakia": "SK",
+    "Luxembourg": "LU",
+    "Malta": "MT",
+    "Cyprus": "CY",
+    "Iceland": "IS",
+    "Russia": "RU",
+    "China": "CN",
+    "Japan": "JP",
+    "South Korea": "KR",
+    "India": "IN",
+    "Pakistan": "PK",
+    "Bangladesh": "BD",
+    "Thailand": "TH",
+    "Indonesia": "ID",
+    "Malaysia": "MY",
+    "Philippines": "PH",
+    "Vietnam": "VN",
+    "Singapore": "SG",
+    "Turkey": "TR",
+    "Israel": "IL",
+    "Saudi Arabia": "SA",
+    "UAE": "AE",
+    "United Arab Emirates": "AE",
+    "South Africa": "ZA",
+    "Egypt": "EG",
+    "Nigeria": "NG",
+    "Kenya": "KE",
+    "Morocco": "MA",
+    "Tunisia": "TN",
+    "Algeria": "DZ",
+    "Ethiopia": "ET",
+    "Ghana": "GH",
+    "Australia": "AU",
+    "New Zealand": "NZ",
+    "Fiji": "FJ",
+  };
+  
+  return countryToCodes[countryName] || null;
+}
+
+/**
  * Get the flag emoji for a given country name
  * @param countryName - The name of the country
- * @returns The flag emoji or null if not found
+ * @returns The flag emoji or country code for Windows compatibility
  */
 export function getCountryFlag(countryName: string): string | null {
-  return countryFlags[countryName] || null;
+  const flag = countryFlags[countryName];
+  
+  // If we have a flag emoji and not on Windows, return the emoji
+  if (flag && !isWindows()) {
+    return flag;
+  }
+  
+  // For Windows or when flag is not available, return country code as fallback
+  const code = getCountryCode(countryName);
+  if (code) {
+    return code;
+  }
+  
+  // If no country code mapping exists, try to extract from country name
+  if (countryName.length >= 2) {
+    return countryName.substring(0, 2).toUpperCase();
+  }
+  
+  return null;
 }

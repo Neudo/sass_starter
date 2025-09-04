@@ -294,7 +294,15 @@ export function getLanguageName(languageCode: string): string {
 }
 
 /**
- * Get language flag emoji based on the primary country for that language
+ * Detect if the user is on Windows
+ */
+function isWindows(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return navigator.userAgent.toLowerCase().includes('windows');
+}
+
+/**
+ * Get language flag emoji or country code based on the primary country for that language
  * Note: This is approximate as languages don't have flags, only countries do
  */
 export function getLanguageFlag(languageCode: string): string | null {
@@ -307,67 +315,67 @@ export function getLanguageFlag(languageCode: string): string | null {
   if (regionCode) {
     switch (regionCode) {
       case "us":
-        return "🇺🇸";
+        return isWindows() ? "US" : "🇺🇸";
       case "gb":
-        return "🇬🇧";
+        return isWindows() ? "GB" : "🇬🇧";
       case "ca":
-        return "🇨🇦";
+        return isWindows() ? "CA" : "🇨🇦";
       case "au":
-        return "🇦🇺";
+        return isWindows() ? "AU" : "🇦🇺";
       case "nz":
-        return "🇳🇿";
+        return isWindows() ? "NZ" : "🇳🇿";
       case "za":
-        return "🇿🇦";
+        return isWindows() ? "ZA" : "🇿🇦";
       case "in":
-        return "🇮🇳";
+        return isWindows() ? "IN" : "🇮🇳";
       case "fr":
-        return "🇫🇷";
+        return isWindows() ? "FR" : "🇫🇷";
       case "be":
-        return "🇧🇪";
+        return isWindows() ? "BE" : "🇧🇪";
       case "ch":
-        return "🇨🇭";
+        return isWindows() ? "CH" : "🇨🇭";
       case "es":
-        return "🇪🇸";
+        return isWindows() ? "ES" : "🇪🇸";
       case "mx":
-        return "🇲🇽";
+        return isWindows() ? "MX" : "🇲🇽";
       case "ar":
-        return "🇦🇷";
+        return isWindows() ? "AR" : "🇦🇷";
       case "co":
-        return "🇨🇴";
+        return isWindows() ? "CO" : "🇨🇴";
       case "cl":
-        return "🇨🇱";
+        return isWindows() ? "CL" : "🇨🇱";
       case "pe":
-        return "🇵🇪";
+        return isWindows() ? "PE" : "🇵🇪";
       case "ve":
-        return "🇻🇪";
+        return isWindows() ? "VE" : "🇻🇪";
       case "br":
-        return "🇧🇷";
+        return isWindows() ? "BR" : "🇧🇷";
       case "pt":
-        return "🇵🇹";
+        return isWindows() ? "PT" : "🇵🇹";
       case "de":
-        return "🇩🇪";
+        return isWindows() ? "DE" : "🇩🇪";
       case "at":
-        return "🇦🇹";
+        return isWindows() ? "AT" : "🇦🇹";
       case "it":
-        return "🇮🇹";
+        return isWindows() ? "IT" : "🇮🇹";
       case "nl":
-        return "🇳🇱";
+        return isWindows() ? "NL" : "🇳🇱";
       case "cn":
-        return "🇨🇳";
+        return isWindows() ? "CN" : "🇨🇳";
       case "tw":
-        return "🇹🇼";
+        return isWindows() ? "TW" : "🇹🇼";
       case "hk":
-        return "🇭🇰";
+        return isWindows() ? "HK" : "🇭🇰";
       case "sg":
-        return "🇸🇬";
+        return isWindows() ? "SG" : "🇸🇬";
       case "my":
-        return "🇲🇾";
+        return isWindows() ? "MY" : "🇲🇾";
       case "jp":
-        return "🇯🇵";
+        return isWindows() ? "JP" : "🇯🇵";
       case "kr":
-        return "🇰🇷";
+        return isWindows() ? "KR" : "🇰🇷";
       case "ru":
-        return "🇷🇺";
+        return isWindows() ? "RU" : "🇷🇺";
       default:
         return null;
     }
@@ -377,165 +385,152 @@ export function getLanguageFlag(languageCode: string): string | null {
   const baseLanguage = normalizedCode.split("-")[0];
   switch (baseLanguage) {
     case "en":
-      return "🇺🇸"; // Default to US English
+      return isWindows() ? "US" : "🇺🇸"; // Default to US English
     case "fr":
-      return "🇫🇷";
+      return isWindows() ? "FR" : "🇫🇷";
     case "es":
-      return "🇪🇸";
+      return isWindows() ? "ES" : "🇪🇸";
     case "de":
-      return "🇩🇪";
+      return isWindows() ? "DE" : "🇩🇪";
     case "it":
-      return "🇮🇹";
+      return isWindows() ? "IT" : "🇮🇹";
     case "pt":
-      return "🇵🇹";
+      return isWindows() ? "PT" : "🇵🇹";
     case "ru":
-      return "🇷🇺";
+      return isWindows() ? "RU" : "🇷🇺";
     case "ja":
-      return "🇯🇵";
+      return isWindows() ? "JP" : "🇯🇵";
     case "ko":
-      return "🇰🇷";
+      return isWindows() ? "KR" : "🇰🇷";
     case "zh":
-      return "🇨🇳";
+      return isWindows() ? "CN" : "🇨🇳";
     case "ar":
-      return "🇸🇦";
+      return isWindows() ? "SA" : "🇸🇦";
     case "hi":
-      return "🇮🇳";
+      return isWindows() ? "IN" : "🇮🇳";
     case "tr":
-      return "🇹🇷";
+      return isWindows() ? "TR" : "🇹🇷";
     case "pl":
-      return "🇵🇱";
+      return isWindows() ? "PL" : "🇵🇱";
     case "nl":
-      return "🇳🇱";
+      return isWindows() ? "NL" : "🇳🇱";
     case "sv":
-      return "🇸🇪";
+      return isWindows() ? "SE" : "🇸🇪";
     case "da":
-      return "🇩🇰";
+      return isWindows() ? "DK" : "🇩🇰";
     case "no":
-      return "🇳🇴";
     case "nb":
-      return "🇳🇴";
     case "nn":
-      return "🇳🇴";
+      return isWindows() ? "NO" : "🇳🇴";
     case "fi":
-      return "🇫🇮";
+      return isWindows() ? "FI" : "🇫🇮";
     case "he":
-      return "🇮🇱";
+      return isWindows() ? "IL" : "🇮🇱";
     case "th":
-      return "🇹🇭";
+      return isWindows() ? "TH" : "🇹🇭";
     case "vi":
-      return "🇻🇳";
+      return isWindows() ? "VN" : "🇻🇳";
     case "id":
-      return "🇮🇩";
+      return isWindows() ? "ID" : "🇮🇩";
     case "ms":
-      return "🇲🇾";
+      return isWindows() ? "MY" : "🇲🇾";
     case "tl":
-      return "🇵🇭";
+      return isWindows() ? "PH" : "🇵🇭";
     case "cs":
-      return "🇨🇿";
+      return isWindows() ? "CZ" : "🇨🇿";
     case "sk":
-      return "🇸🇰";
+      return isWindows() ? "SK" : "🇸🇰";
     case "hu":
-      return "🇭🇺";
+      return isWindows() ? "HU" : "🇭🇺";
     case "ro":
-      return "🇷🇴";
+      return isWindows() ? "RO" : "🇷🇴";
     case "bg":
-      return "🇧🇬";
+      return isWindows() ? "BG" : "🇧🇬";
     case "hr":
-      return "🇭🇷";
+      return isWindows() ? "HR" : "🇭🇷";
     case "sr":
-      return "🇷🇸";
+      return isWindows() ? "RS" : "🇷🇸";
     case "sl":
-      return "🇸🇮";
+      return isWindows() ? "SI" : "🇸🇮";
     case "et":
-      return "🇪🇪";
+      return isWindows() ? "EE" : "🇪🇪";
     case "lv":
-      return "🇱🇻";
+      return isWindows() ? "LV" : "🇱🇻";
     case "lt":
-      return "🇱🇹";
+      return isWindows() ? "LT" : "🇱🇹";
     case "uk":
-      return "🇺🇦";
+      return isWindows() ? "UA" : "🇺🇦";
     case "be":
-      return "🇧🇾";
+      return isWindows() ? "BY" : "🇧🇾";
     case "mk":
-      return "🇲🇰";
+      return isWindows() ? "MK" : "🇲🇰";
     case "sq":
-      return "🇦🇱";
+      return isWindows() ? "AL" : "🇦🇱";
     case "mt":
-      return "🇲🇹";
+      return isWindows() ? "MT" : "🇲🇹";
     case "is":
-      return "🇮🇸";
+      return isWindows() ? "IS" : "🇮🇸";
     case "ga":
-      return "🇮🇪";
+      return isWindows() ? "IE" : "🇮🇪";
     case "cy":
-      return "🏴󠁧󠁢󠁷󠁬󠁳󠁿"; // Wales flag
+      return isWindows() ? "GB-WLS" : "🏴󠁧󠁢󠁷󠁬󠁳󠁿"; // Wales flag
     case "eu":
-      return "🇪🇸"; // Basque (Spain)
     case "ca":
-      return "🇪🇸"; // Catalan (Spain)
     case "gl":
-      return "🇪🇸"; // Galician (Spain)
+      return isWindows() ? "ES" : "🇪🇸"; // Basque/Catalan/Galician (Spain)
     case "fa":
-      return "🇮🇷";
+      return isWindows() ? "IR" : "🇮🇷";
     case "ur":
-      return "🇵🇰";
+      return isWindows() ? "PK" : "🇵🇰";
     case "bn":
-      return "🇧🇩";
+      return isWindows() ? "BD" : "🇧🇩";
     case "ta":
-      return "🇮🇳";
     case "te":
-      return "🇮🇳";
     case "ml":
-      return "🇮🇳";
     case "kn":
-      return "🇮🇳";
     case "gu":
-      return "🇮🇳";
     case "mr":
-      return "🇮🇳";
+      return isWindows() ? "IN" : "🇮🇳";
     case "ne":
-      return "🇳🇵";
+      return isWindows() ? "NP" : "🇳🇵";
     case "si":
-      return "🇱🇰";
+      return isWindows() ? "LK" : "🇱🇰";
     case "my":
-      return "🇲🇲";
+      return isWindows() ? "MM" : "🇲🇲";
     case "km":
-      return "🇰🇭";
+      return isWindows() ? "KH" : "🇰🇭";
     case "lo":
-      return "🇱🇦";
+      return isWindows() ? "LA" : "🇱🇦";
     case "ka":
-      return "🇬🇪";
+      return isWindows() ? "GE" : "🇬🇪";
     case "am":
-      return "🇪🇹";
+      return isWindows() ? "ET" : "🇪🇹";
     case "sw":
-      return "🇰🇪";
+      return isWindows() ? "KE" : "🇰🇪";
     case "zu":
-      return "🇿🇦";
     case "af":
-      return "🇿🇦";
     case "xh":
-      return "🇿🇦";
+      return isWindows() ? "ZA" : "🇿🇦";
     case "ig":
-      return "🇳🇬";
     case "yo":
-      return "🇳🇬";
     case "ha":
-      return "🇳🇬";
+      return isWindows() ? "NG" : "🇳🇬";
     case "az":
-      return "🇦🇿";
+      return isWindows() ? "AZ" : "🇦🇿";
     case "kk":
-      return "🇰🇿";
+      return isWindows() ? "KZ" : "🇰🇿";
     case "ky":
-      return "🇰🇬";
+      return isWindows() ? "KG" : "🇰🇬";
     case "uz":
-      return "🇺🇿";
+      return isWindows() ? "UZ" : "🇺🇿";
     case "tg":
-      return "🇹🇯";
+      return isWindows() ? "TJ" : "🇹🇯";
     case "mn":
-      return "🇲🇳";
+      return isWindows() ? "MN" : "🇲🇳";
     case "el":
-      return "🇬🇷";
+      return isWindows() ? "GR" : "🇬🇷";
     case "hy":
-      return "🇦🇲";
+      return isWindows() ? "AM" : "🇦🇲";
     default:
       return null;
   }
