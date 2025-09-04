@@ -138,10 +138,11 @@ export async function POST(req: NextRequest) {
     const pageData = calculatePageData(page, existingSession);
 
     // Prepare base session data that's always updated
+    const currentTime = new Date().toISOString();
     const baseSessionData = {
       id: sessionId,
       site_id: siteId,
-      last_seen: new Date().toISOString(),
+      last_seen: currentTime,
       // Location data
       country: locationData.country,
       region: locationData.region,
@@ -169,7 +170,7 @@ export async function POST(req: NextRequest) {
           utm_campaign: trafficSource.utmParams.utm_campaign,
           utm_term: trafficSource.utmParams.utm_term,
           utm_content: trafficSource.utmParams.utm_content,
-          created_at: new Date().toISOString(),
+          created_at: currentTime, // Use the same timestamp to ensure consistency
         }
       : baseSessionData;
 

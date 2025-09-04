@@ -39,9 +39,7 @@ export function AnalyticsMetrics({
   siteId,
   dateRangeOption = "today",
 }: AnalyticsMetricsProps) {
-  const [selectedMetric, setSelectedMetric] =
-    useState<string>("uniqueVisitors");
-  const { getAnalyticsData, loading } = useAnalyticsStore();
+  const { getAnalyticsData, loading, setSelectedMetric, selectedMetric } = useAnalyticsStore();
   const analyticsData = getAnalyticsData();
 
   const metrics: Metrics = {
@@ -219,7 +217,7 @@ export function AnalyticsMetrics({
       <MetricsChart
         siteId={siteId}
         dateRange={dateRangeOption}
-        selectedMetrics={[selectedMetric]}
+        selectedMetrics={selectedMetric ? [selectedMetric] : []}
       />
     </div>
   );

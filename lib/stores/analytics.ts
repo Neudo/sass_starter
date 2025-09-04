@@ -98,12 +98,16 @@ interface AnalyticsStore {
   // Filters
   filters: Filter[];
   
+  // Selected metric for filtering (null means show all sessions)
+  selectedMetric: string | null;
+  
   // Cached analytics data
   cachedAnalyticsData: AnalyticsData | null;
   lastFiltersHash: string;
   
   // Computed data (getters)
   getFilteredSessions: () => Session[];
+  getSessionsForAnalytics: () => Session[];
   getAnalyticsData: () => AnalyticsData;
   updateCache: () => void;
   calculateTrends: (currentMetrics: { uniqueVisitors: number; totalVisits: number; totalPageviews: number }, previousMetrics: { uniqueVisitors: number; totalVisits: number; totalPageviews: number }) => { uniqueVisitors: number; totalVisits: number; totalPageviews: number };
@@ -115,6 +119,7 @@ interface AnalyticsStore {
   clearFilters: () => void;
   clearFiltersByType: (type: FilterType) => void;
   hasFilter: (type: FilterType, value: string) => boolean;
+  setSelectedMetric: (metric: string | null) => void;
 }
 
 export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
@@ -127,6 +132,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
   loading: false,
   error: null,
   filters: [],
+  selectedMetric: null, // Default to showing all sessions
   cachedAnalyticsData: null,
   lastFiltersHash: '',
 
@@ -134,6 +140,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
   getFilteredSessions: () => {
     const { allSessions, filters } = get();
     
+    // Apply regular filters (not metric-based filtering)
     return allSessions.filter((session) => {
       return filters.every((filter) => {
         switch (filter.type) {
@@ -183,27 +190,58 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
     });
   },
 
+  // New getter for sessions filtered by metric selection (for analytics display)
+  getSessionsForAnalytics: () => {
+    const { selectedMetric } = get();
+    const state = get();
+    let filteredSessions = state.getFilteredSessions();
+    
+    // If unique visitors is selected, keep only one session per unique visitor
+    if (selectedMetric === 'uniqueVisitors') {
+      const uniqueVisitorsMap = new Map<string, Session>();
+      
+      filteredSessions.forEach(session => {
+        const visitorFingerprint = `${session.browser || "unknown"}-${
+          session.os || "unknown"
+        }-${session.screen_size || "unknown"}-${session.country || "unknown"}`;
+        
+        // Keep the first session for each unique visitor (by creation time)
+        if (!uniqueVisitorsMap.has(visitorFingerprint) || 
+            new Date(session.created_at).getTime() < new Date(uniqueVisitorsMap.get(visitorFingerprint)!.created_at).getTime()) {
+          uniqueVisitorsMap.set(visitorFingerprint, session);
+        }
+      });
+      
+      filteredSessions = Array.from(uniqueVisitorsMap.values());
+    }
+    
+    return filteredSessions;
+  },
+
   getAnalyticsData: () => {
     const state = get();
-    const { filters, cachedAnalyticsData, lastFiltersHash } = state;
+    const { filters, selectedMetric, cachedAnalyticsData, lastFiltersHash } = state;
     
-    // Create a hash of current filters to check if we need to recalculate
-    const currentFiltersHash = JSON.stringify(filters);
+    // Create a hash of current filters AND selected metric to check if we need to recalculate
+    const currentFiltersHash = JSON.stringify({ filters, selectedMetric });
     
     // If we have cached data and filters haven't changed, return cached data
     if (cachedAnalyticsData && lastFiltersHash === currentFiltersHash) {
       return cachedAnalyticsData;
     }
     
-    // If filters have changed, recalculate but don't cache during render
+    // Get sessions for metrics (always all filtered sessions, not affected by metric selection)
     const filteredSessions = state.getFilteredSessions();
+    
+    // Get sessions for analytics displays (affected by metric selection)
+    const analyticsFilteredSessions = state.getSessionsForAnalytics();
     
     // Calculate all analytics data from filtered sessions
     // This is where we'll move all the computation logic
     
-    // Countries
+    // Countries (use analytics filtered sessions)
     const countryCounts: Record<string, number> = {};
-    filteredSessions.forEach(session => {
+    analyticsFilteredSessions.forEach(session => {
       if (session.country) {
         countryCounts[session.country] = (countryCounts[session.country] || 0) + 1;
       }
@@ -220,7 +258,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
 
     // Regions
     const regionCounts: Record<string, { count: number; country?: string }> = {};
-    filteredSessions.forEach(session => {
+    analyticsFilteredSessions.forEach(session => {
       if (session.region) {
         const regionKey = session.region;
         if (!regionCounts[regionKey]) {
@@ -242,7 +280,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
 
     // Cities
     const cityCounts: Record<string, { count: number; country?: string }> = {};
-    filteredSessions.forEach(session => {
+    analyticsFilteredSessions.forEach(session => {
       if (session.city) {
         const cityKey = session.city;
         if (!cityCounts[cityKey]) {
@@ -264,7 +302,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
 
     // Languages
     const languageCounts: Record<string, number> = {};
-    filteredSessions.forEach(session => {
+    analyticsFilteredSessions.forEach(session => {
       if (session.language) {
         languageCounts[session.language] = (languageCounts[session.language] || 0) + 1;
       }
@@ -284,7 +322,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
     const entryCounts: Record<string, number> = {};
     const exitCounts: Record<string, number> = {};
     
-    filteredSessions.forEach(session => {
+    analyticsFilteredSessions.forEach(session => {
       const visitedPages = session.visited_pages || [];
       
       // Count all visited pages
@@ -338,7 +376,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
     const osCounts: Record<string, number> = {};
     const screenCounts: Record<string, number> = {};
     
-    filteredSessions.forEach(session => {
+    analyticsFilteredSessions.forEach(session => {
       if (session.browser) {
         browserCounts[session.browser] = (browserCounts[session.browser] || 0) + 1;
       }
@@ -382,7 +420,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
     const channelCounts: Record<string, number> = {};
     const sourceCounts: Record<string, { count: number; displayName: string }> = {};
     
-    filteredSessions.forEach(session => {
+    analyticsFilteredSessions.forEach(session => {
       // Channels
       const channel = getChannel(
         session.utm_medium,
@@ -562,10 +600,10 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
 
   updateCache: () => {
     const state = get();
-    const { filters } = state;
+    const { filters, selectedMetric } = state;
     
-    // Create a hash of current filters
-    const currentFiltersHash = JSON.stringify(filters);
+    // Create a hash of current filters and selected metric
+    const currentFiltersHash = JSON.stringify({ filters, selectedMetric });
     
     // Only update cache if filters have actually changed
     if (state.lastFiltersHash !== currentFiltersHash) {
@@ -710,5 +748,17 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
   hasFilter: (type: FilterType, value: string) => {
     const { filters } = get();
     return filters.some(f => f.type === type && f.value === value);
+  },
+
+  setSelectedMetric: (metric: string | null) => {
+    const { updateCache, selectedMetric: currentMetric } = get();
+    
+    // If clicking the same metric, toggle it off (set to null)
+    // Otherwise, set the new metric
+    const newMetric = currentMetric === metric ? null : metric;
+    
+    set({ selectedMetric: newMetric });
+    // Update cache after metric change
+    updateCache();
   },
 }));
