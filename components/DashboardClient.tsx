@@ -18,6 +18,7 @@ import {
 } from "@/components/DateFilter";
 import { FunnelsAndEventsCard } from "./SiteData/FunnelsAndEventsCard";
 import { useAnalyticsStore } from "@/lib/stores/analytics";
+import { usePersistedFilters } from "@/hooks/usePersistedFilters";
 
 interface Site {
   id: string;
@@ -37,26 +38,29 @@ export function DashboardClient({
   userSites,
   isPublic = false,
 }: DashboardClientProps) {
-  const [selectedDateRange, setSelectedDateRange] =
-    useState<DateRangeOption>("last7days");
+  const { filters, setDateRange, isLoaded } = usePersistedFilters(domain);
+  const selectedDateRange = filters.dateRange;
   const dateRange = useMemo(() => getDateRange(selectedDateRange), [selectedDateRange]);
 
   const { fetchAllData } = useAnalyticsStore();
 
   // Load all data when component mounts or parameters change
+  // Only fetch after filters are loaded to prevent duplicate requests
   useEffect(() => {
-    fetchAllData(siteId, dateRange, selectedDateRange);
+    if (isLoaded) {
+      fetchAllData(siteId, dateRange, selectedDateRange);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [siteId, dateRange, selectedDateRange]);
+  }, [siteId, dateRange, selectedDateRange, isLoaded]);
 
   return (
     <div className="space-y-6">
       <div className="flex gap-4 flex-wrap items-center justify-between">
         {!isPublic && <SiteSelector sites={userSites} currentDomain={domain} />}
-        <ActiveVisitors siteId={siteId} onActivateRealtime={() => setSelectedDateRange("realtime")} />
+        <ActiveVisitors siteId={siteId} onActivateRealtime={() => setDateRange("realtime")} />
         <DateFilter
           selectedRange={selectedDateRange}
-          onRangeChange={setSelectedDateRange}
+          onRangeChange={setDateRange}
         />
       </div>
       <ActiveFilters />

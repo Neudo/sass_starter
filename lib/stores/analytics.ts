@@ -132,7 +132,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
   loading: false,
   error: null,
   filters: [],
-  selectedMetric: null, // Default to showing all sessions
+  selectedMetric: 'uniqueVisitors', // Default to unique visitors filter
   cachedAnalyticsData: null,
   lastFiltersHash: '',
 
