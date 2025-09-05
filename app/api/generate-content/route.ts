@@ -91,11 +91,6 @@ export async function POST(req: NextRequest) {
 
         // Initialize content generator
         const generator = new ContentGenerator();
-
-        console.log("Starting article rewriting process...");
-        console.log("Original title:", originalTitle);
-        console.log("Original content length:", originalContent?.length || 0);
-
         // Rewrite the article for Hector Analytics
         const rewrittenPost = await generator.rewriteArticle({
           originalTitle,
@@ -103,8 +98,6 @@ export async function POST(req: NextRequest) {
           targetService: targetService || "Hector Analytics",
           style: body.style || "professional",
         });
-
-        console.log("Article rewriting completed successfully");
 
         // Save to database as draft
         const postId = await generator.saveToBlog(rewrittenPost, body.authorId);

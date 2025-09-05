@@ -24,13 +24,15 @@ export function VerificationStep({
   >("idle");
   const [verificationTimer, setVerificationTimer] = useState(20);
   const [isVerified, setIsVerified] = useState(false);
-  
+
   const router = useRouter();
-  const intervalsRef = useRef<{ countdown?: NodeJS.Timeout; check?: NodeJS.Timeout }>({});
+  const intervalsRef = useRef<{
+    countdown?: NodeJS.Timeout;
+    check?: NodeJS.Timeout;
+  }>({});
 
   const startVerification = () => {
     if (isVerified) {
-      console.log("✅ Already verified, skipping verification");
       return;
     }
 
@@ -39,7 +41,8 @@ export function VerificationStep({
     setIsVerified(false);
 
     // Clear any existing intervals
-    if (intervalsRef.current.countdown) clearInterval(intervalsRef.current.countdown);
+    if (intervalsRef.current.countdown)
+      clearInterval(intervalsRef.current.countdown);
     if (intervalsRef.current.check) clearInterval(intervalsRef.current.check);
 
     const countdown = setInterval(() => {
@@ -85,7 +88,10 @@ export function VerificationStep({
       const cleanDomainForCheck = cleanDomainName(domain);
 
       console.log("🔍 Installation check - Original domain:", domain);
-      console.log("🔍 Installation check - Cleaned domain:", cleanDomainForCheck);
+      console.log(
+        "🔍 Installation check - Cleaned domain:",
+        cleanDomainForCheck
+      );
 
       // Call the API to check if script is installed
       const response = await fetch("/api/verify-installation", {
@@ -97,36 +103,26 @@ export function VerificationStep({
       });
 
       const result = await response.json();
-      console.log("🔍 Installation check result:", result);
 
       if (result.installed) {
-        console.log("🎉 Script detected! Stopping intervals and saving site...");
-        
         // Mark as verified to prevent multiple checks
         setIsVerified(true);
-        
+
         // Clear intervals
-        if (intervalsRef.current.countdown) clearInterval(intervalsRef.current.countdown);
-        if (intervalsRef.current.check) clearInterval(intervalsRef.current.check);
+        if (intervalsRef.current.countdown)
+          clearInterval(intervalsRef.current.countdown);
+        if (intervalsRef.current.check)
+          clearInterval(intervalsRef.current.check);
 
         // Site is verified, now save it to database
         const supabase = createClient();
         const cleanDomain = cleanDomainName(domain);
-
-        console.log("💾 Saving site with domain:", cleanDomain);
 
         const {
           data: { user },
         } = await supabase.auth.getUser();
 
         if (user) {
-          console.log("👤 User found:", user.id);
-          console.log("💾 Attempting to insert site:", { 
-            domain: cleanDomain, 
-            timezone, 
-            user_id: user.id 
-          });
-          
           const { error } = await supabase.from("sites").insert({
             domain: cleanDomain,
             timezone,
@@ -135,17 +131,9 @@ export function VerificationStep({
 
           if (error) {
             console.error("❌ Error saving site:", error);
-            if (error.code === "23505") {
-              console.log("ℹ️  Site already exists (duplicate key), continuing...");
-            } else {
-              setVerificationStatus("error");
-              return;
-            }
-          } else {
-            console.log("✅ Site saved successfully!");
+            setVerificationStatus("error");
+            return;
           }
-        } else {
-          console.error("❌ No user found!");
         }
 
         setVerificationStatus("success");
@@ -175,10 +163,11 @@ export function VerificationStep({
   // Start verification automatically when component mounts
   useEffect(() => {
     startVerification();
-    
+
     // Cleanup intervals on unmount
     return () => {
-      if (intervalsRef.current.countdown) clearInterval(intervalsRef.current.countdown);
+      if (intervalsRef.current.countdown)
+        clearInterval(intervalsRef.current.countdown);
       if (intervalsRef.current.check) clearInterval(intervalsRef.current.check);
     };
   }, []);

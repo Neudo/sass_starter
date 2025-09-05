@@ -91,9 +91,6 @@ function WelcomePageContent() {
       const supabase = createClient();
       const cleanDomain = cleanDomainName(domain);
 
-      console.log("🔍 Domain check - Original:", domain);
-      console.log("🔍 Domain check - Cleaned:", cleanDomain);
-
       try {
         const { data: existingSite } = await supabase
           .from("sites")
@@ -195,18 +192,17 @@ function WelcomePageContent() {
     }, 20000);
   };
 
-  const checkInstallation = async (earlyCheck = false, onSuccess?: () => void) => {
+  const checkInstallation = async (
+    earlyCheck = false,
+    onSuccess?: () => void
+  ) => {
     // Don't check if already verified
     if (isVerified) {
-      console.log("✅ Already verified, skipping check");
       return;
     }
 
     try {
       const cleanDomainForCheck = cleanDomainName(domain);
-
-      console.log("🔍 Installation check - Original domain:", domain);
-      console.log("🔍 Installation check - Cleaned domain:", cleanDomainForCheck);
 
       // Call the API to check if script is installed
       const response = await fetch("/api/verify-installation", {
@@ -218,17 +214,13 @@ function WelcomePageContent() {
       });
 
       const result = await response.json();
-      console.log("🔍 Installation check result:", result);
 
       if (result.installed) {
-        console.log("🎉 Script detected! Stopping intervals and saving site...");
-        
         // Mark as verified to prevent multiple checks
         setIsVerified(true);
-        
+
         // Stop any intervals first
         if (onSuccess) {
-          console.log("🛑 Calling onSuccess to stop intervals");
           onSuccess();
         }
 
@@ -236,16 +228,11 @@ function WelcomePageContent() {
         const supabase = createClient();
         const cleanDomain = cleanDomainName(domain);
 
-        console.log("💾 Saving site with domain:", cleanDomain);
-
         const {
           data: { user },
         } = await supabase.auth.getUser();
 
         if (user) {
-          console.log("👤 User found:", user.id);
-          console.log("💾 Attempting to insert site:", { domain: cleanDomain, timezone, user_id: user.id });
-          
           const { error } = await supabase.from("sites").insert({
             domain: cleanDomain,
             timezone,
@@ -253,18 +240,12 @@ function WelcomePageContent() {
           });
 
           if (error) {
-            console.error("❌ Error saving site:", error);
             if (error.code === "23505") {
-              console.log("ℹ️  Site already exists (duplicate key), continuing...");
             } else {
               setVerificationStatus("error");
               return;
             }
-          } else {
-            console.log("✅ Site saved successfully!");
           }
-        } else {
-          console.error("❌ No user found!");
         }
 
         setVerificationStatus("success");

@@ -11,8 +11,11 @@ export async function DELETE(
     const supabase = await createClient();
     const adminClient = createAdminClient();
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -35,51 +38,33 @@ export async function DELETE(
       );
     }
 
-    console.log(`Resetting analytics data for site: ${siteId}`);
-
     // Delete analytics data but keep site configuration
     // Order matters due to foreign key constraints
 
     // 1. Delete funnel conversions for this site
-    await adminClient
-      .from("funnel_conversions")
-      .delete()
-      .eq("site_id", siteId);
+    await adminClient.from("funnel_conversions").delete().eq("site_id", siteId);
 
     // 2. Delete analytics events for this site
-    await adminClient
-      .from("analytics_events")
-      .delete()
-      .eq("site_id", siteId);
+    await adminClient.from("analytics_events").delete().eq("site_id", siteId);
 
     // 3. Delete sessions for this site
-    await adminClient
-      .from("sessions")
-      .delete()
-      .eq("site_id", siteId);
+    await adminClient.from("sessions").delete().eq("site_id", siteId);
 
     // 4. Delete GA import jobs for this site
-    await adminClient
-      .from("ga_import_jobs")
-      .delete()
-      .eq("site_id", siteId);
+    await adminClient.from("ga_import_jobs").delete().eq("site_id", siteId);
 
     // 5. Delete usage events for this site
-    await adminClient
-      .from("usage_events")
-      .delete()
-      .eq("site_id", siteId);
+    await adminClient.from("usage_events").delete().eq("site_id", siteId);
 
     // Note: We keep funnels and funnel_steps as they are configuration, not data
     // Note: We keep the site record itself and its settings
 
     console.log(`Analytics data reset completed for site: ${siteId}`);
 
-    return NextResponse.json({ 
-      success: true, 
-      message: "Analytics data reset successfully" 
+    return NextResponse.json({
+      success: true,
+      message: "Analytics data reset successfully",
     });
-
   } catch (error) {
     console.error("Error resetting site data:", error);
     return NextResponse.json(

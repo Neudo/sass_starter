@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(request: NextRequest) {
   try {
     const adminClient = createAdminClient();
-    
+
     const { searchParams } = new URL(request.url);
     const siteDomain = searchParams.get("domain");
     const fromDate = searchParams.get("from");
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     // Normalize domain - handle both with and without www
     const domainVariants = [siteDomain];
-    if (siteDomain.startsWith('www.')) {
+    if (siteDomain.startsWith("www.")) {
       domainVariants.push(siteDomain.substring(4));
     } else {
       domainVariants.push(`www.${siteDomain}`);
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       .from("sites")
       .select("id, public_enabled")
       .in("domain", domainVariants);
-    
+
     const siteData = sites && sites.length > 0 ? sites[0] : null;
 
     if (siteError || !siteData || !siteData.public_enabled) {

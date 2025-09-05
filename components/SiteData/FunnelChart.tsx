@@ -109,18 +109,13 @@ export function FunnelChart({
             description: selectedFunnel.description || "",
           },
           steps: selectedFunnel.steps.map((step: any, index: number) => {
-            const entered_count = index === 0 ? step.visitors : selectedFunnel.steps[index - 1].visitors;
+            const entered_count =
+              index === 0
+                ? step.visitors
+                : selectedFunnel.steps[index - 1].visitors;
             const completed_count = step.visitors;
             const dropped_count = entered_count - completed_count;
-            
-            console.log(`Step ${step.step_number} (${step.name}):`, {
-              visitors: step.visitors,
-              entered_count,
-              completed_count,
-              dropped_count,
-              conversion_rate: step.conversion_rate
-            });
-            
+
             return {
               id: step.id,
               step_number: step.step_number,
@@ -163,13 +158,6 @@ export function FunnelChart({
     };
   }, [funnelId, siteId, dateRange, isRealtimeMode, isPublic, domain]);
 
-  console.log("domain", domain);
-  console.log("funnelId", funnelId);
-  console.log("siteId", siteId);
-  console.log("dateRange", dateRange);
-  console.log("isRealtimeMode", isRealtimeMode);
-  console.log("isPublic", isPublic);
-
   if (loading) {
     return (
       <div className="text-sm text-muted-foreground">
@@ -203,7 +191,7 @@ export function FunnelChart({
 
     // Use conversion rate directly as the height percentage
     const conversionPercentage = step.conversion_rate || 0;
-    
+
     // For first step, show full height if there are visitors, otherwise 0
     if (index === 0) {
       const displayPercentage = step.entered_count > 0 ? 100 : 0;
