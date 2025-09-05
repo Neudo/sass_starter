@@ -25,17 +25,17 @@ export async function updateSession(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
+            request.cookies.set(name, value)
           );
           supabaseResponse = NextResponse.next({
             request,
           });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
+            supabaseResponse.cookies.set(name, value, options)
           );
         },
       },
-    },
+    }
   );
 
   // Do not run code between createServerClient and
@@ -46,6 +46,26 @@ export async function updateSession(request: NextRequest) {
   // with the Supabase client, your users may be randomly logged out.
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
+
+  if (request.nextUrl.pathname.startsWith("/dashboard")) {
+    const siteName = request.nextUrl.pathname.split("/")[2];
+
+    if (!siteName) {
+      return;
+    }
+
+    const { data: sites } = await supabase
+      .from("sites")
+      .select("domain")
+      .eq("user_id", user?.sub);
+
+    // Check if the user owns this site
+    const userOwnsSite = sites?.some((site) => site.domain === siteName);
+
+    if (!userOwnsSite) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+  }
 
   if (
     request.nextUrl.pathname !== "/" &&
