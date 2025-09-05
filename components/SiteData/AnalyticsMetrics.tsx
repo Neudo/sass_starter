@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Eye,
@@ -39,7 +39,8 @@ export function AnalyticsMetrics({
   siteId,
   dateRangeOption = "today",
 }: AnalyticsMetricsProps) {
-  const { getAnalyticsData, loading, setSelectedMetric, selectedMetric } = useAnalyticsStore();
+  const { getAnalyticsData, loading, setSelectedMetric, selectedMetric } =
+    useAnalyticsStore();
   const analyticsData = getAnalyticsData();
 
   const metrics: Metrics = {
@@ -86,8 +87,8 @@ export function AnalyticsMetrics({
           ? value.toLocaleString()
           : value
         : format === "percentage"
-        ? `${value}%`
-        : value;
+          ? `${value}%`
+          : value;
 
     const isSelected = metricKey && selectedMetric === metricKey;
 
