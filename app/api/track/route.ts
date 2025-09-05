@@ -26,8 +26,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Skip tracking for dashboard pages
-    if (page && page.startsWith("/dashboard/")) {
+    // Skip tracking for ALL dashboard pages (security: don't track private data)
+    if (page && page.includes("/dashboard")) {
       return new NextResponse(null, {
         status: 204,
         headers: {
