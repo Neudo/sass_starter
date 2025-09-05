@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeviceCard } from "@/components/SiteData/DeviceCard";
 import { LocationCard } from "@/components/SiteData/LocationCard";
@@ -11,11 +11,7 @@ import { WorldMapCard } from "@/components/SiteData/WorldMapCard";
 import { SiteSelector } from "@/components/SiteSelector";
 import { ActiveVisitors } from "@/components/SiteData/ActiveVisitors";
 import { ActiveFilters } from "@/components/SiteData/ActiveFilters";
-import {
-  DateFilter,
-  DateRangeOption,
-  getDateRange,
-} from "@/components/DateFilter";
+import { DateFilter, getDateRange } from "@/components/DateFilter";
 import { FunnelsAndEventsCard } from "./SiteData/FunnelsAndEventsCard";
 import { useAnalyticsStore } from "@/lib/stores/analytics";
 import { usePersistedFilters } from "@/hooks/usePersistedFilters";
@@ -40,7 +36,10 @@ export function DashboardClient({
 }: DashboardClientProps) {
   const { filters, setDateRange, isLoaded } = usePersistedFilters(domain);
   const selectedDateRange = filters.dateRange;
-  const dateRange = useMemo(() => getDateRange(selectedDateRange), [selectedDateRange]);
+  const dateRange = useMemo(
+    () => getDateRange(selectedDateRange),
+    [selectedDateRange]
+  );
 
   const { fetchAllData } = useAnalyticsStore();
 
@@ -57,7 +56,10 @@ export function DashboardClient({
     <div className="space-y-6">
       <div className="flex gap-4 flex-wrap items-center justify-between">
         {!isPublic && <SiteSelector sites={userSites} currentDomain={domain} />}
-        <ActiveVisitors siteId={siteId} onActivateRealtime={() => setDateRange("realtime")} />
+        <ActiveVisitors
+          siteId={siteId}
+          onActivateRealtime={() => setDateRange("realtime")}
+        />
         <DateFilter
           selectedRange={selectedDateRange}
           onRangeChange={setDateRange}
