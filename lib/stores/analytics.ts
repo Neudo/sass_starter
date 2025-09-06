@@ -96,6 +96,8 @@ export interface AnalyticsData {
       uniqueVisitors: number;
       totalVisits: number;
       totalPageviews: number;
+      bounceRate: number;
+      avgDuration: number;
     };
   };
 }
@@ -136,7 +138,7 @@ interface AnalyticsStore {
       totalVisits: number;
       totalPageviews: number;
     }
-  ) => { uniqueVisitors: number; totalVisits: number; totalPageviews: number };
+  ) => { uniqueVisitors: number; totalVisits: number; totalPageviews: number; bounceRate: number; avgDuration: number };
 
   // Actions
   fetchAllData: (
@@ -623,6 +625,8 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       // Calculate metrics for previous period, even if no sessions
       const prevUniqueVisitorsSet = new Set<string>();
       let prevTotalPageviews = 0;
+      let prevBounceCount = 0;
+      let prevTotalDuration = 0;
 
       previousSessions.forEach((session) => {
         const visitorFingerprint = `${session.browser || "unknown"}-${
@@ -634,18 +638,45 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
           ? session.visited_pages.length
           : 1;
         prevTotalPageviews += visitedPagesCount;
+        
+        // Count bounces for previous period
+        if (visitedPagesCount === 1) {
+          prevBounceCount++;
+        }
+        
+        // Calculate duration for previous period
+        if (session.created_at && session.last_seen) {
+          const created = new Date(session.created_at).getTime();
+          const lastSeen = new Date(session.last_seen).getTime();
+          let duration = Math.round((lastSeen - created) / 1000);
+          const MAX_SESSION_DURATION = 1800;
+          if (duration > MAX_SESSION_DURATION) {
+            duration = MAX_SESSION_DURATION;
+          }
+          if (duration > 0) {
+            prevTotalDuration += duration;
+          }
+        }
       });
+      
+      const prevTotalVisits = previousSessions.length;
+      const prevBounceRate = prevTotalVisits > 0 ? (prevBounceCount / prevTotalVisits) * 100 : 0;
+      const prevAvgDuration = prevTotalVisits > 0 ? Math.round(prevTotalDuration / prevTotalVisits) : 0;
 
       const previousMetrics = {
         uniqueVisitors: prevUniqueVisitorsSet.size,
-        totalVisits: previousSessions.length,
+        totalVisits: prevTotalVisits,
         totalPageviews: prevTotalPageviews,
+        bounceRate: prevBounceRate,
+        avgDuration: prevAvgDuration,
       };
 
       const currentMetrics = {
         uniqueVisitors,
         totalVisits,
         totalPageviews,
+        bounceRate,
+        avgDuration,
       };
 
       change = calculateTrends(currentMetrics, previousMetrics);
@@ -708,11 +739,15 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       uniqueVisitors: number;
       totalVisits: number;
       totalPageviews: number;
+      bounceRate: number;
+      avgDuration: number;
     },
     previousMetrics: {
       uniqueVisitors: number;
       totalVisits: number;
       totalPageviews: number;
+      bounceRate: number;
+      avgDuration: number;
     }
   ) => {
     const calculatePercentageChange = (
@@ -737,6 +772,14 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       totalPageviews: calculatePercentageChange(
         currentMetrics.totalPageviews,
         previousMetrics.totalPageviews
+      ),
+      bounceRate: calculatePercentageChange(
+        currentMetrics.bounceRate,
+        previousMetrics.bounceRate
+      ),
+      avgDuration: calculatePercentageChange(
+        currentMetrics.avgDuration,
+        previousMetrics.avgDuration
       ),
     };
   },

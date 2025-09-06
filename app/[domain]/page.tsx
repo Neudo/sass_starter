@@ -45,7 +45,7 @@ export default async function PublicDashboardPage({
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <h1 className="text-2xl font-bold">{domain}</h1>
+                <h1 className="text-lg sm:text-2xl font-bold">{domain}</h1>
                 <div className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded">
                   Public Dashboard
                 </div>

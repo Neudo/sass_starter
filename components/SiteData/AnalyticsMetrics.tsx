@@ -97,6 +97,11 @@ export function AnalyticsMetrics({
       setSelectedMetric(metricKey);
     };
 
+    // For bounce rate, lower is better, so invert the colors
+    const isInverted = metricKey === "bounceRate";
+    const isPositive = isInverted ? change < 0 : change >= 0;
+    const displayChange = Math.abs(change || 0);
+
     return (
       <Card
         className={`transition-all cursor-pointer hover:border-primary hover:bg-primary/15 ${
@@ -114,23 +119,26 @@ export function AnalyticsMetrics({
           <div className="text-2xl font-bold">
             {formattedValue}
             {suffix}
+            {change !== undefined && (
+              <div className="inline-block pl-2 text-xs text-muted-foreground mt-1">
+                {isPositive ? (
+                  <>
+                    <ArrowUpRight className="h-3 w-3 text-green-500 mr-1 inline" />
+                    <span className="text-green-500">
+                      {change >= 0 ? "+" : "-"}{displayChange}%
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <ArrowDownRight className="h-3 w-3 text-red-500 mr-1 inline" />
+                    <span className="text-red-500">
+                      {change >= 0 ? "+" : "-"}{displayChange}%
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
-          {change !== undefined && (
-            <div className="flex items-center text-xs text-muted-foreground mt-1">
-              {change >= 0 ? (
-                <>
-                  <ArrowUpRight className="h-3 w-3 text-green-500 mr-1" />
-                  <span className="text-green-500">+{change}%</span>
-                </>
-              ) : (
-                <>
-                  <ArrowDownRight className="h-3 w-3 text-red-500 mr-1" />
-                  <span className="text-red-500">{change}%</span>
-                </>
-              )}
-              <span className="ml-1">from last period</span>
-            </div>
-          )}
         </CardContent>
       </Card>
     );
@@ -203,6 +211,7 @@ export function AnalyticsMetrics({
               value={metrics.bounceRate}
               icon={Activity}
               format="percentage"
+              change={metrics.change?.bounceRate}
               metricKey="bounceRate"
             />
             <MetricCard
@@ -210,6 +219,7 @@ export function AnalyticsMetrics({
               value={formatDuration(metrics.avgDuration)}
               icon={Clock}
               format="duration"
+              change={metrics.change?.avgDuration}
               metricKey="avgDuration"
             />
           </>
