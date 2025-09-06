@@ -32,6 +32,8 @@ interface Metrics {
     uniqueVisitors: number;
     totalVisits: number;
     totalPageviews: number;
+    bounceRate: number;
+    avgDuration: number;
   };
 }
 
@@ -99,7 +101,7 @@ export function AnalyticsMetrics({
 
     // For bounce rate, lower is better, so invert the colors
     const isInverted = metricKey === "bounceRate";
-    const isPositive = isInverted ? change < 0 : change >= 0;
+    const isPositive = change !== undefined ? (isInverted ? change < 0 : change >= 0) : false;
     const displayChange = Math.abs(change || 0);
 
     return (

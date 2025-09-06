@@ -132,11 +132,15 @@ interface AnalyticsStore {
       uniqueVisitors: number;
       totalVisits: number;
       totalPageviews: number;
+      bounceRate: number;
+      avgDuration: number;
     },
     previousMetrics: {
       uniqueVisitors: number;
       totalVisits: number;
       totalPageviews: number;
+      bounceRate: number;
+      avgDuration: number;
     }
   ) => { uniqueVisitors: number; totalVisits: number; totalPageviews: number; bounceRate: number; avgDuration: number };
 
