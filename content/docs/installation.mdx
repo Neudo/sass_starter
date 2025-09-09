@@ -1,0 +1,176 @@
+---
+title: Installation
+description: How to add Hector Analytics tracking to your website
+---
+
+# Installation
+
+Adding Hector Analytics to your website takes just a few minutes. Follow this guide to get started.
+
+## Prerequisites
+
+- A Hector Analytics account (sign up through the dashboard)
+- Access to your website's HTML code
+- A verified domain in your dashboard
+
+## Step 1: Add Your Site
+
+1. Log in to your dashboard at `/dashboard`
+2. Click on **"Add New Site"** 
+3. Enter your domain name (e.g., `example.com`)
+4. Click **"Create"**
+
+Your site will be registered and ready for tracking.
+
+## Step 2: Install the Tracking Script
+
+Add the following script to the `<head>` section of all pages you want to track:
+
+```html
+<script src="/script.js"></script>
+```
+
+The script automatically handles:
+- Session ID generation using localStorage or in-memory fallback
+- Page view tracking
+- Custom events and funnel tracking
+- Automatic dashboard page exclusion (for privacy)
+- Bot detection and filtering
+
+### Complete Example
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Website</title>
+    
+    <!-- Hector Analytics -->
+    <script src="/script.js"></script>
+</head>
+<body>
+    <!-- Your content -->
+</body>
+</html>
+```
+
+## Framework-Specific Integration
+
+### Next.js
+
+For Next.js with App Router, add the script in your `app/layout.tsx`:
+
+```tsx
+import Script from 'next/script'
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body>
+        {children}
+        <Script src="/script.js" />
+      </body>
+    </html>
+  )
+}
+```
+
+### WordPress
+
+1. Install a plugin like "Insert Headers and Footers"
+2. Go to **Settings → Insert Headers and Footers**
+3. Paste the script in the **Header Scripts** section
+4. Save your changes
+
+### React (Create React App)
+
+Add the script to `public/index.html`:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>React App</title>
+    
+    <!-- Hector Analytics -->
+    <script src="/script.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+```
+
+### Vue.js
+
+In your `index.html` file:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vue App</title>
+    
+    <!-- Hector Analytics -->
+    <script src="/script.js"></script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
+```
+
+## Step 3: Verify Installation
+
+1. Visit your website
+2. Open your Hector Analytics dashboard
+3. You should see your visit appear in real-time
+
+If data doesn't appear:
+- Ensure the script is properly loaded (check Network tab in DevTools)
+- Verify your domain is correctly configured in the dashboard
+- Check browser console for any errors
+- Note: Dashboard pages are automatically excluded from tracking
+
+## Advanced Features
+
+### Automatic Tracking
+
+The script automatically tracks:
+- **Page views**: Every page navigation
+- **Session management**: Using localStorage with fallback to in-memory storage
+- **Traffic sources**: Referrers, UTM parameters, search engines
+- **Device information**: Browser, OS, device type via User-Agent parsing
+- **Geographic location**: Country and city via IP geolocation (MaxMind GeoIP2)
+- **Custom events**: If configured in your dashboard
+- **Funnel steps**: Automatic funnel tracking based on your configuration
+
+### Custom Event Tracking
+
+Custom events are automatically tracked based on your dashboard configuration. The script:
+1. Fetches your custom event configuration
+2. Automatically tracks configured events (clicks, form submissions, etc.)
+3. Supports both CSS selector and URL pattern matching
+
+### Privacy Features
+
+- **No cookies**: Uses localStorage for session ID, with in-memory fallback
+- **Dashboard exclusion**: All `/dashboard` pages are automatically excluded
+- **Bot detection**: Automatic filtering of bot traffic
+- **IP anonymization**: IPs are processed for geolocation then discarded
+- **No cross-site tracking**: Each domain's data is completely isolated
+
+## Troubleshooting
+
+For issues or questions, use the support section in your dashboard.
