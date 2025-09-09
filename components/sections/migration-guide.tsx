@@ -39,7 +39,7 @@ export function MigrationGuide() {
           className="max-w-4xl mx-auto"
         >
           <div className="bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg border p-8 mb-12">
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-4 flex-wrap">
               <Upload className="w-8 h-8 text-primary mt-1" />
               <div>
                 <h3 className="text-2xl font-semibold mb-4">

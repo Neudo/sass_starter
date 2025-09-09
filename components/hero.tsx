@@ -15,6 +15,7 @@ import {
   Clock,
   Monitor,
   Sparkles,
+  BookOpen,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -78,6 +79,19 @@ export default function Hero({ cta }: { cta?: ReactNode }) {
               </Link>
             </motion.div>
           )}
+
+          {/* Setup Guide Link */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.35 }}
+            className="mb-8"
+          >
+            <Link href="/docs" className="inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
+              <BookOpen className="w-4 h-4 mr-2" />
+              <span>Need help getting started? Check our setup guide →</span>
+            </Link>
+          </motion.div>
 
           {/* Trust indicators */}
           <motion.div

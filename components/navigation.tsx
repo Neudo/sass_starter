@@ -58,20 +58,6 @@ export function Navigation() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8 text-xl">
-              {navItems.map((item) => {
-                if (item) {
-                  return (
-                    <Link
-                      key={item.id}
-                      href={item.path}
-                      className="text-muted-foreground hover:text-primary transition-colors duration-200"
-                    >
-                      {item.name}
-                    </Link>
-                  );
-                }
-              })}
-
               {/* Resources Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -97,6 +83,19 @@ export function Navigation() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
+              {navItems.map((item) => {
+                if (item) {
+                  return (
+                    <Link
+                      key={item.id}
+                      href={item.path}
+                      className="text-muted-foreground hover:text-primary transition-colors duration-200"
+                    >
+                      {item.name}
+                    </Link>
+                  );
+                }
+              })}
             </div>
 
             {/* CTA Buttons + Theme Toggle */}
