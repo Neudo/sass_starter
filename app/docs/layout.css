@@ -1,1 +1,19 @@
 @import "fumadocs-ui/style.css";
+
+/* Override du background pour la documentation */
+body {
+  background: linear-gradient(to bottom right, #f9fafb, #ffffff, #f9fafb) !important;
+}
+
+.dark body {
+  background: linear-gradient(to bottom right, #030712, #111827, #030712) !important;
+}
+
+/* Ou si vous préférez une couleur unie */
+/* body {
+  background-color: #fafafa !important;
+}
+
+.dark body {
+  background-color: #0a0a0a !important;
+} */

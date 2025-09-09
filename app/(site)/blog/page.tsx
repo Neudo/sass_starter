@@ -10,10 +10,8 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { blogSchema } from "@/lib/schema";
 import { Calendar } from "lucide-react";
-import { Navigation } from "@/components/navigation";
 import { Breadcrumb } from "@/components/breadcrumb";
 import Image from "next/image";
-import Footer from "@/components/footer";
 import { BlogPost } from "@/types";
 
 export default async function BlogPage() {
@@ -33,7 +31,7 @@ export default async function BlogPage() {
   const blogPosts: BlogPost[] = posts || [];
 
   return (
-    <div className="min-h-screen">
+    <>
       <Script
         id="blog-schema"
         type="application/ld+json"
@@ -41,8 +39,6 @@ export default async function BlogPage() {
           __html: JSON.stringify(blogSchema),
         }}
       />
-      {/* Header */}
-      <Navigation />
 
       {/* Blog Posts Grid */}
       <div className="container mx-auto px-4 py-16">
@@ -126,8 +122,7 @@ export default async function BlogPage() {
           </div>
         )}
       </div>
-      <Footer />
-    </div>
+    </>
   );
 }
 

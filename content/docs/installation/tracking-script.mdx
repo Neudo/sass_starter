@@ -1,0 +1,209 @@
+---
+title: Install Tracking Script
+description: Add the Hector Analytics tracking script to your website
+---
+
+# Install Tracking Script
+
+Now that you've added your website, it's time to install the tracking script. This lightweight script (under 2KB) will start collecting privacy-friendly analytics data immediately.
+
+## Get Your Tracking Script
+
+1. Go to your website's settings in the dashboard
+2. Click on the **"Installation"** tab
+3. Copy your unique tracking script
+
+Your script will look something like this:
+
+```html
+<script async src="https://analytics.hectoranalytics.com/script.js" data-website-id="your-unique-id"></script>
+```
+
+## Installation Methods
+
+### Method 1: HTML Head Section (Recommended)
+
+Add the script to your website's `<head>` section:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Your Website</title>
+    <!-- Other head elements -->
+    
+    <!-- Hector Analytics -->
+    <script async src="https://analytics.hectoranalytics.com/script.js" data-website-id="your-unique-id"></script>
+</head>
+<body>
+    <!-- Your content -->
+</body>
+</html>
+```
+
+### Method 2: Before Closing Body Tag
+
+Alternatively, place it just before the closing `</body>` tag:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Your Website</title>
+</head>
+<body>
+    <!-- Your content -->
+    
+    <!-- Hector Analytics -->
+    <script async src="https://analytics.hectoranalytics.com/script.js" data-website-id="your-unique-id"></script>
+</body>
+</html>
+```
+
+## Platform-Specific Guides
+
+### WordPress
+
+**Option A: Theme Files**
+1. Go to Appearance → Theme Editor
+2. Edit `header.php`
+3. Add the script before `</head>`
+
+**Option B: Plugin**
+1. Install a "Header and Footer Scripts" plugin
+2. Paste the script in the header section
+
+**Option C: WordPress Admin**
+1. Go to Appearance → Customize
+2. Additional CSS → Add the script in a Custom HTML widget
+
+### React/Next.js
+
+Add to your main layout or `_app.js`:
+
+```jsx
+import Head from 'next/head';
+
+export default function MyApp({ Component, pageProps }) {
+  return (
+    <>
+      <Head>
+        <script 
+          async 
+          src="https://analytics.hectoranalytics.com/script.js" 
+          data-website-id="your-unique-id"
+        />
+      </Head>
+      <Component {...pageProps} />
+    </>
+  );
+}
+```
+
+### Vue.js
+
+Add to your main `index.html` or in the app component:
+
+```html
+<!-- In public/index.html -->
+<head>
+  <script async src="https://analytics.hectoranalytics.com/script.js" data-website-id="your-unique-id"></script>
+</head>
+```
+
+### Gatsby
+
+Add to `gatsby-ssr.js` or `gatsby-browser.js`:
+
+```javascript
+export const onRenderBody = ({ setHeadComponents }) => {
+  setHeadComponents([
+    <script
+      key="hector-analytics"
+      async
+      src="https://analytics.hectoranalytics.com/script.js"
+      data-website-id="your-unique-id"
+    />,
+  ]);
+};
+```
+
+### Shopify
+
+1. Go to Online Store → Themes
+2. Click "Actions" → "Edit code"
+3. Open `theme.liquid`
+4. Add the script before `</head>`
+
+### Webflow
+
+1. Go to Project Settings → Custom Code
+2. Paste the script in "Head Code"
+3. Publish your site
+
+## Advanced Configuration
+
+### Custom Domain (Self-hosted)
+
+If you're self-hosting Hector Analytics:
+
+```html
+<script async src="https://your-domain.com/script.js" data-website-id="your-unique-id"></script>
+```
+
+### Environment-Specific Tracking
+
+For different environments (dev, staging, prod):
+
+```html
+<!-- Development -->
+<script async src="https://analytics.hectoranalytics.com/script.js" data-website-id="dev-site-id"></script>
+
+<!-- Production -->
+<script async src="https://analytics.hectoranalytics.com/script.js" data-website-id="prod-site-id"></script>
+```
+
+## What the Script Does
+
+The Hector Analytics script:
+
+✅ **Tracks page views automatically**
+✅ **Collects visitor metrics (location, device, browser)**
+✅ **Records referral sources**
+✅ **Measures session duration**
+✅ **Detects and filters bot traffic**
+✅ **Works without cookies**
+✅ **Respects Do Not Track headers**
+✅ **Anonymizes IP addresses**
+
+❌ **Does NOT collect personal data**
+❌ **Does NOT use cookies by default**
+❌ **Does NOT track across websites**
+❌ **Does NOT slow down your site**
+
+## Performance Impact
+
+- **File size**: Under 2KB gzipped
+- **Load time**: Asynchronous, non-blocking
+- **Bandwidth**: Minimal data transmission
+- **Privacy**: No cookies, no personal data
+
+## Troubleshooting
+
+**Script not loading?**
+- Check that the URL is correct
+- Verify your website ID
+- Ensure there are no ad blockers interfering
+
+**No data appearing?**
+- Wait a few minutes for data to process
+- Check that you're visiting the correct domain
+- Verify the script is in the `<head>` section
+
+## Ready to Verify?
+
+Great! Now let's [verify your installation](/docs/installation/verify) to make sure everything is working correctly.
+
+---
+
+**🔒 Privacy Note**: The script automatically anonymizes all data and respects user privacy preferences. No personal information is collected or stored.

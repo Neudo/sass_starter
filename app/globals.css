@@ -471,14 +471,6 @@ button {
   cursor: pointer;
 }
 
-/* Spécificité élevée pour forcer les bonnes couleurs */
-body,
-#root,
-[data-theme] {
-  color: var(--foreground) !important;
-  background-color: var(--background) !important;
-}
-
 svg {
   display: inline-block;
   vertical-align: middle;

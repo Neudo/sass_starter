@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { combinedHomeSchema } from "@/lib/schema";
 import "./globals.css";
 import Script from "next/script";
-import { RootProvider } from "fumadocs-ui/provider";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -57,7 +56,7 @@ export default function RootLayout({
           defaultTheme="light"
           disableTransitionOnChange
         >
-          <RootProvider>{children}</RootProvider>
+          {children}
           <Toaster />
         </ThemeProvider>
         <Script

@@ -5,6 +5,7 @@ import { Logo } from "./logo";
 import { Menu, X, LogOut, User, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   DropdownMenu,
@@ -32,7 +33,7 @@ export function Navigation() {
   const resourcesItems = [
     { name: "Use Cases", path: "/use-cases", id: "use-cases" },
     { name: "Blog", path: "/blog", id: "blog" },
-    { name: "Documentation", path: "/docs", id: "docs" },
+    { name: "Documentation", path: "/docs", id: "docs", target: "_blank" },
   ];
   return (
     <>
@@ -48,25 +49,25 @@ export function Navigation() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Hector Analytics Logo */}
-            <button
-              onClick={() => router.push("/")}
+            <Link
+              href="/"
               className="flex items-center hover:opacity-80 transition-opacity"
             >
               <Logo size="md" showText={true} />
-            </button>
+            </Link>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8 text-xl">
               {navItems.map((item) => {
                 if (item) {
                   return (
-                    <a
+                    <Link
                       key={item.id}
                       href={item.path}
                       className="text-muted-foreground hover:text-primary transition-colors duration-200"
                     >
                       {item.name}
-                    </a>
+                    </Link>
                   );
                 }
               })}
@@ -85,12 +86,13 @@ export function Navigation() {
                 <DropdownMenuContent align="start" className="w-48">
                   {resourcesItems.map((item) => (
                     <DropdownMenuItem key={item.id} asChild>
-                      <a
+                      <Link
                         href={item.path}
                         className="cursor-pointer w-full px-6 py-4 md:text-xl"
+                        target={item.target}
                       >
                         {item.name}
-                      </a>
+                      </Link>
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -190,13 +192,13 @@ export function Navigation() {
                 {navItems.map((item) => {
                   if (item) {
                     return (
-                      <a
+                      <Link
                         key={item.id}
                         href={item.path}
                         className="block px-3 py-2 rounded-md text-base text-muted-foreground hover:text-primary hover:bg-primary/5"
                       >
                         {item.name}
-                      </a>
+                      </Link>
                     );
                   }
                 })}
@@ -207,13 +209,14 @@ export function Navigation() {
                     Resources
                   </div>
                   {resourcesItems.map((item) => (
-                    <a
+                    <Link
                       key={item.id}
                       href={item.path}
+                      target={item.target}
                       className="block px-3 py-2 rounded-md text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 ml-2"
                     >
                       {item.name}
-                    </a>
+                    </Link>
                   ))}
                 </div>
 

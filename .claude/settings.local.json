@@ -25,7 +25,8 @@
       "Bash(pnpm build:*)",
       "Bash(pnpm lint:*)",
       "Bash(sed:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(mv:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
