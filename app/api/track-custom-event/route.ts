@@ -11,8 +11,11 @@ export async function POST(request: NextRequest) {
 
     if (!site_domain || !event_name || !session_id || !page_url) {
       return NextResponse.json(
-        { error: "site_domain, event_name, session_id, and page_url are required" },
-        { 
+        {
+          error:
+            "site_domain, event_name, session_id, and page_url are required",
+        },
+        {
           status: 400,
           headers: {
             "Access-Control-Allow-Origin": "*",
@@ -25,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     // Normalize domain - handle both with and without www
     const domainVariants = [site_domain];
-    if (site_domain.startsWith('www.')) {
+    if (site_domain.startsWith("www.")) {
       domainVariants.push(site_domain.substring(4));
     } else {
       domainVariants.push(`www.${site_domain}`);
@@ -36,13 +39,13 @@ export async function POST(request: NextRequest) {
       .from("sites")
       .select("id")
       .in("domain", domainVariants);
-    
+
     const siteData = sites && sites.length > 0 ? sites[0] : null;
 
     if (siteError || !siteData) {
       return NextResponse.json(
-        { error: "Site not found" }, 
-        { 
+        { error: "Site not found" },
+        {
           status: 404,
           headers: {
             "Access-Control-Allow-Origin": "*",
@@ -65,7 +68,7 @@ export async function POST(request: NextRequest) {
     if (eventError || !customEventData) {
       return NextResponse.json(
         { error: "Custom event not found or inactive" },
-        { 
+        {
           status: 404,
           headers: {
             "Access-Control-Allow-Origin": "*",
@@ -85,10 +88,13 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (checkError && checkError.code !== "PGRST116") {
-      console.error("Error checking existing custom event completion:", checkError);
+      console.error(
+        "Error checking existing custom event completion:",
+        checkError
+      );
       return NextResponse.json(
         { error: "Failed to check existing completion" },
-        { 
+        {
           status: 500,
           headers: {
             "Access-Control-Allow-Origin": "*",
@@ -131,16 +137,9 @@ export async function POST(request: NextRequest) {
     // Build metadata with session info (fallback if no session data)
     const eventMetadata = {
       ...metadata,
-      source: sessionData?.referrer_domain || 'direct',
-      country: sessionData?.country || 'unknown',
+      source: sessionData?.referrer_domain || "direct",
+      country: sessionData?.country || "unknown",
     };
-
-    console.log("Attempting to insert custom event completion:", {
-      custom_event_id: customEventData.id,
-      session_id: session_id,
-      page_url: page_url,
-      metadata: eventMetadata,
-    });
 
     // Insert completion record
     const { error: insertError } = await adminClient
@@ -154,10 +153,13 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error("Error inserting custom event completion:", insertError);
-      
+
       // Check if it's a foreign key constraint error
-      if (insertError.code === '23503') {
-        console.error("Foreign key violation - session might not exist:", session_id);
+      if (insertError.code === "23503") {
+        console.error(
+          "Foreign key violation - session might not exist:",
+          session_id
+        );
         // Try to create a basic session first
         const { error: sessionCreateError } = await adminClient
           .from("sessions")
@@ -165,9 +167,9 @@ export async function POST(request: NextRequest) {
             id: session_id,
             site_id: siteData.id,
             last_seen: new Date().toISOString(),
-            country: 'unknown',
+            country: "unknown",
           });
-        
+
         if (sessionCreateError) {
           console.error("Failed to create session:", sessionCreateError);
         } else {
@@ -180,12 +182,12 @@ export async function POST(request: NextRequest) {
               page_url: page_url,
               metadata: eventMetadata,
             });
-          
+
           if (retryError) {
             console.error("Retry failed:", retryError);
             return NextResponse.json(
               { error: "Failed to record completion after retry" },
-              { 
+              {
                 status: 500,
                 headers: {
                   "Access-Control-Allow-Origin": "*",
@@ -199,7 +201,7 @@ export async function POST(request: NextRequest) {
       } else {
         return NextResponse.json(
           { error: "Failed to record completion" },
-          { 
+          {
             status: 500,
             headers: {
               "Access-Control-Allow-Origin": "*",
@@ -228,7 +230,7 @@ export async function POST(request: NextRequest) {
     console.error("Error in track-custom-event:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { 
+      {
         status: 500,
         headers: {
           "Access-Control-Allow-Origin": "*",

@@ -32,6 +32,7 @@ export function Navigation() {
   const resourcesItems = [
     { name: "Use Cases", path: "/use-cases", id: "use-cases" },
     { name: "Blog", path: "/blog", id: "blog" },
+    { name: "Documentation", path: "/docs", id: "docs" },
   ];
   return (
     <>

@@ -11,7 +11,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { ChevronDown, Clock, Lightbulb } from "lucide-react";
+import {
+  BookOpen,
+  ChevronDown,
+  Clock,
+  Lightbulb,
+  Settings,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { LogoutButton } from "@/components/logout-button";
 import { QueryClient } from "@tanstack/react-query";
@@ -32,20 +38,22 @@ export default function ProtectedLayout({
   const { userInfo: userEmail, loading: emailLoading } =
     useShowUserInfos("email");
   const { userInfo: userName, loading: nameLoading } = useShowUserInfos("name");
-  
+
   const [trialInfo, setTrialInfo] = useState<{
     daysLeft: number;
     isActive: boolean;
     hasActiveSubscription: boolean;
   } | null>(null);
-  
+
   const [requestFeatureOpen, setRequestFeatureOpen] = useState(false);
 
   useEffect(() => {
     const fetchTrialStatus = async () => {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) return;
 
       const { data: subscription } = await supabase
@@ -56,16 +64,17 @@ export default function ProtectedLayout({
 
       if (subscription) {
         // Check if user has a paid subscription (not free plan)
-        const hasPaidSubscription = subscription.plan_tier !== "free" && 
-                                   subscription.stripe_subscription_id && 
-                                   subscription.stripe_subscription_id !== "";
-        
+        const hasPaidSubscription =
+          subscription.plan_tier !== "free" &&
+          subscription.stripe_subscription_id &&
+          subscription.stripe_subscription_id !== "";
+
         if (hasPaidSubscription) {
           // User has paid subscription - no limitations
           setTrialInfo({
             daysLeft: 0,
             isActive: false,
-            hasActiveSubscription: true
+            hasActiveSubscription: true,
           });
         } else {
           // User is on free plan - calculate days left from created_at + 30 days
@@ -73,12 +82,15 @@ export default function ProtectedLayout({
           freeEndDate.setDate(freeEndDate.getDate() + 30);
           const now = new Date();
           const diffTime = freeEndDate.getTime() - now.getTime();
-          const daysLeft = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-          
+          const daysLeft = Math.max(
+            0,
+            Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+          );
+
           setTrialInfo({
             daysLeft,
             isActive: daysLeft > 0,
-            hasActiveSubscription: false
+            hasActiveSubscription: false,
           });
         }
       }
@@ -104,19 +116,24 @@ export default function ProtectedLayout({
                     </button>
 
                     {/* Show trial badge only if user is in trial and doesn't have active subscription */}
-                    {trialInfo && trialInfo.isActive && !trialInfo.hasActiveSubscription && (
-                      <Badge
-                        variant="outline"
-                        className={`border-ring/30 text-ring bg-ring/5 px-3 py-1 hidden sm:block ${
-                          trialInfo.daysLeft <= 3 ? 'border-destructive/30 text-destructive bg-destructive/5' : ''
-                        }`}
-                      >
-                        <Clock className="w-3 h-3 mr-1" />
-                        <Link href="/pricing">
-                          {trialInfo.daysLeft} free day{trialInfo.daysLeft !== 1 ? 's' : ''} left
-                        </Link>
-                      </Badge>
-                    )}
+                    {trialInfo &&
+                      trialInfo.isActive &&
+                      !trialInfo.hasActiveSubscription && (
+                        <Badge
+                          variant="outline"
+                          className={`border-ring/30 text-ring bg-ring/5 px-3 py-1 hidden sm:block ${
+                            trialInfo.daysLeft <= 3
+                              ? "border-destructive/30 text-destructive bg-destructive/5"
+                              : ""
+                          }`}
+                        >
+                          <Clock className="w-3 h-3 mr-1" />
+                          <Link href="/pricing">
+                            {trialInfo.daysLeft} free day
+                            {trialInfo.daysLeft !== 1 ? "s" : ""} left
+                          </Link>
+                        </Badge>
+                      )}
                   </div>
 
                   {/* User section + Theme toggle */}
@@ -158,13 +175,14 @@ export default function ProtectedLayout({
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="p-4 relative">
                           <Link
-                            className="before:absolute before:content-[''] before:-inset-0"
+                            className="before:absolute before:content-[''] before:-inset-0flex items-center gap-2"
                             href="/settings"
                           >
+                            <Settings className="h-4 w-4" />
                             Settings
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           className="p-4 cursor-pointer"
                           onClick={() => setRequestFeatureOpen(true)}
                         >
@@ -172,6 +190,16 @@ export default function ProtectedLayout({
                             <Lightbulb className="h-4 w-4" />
                             Request a Feature
                           </div>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="p-4 relative">
+                          <BookOpen className="h-4 w-4" />
+                          <Link
+                            href="/docs"
+                            className="before:absolute before:content-[''] before:-inset-0 flex items-center gap-2"
+                            target="_blank"
+                          >
+                            Documentation
+                          </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive">
@@ -188,8 +216,8 @@ export default function ProtectedLayout({
             {children}
           </div>
         </div>
-        
-        <RequestFeatureModal 
+
+        <RequestFeatureModal
           open={requestFeatureOpen}
           onOpenChange={setRequestFeatureOpen}
         />
