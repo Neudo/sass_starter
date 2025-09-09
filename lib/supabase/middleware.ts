@@ -50,7 +50,9 @@ export async function updateSession(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith("/dashboard")) {
     const siteName = request.nextUrl.pathname.split("/")[2];
 
-    if (!siteName) {
+    console.log(siteName);
+
+    if (!siteName || siteName === "new") {
       return;
     }
 

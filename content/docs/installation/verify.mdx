@@ -5,220 +5,33 @@ description: Confirm that Hector Analytics is tracking your website correctly
 
 # Verify Installation
 
-Let's make sure everything is working correctly! This verification process will confirm that your tracking script is installed properly and data is flowing to your dashboard.
+Once you've installed the tracking script, our system automatically detects when everything is working correctly.
 
-## Quick Verification Checklist
+![Installation verification dashboard](/images/docs/installation-check.jpg)
 
-### ✅ Step 1: Check Script Installation
+## Automatic Detection
 
-**Browser Developer Tools Method:**
+Hector Analytics automatically detects when your tracking script is properly installed and collecting data. You'll see:
 
-1. Open your website in a web browser
-2. Right-click and select "Inspect" or press `F12`
-3. Go to the **Network** tab
-4. Refresh the page
-5. Look for a request to `script.js` or your analytics domain
-6. If you see it, the script is loading correctly! ✅
+✅ **Installation Status** - Green indicator when the script is detected
 
-**View Source Method:**
+✅ **Real-time Data** - Visitor data are now being collected
 
-1. Right-click on your webpage
-2. Select "View Page Source"
-3. Search for `hectoranalytics.com` or your website ID
-4. If found, the script is properly installed! ✅
+✅ **Dashboard Active** - Your analytics dashboard is now active
 
-### ✅ Step 2: Verify Data Collection
+## You can try it out
 
-**Real-time Dashboard Check:**
+After installation, you can try it out by visiting your website and checking your dashboard, you should see real-time data appearing.
 
-1. Open your Hector Analytics dashboard
-2. Go to your website's analytics
-3. Open your website in another tab/browser
-4. Navigate around your site for a minute
-5. Return to your dashboard and refresh
-6. You should see visitor data within 1-2 minutes! ✅
+## Need Help?
 
-**Console Debugging (Advanced):**
+If you don't see data appearing in your dashboard after a few minutes, or if you encounter any installation issues:
 
-1. Open browser developer tools
-2. Go to the **Console** tab
-3. Type: `console.log('HA tracking active:', window.ha)`
-4. If you see tracking info, data collection is working! ✅
+**📧 Contact Support**  
+Email us at [support@hectoranalytics.com](mailto:support@hectoranalytics.com) and we'll help you get set up quickly.
 
-### ✅ Step 3: Test Different Scenarios
-
-**Page View Tracking:**
-- Visit 3-4 different pages on your site
-- Each should register as a separate page view
-- Check your dashboard for the page list
-
-**Referrer Tracking:**
-- Visit your site from Google search
-- Click a link from another website
-- Check that referrer sources appear in your dashboard
-
-**Device Detection:**
-- View your site on mobile and desktop
-- Different devices should show in your analytics
-
-## Common Installation Issues
-
-### Script Not Loading
-
-**Problem**: No network request to analytics script
-
-**Solutions**:
-- Double-check the script URL
-- Verify your website ID is correct
-- Make sure the script is in the `<head>` section
-- Check for typos in the HTML
-
-### No Data Appearing
-
-**Problem**: Script loads but no analytics data
-
-**Solutions**:
-- Wait 2-3 minutes (data processing delay)
-- Disable ad blockers temporarily
-- Check that you're using the correct domain
-- Verify date range in dashboard is set to "Today"
-
-### Duplicate Tracking
-
-**Problem**: Inflated visitor numbers
-
-**Solutions**:
-- Make sure the script appears only once per page
-- Check that you don't have multiple website IDs
-- Remove any old analytics scripts
-
-### Bot Traffic
-
-**Problem**: Unusual traffic patterns
-
-**Solutions**:
-- Our system automatically filters most bots
-- Check the "Filter Bots" setting in your dashboard
-- Review traffic sources for suspicious patterns
-
-## Advanced Verification
-
-### Custom Events Testing
-
-If you've set up custom events:
-
-```javascript
-// Test custom event firing
-ha('track', 'button_click', { button_name: 'test' });
-```
-
-Check your dashboard's Events section for the test event.
-
-### API Verification
-
-For API integrations, test with:
-
-```bash
-curl -X POST https://api.hectoranalytics.com/collect \
-  -H "Content-Type: application/json" \
-  -d '{"website_id":"your-id","type":"pageview","url":"test"}'
-```
-
-## Verification Tools
-
-### Browser Extensions
-
-- **Ghostery**: Should show Hector Analytics as detected
-- **uBlock Origin**: May block tracking (temporarily disable for testing)
-- **Privacy Badger**: Usually allows privacy-friendly tracking
-
-### Analytics Debuggers
-
-- Most analytics debuggers will show Hector Analytics requests
-- Look for requests to your analytics domain
-- Check that data payloads are being sent
-
-## Performance Verification
-
-### Page Speed Check
-
-Your website speed should be unaffected:
-
-- **GTMetrix**: Run before and after installation
-- **PageSpeed Insights**: Check Core Web Vitals
-- **WebPageTest**: Monitor loading times
-
-Hector Analytics should have minimal impact (< 50ms).
-
-### Network Analysis
-
-Monitor network requests:
-- Script should load in < 100ms
-- Data requests should be < 10KB
-- No blocking of other resources
-
-## Data Accuracy Check
-
-### Compare with Other Analytics
-
-If migrating from another platform:
-
-1. Run both systems simultaneously for a week
-2. Compare key metrics:
-   - Page views (expect 5-10% difference)
-   - Unique visitors (expect some variation)
-   - Top pages (should be similar)
-   - Traffic sources (may vary due to different attribution)
-
-3. Hector Analytics typically shows:
-   - **Fewer bot visits** (better filtering)
-   - **More accurate unique visitors** (no cookie deletion issues)
-   - **Cleaner referrer data** (less spam)
-
-## Troubleshooting Commands
-
-### Browser Console Tests
-
-```javascript
-// Check if script loaded
-console.log(window.ha ? 'Loaded' : 'Not loaded');
-
-// Test manual tracking
-ha('track', 'pageview', { url: window.location.href });
-
-// Check configuration
-console.log(ha.config);
-```
-
-### Network Debugging
-
-In Network tab, filter by your analytics domain:
-- `script.js` should load with 200 status
-- POST requests to `/collect` should appear on page views
-- Response times should be < 500ms
-
-## Success! What's Next?
-
-If verification passed, congratulations! 🎉 Your privacy-first analytics are now active.
-
-**Recommended next steps:**
-
-1. **[Explore Your Dashboard](/docs/dashboard)** - Learn about your analytics interface
-2. **[Set Up Custom Events](/docs/custom-events)** - Track specific user actions
-3. **[Create Conversion Funnels](/docs/funnels)** - Monitor user journeys
-4. **[Configure Alerts](/docs/alerts)** - Get notified about traffic changes
-
-## Still Having Issues?
-
-If you're still experiencing problems:
-
-- Check our [troubleshooting guide](/docs/troubleshooting)
-- Contact support through your dashboard
-- Join our community forum for help
-- Schedule a screen-share session with our team
-
-**Remember**: We're here to help! Don't hesitate to reach out if you need assistance.
+Our support team typically responds within a few hours and can help troubleshoot any installation problems.
 
 ---
 
-**✅ Verification Complete**: Your website is now tracking visitors while respecting their privacy!
+**🎉 That's it!** Your privacy-first analytics are now tracking visitors while fully respecting their privacy.
