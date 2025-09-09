@@ -15,9 +15,9 @@ export const faqs: FAQItem[] = [
       "No, the interface is designed for non-technical users. You can start tracking metrics immediately after installing the snippet.",
   },
   {
-    title: "How is my data protected?",
+    title: "What if I exceed my plan's limits?",
     description:
-      "All data is stored in the EU and processed according to GDPR guidelines. We never sell or share your information.",
+      "We'll inform you when you will be at 80% of the limit of your current plan. If you exceed the event limit two times in a row, we'll contact you to upgrade to a higher plan.",
   },
   {
     title: "Can I integrate Hector Analytics with other tools?",
@@ -26,7 +26,7 @@ export const faqs: FAQItem[] = [
   },
   {
     title: "Is there a free trial available?",
-    description: "Subscribe to our waitlist to get a free 30 days trial.",
+    description: "No. But, you car start with Hobby plan for free.",
   },
   {
     title: "How often are analytics updated?",
