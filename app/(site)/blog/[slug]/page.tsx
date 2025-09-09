@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateArticleSchema } from "@/lib/schema";
 import { Calendar } from "lucide-react";
-import { Navigation } from "@/components/navigation";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { sanitizeHtml } from "@/lib/markdown-utils";
 
@@ -77,14 +76,10 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
         }}
       />
       {/* Header */}
-      <Navigation />
       <div className="border-b">
         <div className="container mx-auto px-4 py-8">
-          <Breadcrumb 
-            items={[
-              { label: "Blog", href: "/blog" },
-              { label: post.title }
-            ]}
+          <Breadcrumb
+            items={[{ label: "Blog", href: "/blog" }, { label: post.title }]}
             className="mb-6"
           />
 
@@ -104,7 +99,9 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
               {post.title}
             </h1>
 
-            <p className="text-xl text-gray-600 mb-6">{post.excerpt}</p>
+            <p className="text-xl text-gray-600 dark:text-gray-400 mb-6">
+              {post.excerpt}
+            </p>
           </div>
         </div>
       </div>
@@ -120,7 +117,7 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
 
             {/* Article Footer */}
             <div className="mt-12 pt-8 border-t border-gray-200">
-              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-6">
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-primary dark:to-secondary rounded-lg p-6">
                 <h3 className="text-lg font-semibold mb-2">
                   Discover Hector Analytics
                 </h3>
@@ -138,7 +135,7 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
                   <Link
                     target="_blank"
                     href="/hectoranalytics.com"
-                    className="bg-white hover:bg-gray-50 px-4 py-2 rounded-lg font-medium border transition-colors text-sm"
+                    className="bg-white hover:bg-gray-50 dark:text-black px-4 py-2 rounded-lg font-medium transition-colors text-sm"
                   >
                     See the demo
                   </Link>
@@ -158,7 +155,7 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
               {relatedPosts.map((relatedPost) => (
                 <Card
                   key={relatedPost.id}
-                  className="hover:shadow-lg transition-shadow"
+                  className="hover:shadow-lg transition-shadow pt-4"
                 >
                   <CardContent className="p-6">
                     <h3 className="font-semibold text-lg mb-2 line-clamp-2">

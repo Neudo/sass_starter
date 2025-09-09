@@ -12,7 +12,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Navigation } from "@/components/navigation";
 
 export default function PricingPageClient() {
   const faqs = [
@@ -50,7 +49,6 @@ export default function PricingPageClient() {
 
   return (
     <div className="min-h-screen">
-      <Navigation />
       <div>
         <PricingSection showFullPage={true} />
 

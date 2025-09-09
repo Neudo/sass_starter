@@ -1,15 +1,11 @@
 "use client";
-
-import { Navigation } from "@/components/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Mail } from "lucide-react";
 import { motion } from "motion/react";
-import Footer from "@/components/footer";
 
 export default function ContactPageClient() {
   return (
     <div className="min-h-screen bg-background text-foreground theme-transition">
-      <Navigation />
       <section className=" min-h-[calc(100vh-16rem)] flex items-center justify-center">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
@@ -38,7 +34,6 @@ export default function ContactPageClient() {
           </motion.div>
         </div>
       </section>
-      <Footer />
     </div>
   );
 }

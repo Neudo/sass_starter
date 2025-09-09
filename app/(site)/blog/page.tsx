@@ -42,15 +42,13 @@ export default async function BlogPage() {
 
       {/* Blog Posts Grid */}
       <div className="container mx-auto px-4 py-16">
-        <Breadcrumb 
-          items={[{ label: "Blog" }]}
-          className="mb-8"
-        />
-        
-        <div className="mb-8">
+        <Breadcrumb items={[{ label: "Blog" }]} className="mb-8" />
+
+        <div className="mb-8 md:mb-26">
           <h1 className="text-4xl font-bold mb-4">Blog</h1>
-          <p className="text-xl text-gray-600">
-            Expert insights on privacy-respecting web analytics and GDPR compliance
+          <p className="text-xl text-gray-600 dark:text-gray-400">
+            Expert insights on privacy-respecting web analytics and GDPR
+            compliance
           </p>
         </div>
 
@@ -94,11 +92,12 @@ export default async function BlogPage() {
                 <CardHeader>
                   <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
                     <Calendar className="h-4 w-4" />
-                    {post.published_at && new Date(post.published_at).toLocaleDateString("en-US", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
+                    {post.published_at &&
+                      new Date(post.published_at).toLocaleDateString("en-US", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
                   </div>
                   <CardTitle className="line-clamp-2 hover:text-primary transition-colors">
                     <h2 className="text-xl group-hover:text-primary transition-colors">

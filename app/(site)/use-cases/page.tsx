@@ -19,8 +19,6 @@ import {
   Globe,
   CheckCircle,
 } from "lucide-react";
-import Footer from "@/components/footer";
-import { Navigation } from "@/components/navigation";
 
 export const metadata: Metadata = {
   title: "Use Cases - Hector Analytics for Every Industry",
@@ -447,7 +445,6 @@ export default function UseCasesPage() {
 
   return (
     <>
-      <Navigation />
       <div className="min-h-screen bg-background">
         {/* Hero Section */}
         <section className="py-24 bg-gradient-to-b from-background to-muted/20">
@@ -575,7 +572,6 @@ export default function UseCasesPage() {
           </div>
         </section>
       </div>
-      <Footer />
     </>
   );
 }

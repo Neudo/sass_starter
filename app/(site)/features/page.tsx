@@ -22,8 +22,6 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { FinalCTA } from "@/components/sections/final-cta";
-import { Navigation } from "@/components/navigation";
-import Footer from "@/components/footer";
 
 export const metadata: Metadata = {
   title: "Features - Hector Analytics",
@@ -312,7 +310,6 @@ export default function FeaturesPage() {
 
   return (
     <>
-      <Navigation />
       <div className="min-h-screen bg-background">
         {/* Hero Section */}
         <section className="py-24 bg-gradient-to-b from-background to-muted/20">
@@ -538,7 +535,6 @@ export default function FeaturesPage() {
         </section>
         {/* CTA Section */}
         <FinalCTA />
-        <Footer />
       </div>
     </>
   );
