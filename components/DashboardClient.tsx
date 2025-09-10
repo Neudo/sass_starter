@@ -46,7 +46,7 @@ export function DashboardClient({
   // Load all data when component mounts or parameters change
   // Only fetch after filters are loaded to prevent duplicate requests
   useEffect(() => {
-    if (isLoaded && dateRange) {
+    if (isLoaded && (dateRange || selectedDateRange === "alltime")) {
       fetchAllData(siteId, dateRange, selectedDateRange);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
