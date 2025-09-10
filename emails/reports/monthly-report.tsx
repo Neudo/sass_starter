@@ -22,7 +22,7 @@ interface MonthlyReportEmailProps {
     bounceRate: number;
     visitorsChange: number;
     pageViewsChange: number;
-    uniqueVisitors: number;
+    visitors: number;
     returningVisitors: number;
   };
   growthTrend: Array<{
@@ -33,7 +33,7 @@ interface MonthlyReportEmailProps {
   topPages: Array<{
     path: string;
     views: number;
-    uniqueVisitors: number;
+    visitors: number;
     avgTime: string;
   }>;
   deviceBreakdown: {
@@ -130,12 +130,12 @@ export const MonthlyReportEmail = ({
             </div>
 
             <div style={metricCard}>
-              <Text style={metricLabel}>Unique Visitors</Text>
+              <Text style={metricLabel}>Visitors</Text>
               <Text style={metricValue}>
-                {stats.uniqueVisitors.toLocaleString()}
+                {stats.visitors.toLocaleString()}
               </Text>
               <Text style={metricSubtext}>
-                {((stats.uniqueVisitors / stats.totalVisitors) * 100).toFixed(1)}% of total
+                {((stats.visitors / stats.totalVisitors) * 100).toFixed(1)}% of total
               </Text>
             </div>
 
@@ -207,7 +207,7 @@ export const MonthlyReportEmail = ({
                   <tr>
                     <th style={tableHeader}>Page</th>
                     <th style={tableHeaderRight}>Views</th>
-                    <th style={tableHeaderRight}>Unique</th>
+                    <th style={tableHeaderRight}>Visitors</th>
                     <th style={tableHeaderRight}>Avg. Time</th>
                   </tr>
                 </thead>
@@ -221,7 +221,7 @@ export const MonthlyReportEmail = ({
                         {page.views.toLocaleString()}
                       </td>
                       <td style={tableCellRight}>
-                        {page.uniqueVisitors.toLocaleString()}
+                        {page.visitors.toLocaleString()}
                       </td>
                       <td style={tableCellRight}>
                         {page.avgTime}
@@ -339,7 +339,7 @@ MonthlyReportEmail.PreviewProps = {
     bounceRate: 38,
     visitorsChange: 23,
     pageViewsChange: 18,
-    uniqueVisitors: 12890,
+    visitors: 12890,
     returningVisitors: 2344,
   },
   growthTrend: [
@@ -349,9 +349,9 @@ MonthlyReportEmail.PreviewProps = {
     { week: "Week 4", visitors: 4543, pageViews: 14001 },
   ],
   topPages: [
-    { path: "/", views: 12345, uniqueVisitors: 8901, avgTime: "2m 34s" },
-    { path: "/blog", views: 8901, uniqueVisitors: 6234, avgTime: "4m 12s" },
-    { path: "/about", views: 5678, uniqueVisitors: 4567, avgTime: "1m 45s" },
+    { path: "/", views: 12345, visitors: 8901, avgTime: "2m 34s" },
+    { path: "/blog", views: 8901, visitors: 6234, avgTime: "4m 12s" },
+    { path: "/about", views: 5678, visitors: 4567, avgTime: "1m 45s" },
   ],
   deviceBreakdown: {
     desktop: 62,

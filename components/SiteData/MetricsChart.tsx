@@ -40,23 +40,27 @@ interface SessionData {
 interface ChartDataPoint {
   date: string;
   displayDate: string;
-  uniqueVisitors: number;
+  visitors: number;
   totalVisits: number;
   totalPageviews: number;
+  viewsPerVisit: number;
   bounceRate: number;
   avgDuration: number;
   realtimePageViews?: number;
 }
 
 const chartConfig = {
-  uniqueVisitors: {
-    label: "Unique Visitors",
+  visitors: {
+    label: "Visitors",
   },
   totalVisits: {
     label: "Total Visits",
   },
   totalPageviews: {
-    label: "Total Pageviews",
+    label: "Total Page Views",
+  },
+  viewsPerVisit: {
+    label: "Views per Visit",
   },
   bounceRate: {
     label: "Bounce Rate (%)",
@@ -77,12 +81,13 @@ export function MetricsChart({
   // Get the display title for the selected metric
   const getMetricTitle = (metric: string): string => {
     const titles: Record<string, string> = {
-      uniqueVisitors:
+      visitors:
         dateRange === "realtime"
-          ? "Unique Visitors (last 30 min)"
-          : "Unique Visitors",
+          ? "Visitors (last 30 min)"
+          : "Visitors",
       totalVisits: "Total Visits",
-      totalPageviews: "Total Pageviews",
+      totalPageviews: "Total Page Views",
+      viewsPerVisit: "Views per Visit",
       bounceRate: "Bounce Rate",
       avgDuration: "Average Duration",
       realtimePageViews: "Page Views (last 30 min)",
@@ -185,9 +190,9 @@ export function MetricsChart({
       const supabase = createClient();
       const range = getDateRange(dateRange);
 
-      // Special handling for realtime metrics (uniqueVisitors in realtime, realtimePageViews)
+      // Special handling for realtime metrics (visitors in realtime, realtimePageViews)
       if (
-        (selectedMetrics[0] === "uniqueVisitors" && dateRange === "realtime") ||
+        (selectedMetrics[0] === "visitors" && dateRange === "realtime") ||
         selectedMetrics[0] === "realtimePageViews"
       ) {
         // Generate last 30 minutes with 4-minute intervals
@@ -209,20 +214,13 @@ export function MetricsChart({
           return;
         }
 
-        // Fetch page views for these sessions
-        const sessionIds = recentSessions?.map((s) => s.id) || [];
-        const { data: pageViews } = await supabase
-          .from("page_views")
-          .select("session_id, created_at")
-          .in("session_id", sessionIds)
-          .gte("created_at", thirtyMinutesAgo.toISOString());
 
         // Create 8 time intervals (every 4 minutes for the last 30 minutes)
         for (let i = 7; i >= 0; i--) {
           const intervalEnd = new Date(now.getTime() - i * 4 * 60 * 1000);
           const intervalStart = new Date(intervalEnd.getTime() - 4 * 60 * 1000);
 
-          // Count unique visitors in this interval
+          // Count visitors in this interval (1 session = 1 visitor)
           const intervalSessions =
             recentSessions?.filter((session) => {
               const lastSeen = new Date(
@@ -231,23 +229,22 @@ export function MetricsChart({
               return lastSeen >= intervalStart && lastSeen <= intervalEnd;
             }) || [];
 
-          const uniqueVisitorsSet = new Set<string>();
+          const visitorCount = intervalSessions.length;
 
-          intervalSessions.forEach((session) => {
-            const visitorFingerprint = `${session.browser || "unknown"}-${
-              session.os || "unknown"
-            }-${session.screen_size || "unknown"}-${
-              session.country || "unknown"
-            }`;
-            uniqueVisitorsSet.add(visitorFingerprint);
-          });
-
-          // Count page views in this interval
-          const intervalPageViews =
-            pageViews?.filter((pv) => {
-              const pvTime = new Date(pv.created_at);
-              return pvTime >= intervalStart && pvTime <= intervalEnd;
-            }).length || 0;
+          // Need to fetch page views for realtime
+          const sessionIds = intervalSessions.map((s) => s.id);
+          let intervalPageViews = 0;
+          
+          if (sessionIds.length > 0) {
+            const { data: pageViews } = await supabase
+              .from("page_views")
+              .select("id")
+              .in("session_id", sessionIds)
+              .gte("created_at", intervalStart.toISOString())
+              .lte("created_at", intervalEnd.toISOString());
+            
+            intervalPageViews = pageViews?.length || 0;
+          }
 
           const minutesAgo = i * 4;
           const displayLabel = minutesAgo === 0 ? "Now" : `-${minutesAgo}min`;
@@ -255,10 +252,11 @@ export function MetricsChart({
           realtimeData.push({
             date: intervalEnd.toISOString(),
             displayDate: displayLabel,
-            uniqueVisitors: uniqueVisitorsSet.size,
+            visitors: visitorCount,
             realtimePageViews: intervalPageViews,
             totalVisits: 0,
             totalPageviews: 0,
+            viewsPerVisit: 0,
             bounceRate: 0,
             avgDuration: 0,
           });
@@ -382,19 +380,14 @@ export function MetricsChart({
       const dateMap = new Map(allDates.map((d) => [d.key, d.displayDate]));
 
       groupedData.forEach((sessions, dateKey) => {
-        const uniqueVisitorsSet = new Set<string>();
+        // Following Plausible's approach: 1 session = 1 visitor
+        const visitors = sessions.length;
+        const totalVisits = sessions.length;
         let totalPageviews = 0;
         let totalDuration = 0;
         let bounces = 0;
 
         sessions.forEach((session) => {
-          // Create visitor fingerprint from available data for unique visitor identification
-          const visitorFingerprint = `${session.browser || "unknown"}-${
-            session.os || "unknown"
-          }-${session.screen_size || "unknown"}-${
-            session.country || "unknown"
-          }`;
-          uniqueVisitorsSet.add(visitorFingerprint);
           const sessionPageviews = pageViewsPerSession.get(session.id) || 1;
           totalPageviews += sessionPageviews;
 
@@ -412,18 +405,22 @@ export function MetricsChart({
           }
         });
 
-        const totalVisits = sessions.length;
         const bounceRate =
           totalVisits > 0 ? Math.round((bounces / totalVisits) * 100) : 0;
         const avgDuration =
           totalVisits > 0 ? Math.round(totalDuration / totalVisits) : 0;
+        const viewsPerVisit =
+          totalVisits > 0
+            ? parseFloat((totalPageviews / totalVisits).toFixed(2))
+            : 0;
 
         chartPoints.push({
           date: dateKey,
           displayDate: dateMap.get(dateKey) || dateKey,
-          uniqueVisitors: uniqueVisitorsSet.size,
+          visitors,
           totalVisits,
           totalPageviews,
+          viewsPerVisit,
           bounceRate,
           avgDuration,
         });

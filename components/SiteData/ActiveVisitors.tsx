@@ -40,16 +40,11 @@ export function ActiveVisitors({
         return;
       }
 
-      // Count unique visitors using the same fingerprint logic as AnalyticsMetrics
-      const uniqueVisitorsSet = new Set<string>();
-      sessions?.forEach((session) => {
-        const visitorFingerprint = `${session.browser || "unknown"}-${
-          session.os || "unknown"
-        }-${session.screen_size || "unknown"}-${session.country || "unknown"}`;
-        uniqueVisitorsSet.add(visitorFingerprint);
-      });
+      // Following Plausible's approach: 1 session = 1 visitor
+      // Each session represents a unique visitor
+      const visitorCount = sessions?.length || 0;
 
-      setActiveCount(uniqueVisitorsSet.size);
+      setActiveCount(visitorCount);
       setLoading(false);
     };
 

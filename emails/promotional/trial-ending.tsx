@@ -14,7 +14,7 @@ interface TrialEndingEmailProps {
   upgradeUrl: string;
   currentUsage?: {
     pageViews: number;
-    uniqueVisitors: number;
+    visitors: number;
     sites: number;
   };
 }
@@ -53,8 +53,8 @@ export const TrialEndingEmail = ({
                 <Text style={statLabel}>Page Views</Text>
               </Section>
               <Section style={statItem}>
-                <Text style={statValue}>{currentUsage.uniqueVisitors.toLocaleString()}</Text>
-                <Text style={statLabel}>Unique Visitors</Text>
+                <Text style={statValue}>{currentUsage.visitors.toLocaleString()}</Text>
+                <Text style={statLabel}>Visitors</Text>
               </Section>
               <Section style={statItem}>
                 <Text style={statValue}>{currentUsage.sites}</Text>
@@ -117,7 +117,7 @@ TrialEndingEmail.PreviewProps = {
   upgradeUrl: "https://hectoranalytics.com/upgrade",
   currentUsage: {
     pageViews: 45230,
-    uniqueVisitors: 3421,
+    visitors: 3421,
     sites: 2,
   },
 } as TrialEndingEmailProps;

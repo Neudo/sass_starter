@@ -92,14 +92,14 @@ export interface AnalyticsData {
     campaigns: Array<{ name: string; count: number; percentage: number }>;
   };
   metrics: {
-    uniqueVisitors: number;
+    visitors: number;
     totalVisits: number;
     totalPageviews: number;
     viewsPerVisit: number;
     bounceRate: number;
     avgDuration: number;
     change?: {
-      uniqueVisitors: number;
+      visitors: number;
       totalVisits: number;
       totalPageviews: number;
       bounceRate: number;
@@ -135,20 +135,24 @@ interface AnalyticsStore {
   updateCache: () => void;
   calculateTrends: (
     currentMetrics: {
-      uniqueVisitors: number;
-      totalVisits: number;
+      visitors: number;
       totalPageviews: number;
       bounceRate: number;
       avgDuration: number;
     },
     previousMetrics: {
-      uniqueVisitors: number;
-      totalVisits: number;
+      visitors: number;
       totalPageviews: number;
       bounceRate: number;
       avgDuration: number;
     }
-  ) => { uniqueVisitors: number; totalVisits: number; totalPageviews: number; bounceRate: number; avgDuration: number };
+  ) => {
+    visitors: number;
+    totalVisits: number;
+    totalPageviews: number;
+    bounceRate: number;
+    avgDuration: number;
+  };
 
   // Actions
   fetchAllData: (
@@ -174,7 +178,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
   loading: false,
   error: null,
   filters: [],
-  selectedMetric: "uniqueVisitors", // Default to unique visitors filter
+  selectedMetric: "visitors", // Default to visitors filter
   cachedAnalyticsData: null,
   lastFiltersHash: "",
 
@@ -219,7 +223,10 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
           case "utm_content":
             return session.utm_content === filter.value;
           case "visited_page":
-            return session.page_views?.some(pv => pv.page_path === filter.value) || false;
+            return (
+              session.page_views?.some((pv) => pv.page_path === filter.value) ||
+              false
+            );
           case "entry_page":
             return session.page_views?.[0]?.page_path === filter.value;
           case "exit_page":
@@ -539,21 +546,16 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
 
     // Plausible-style metrics calculation
     const totalVisits = filteredSessions.length; // Total sessions/visits
-
-    // Simple unique visitors calculation (like Plausible - count distinct sessions, not complex fingerprinting)
-    // In our case, each session is already a "visit" so unique visitors ≈ unique sessions
-    // But we'll use a simple approach: count unique combinations of basic identifiers
-    const uniqueVisitorsSet = new Set<string>();
+    
+    // Following Plausible's approach: 1 session = 1 visitor
+    // "If a person visits from multiple devices or on multiple days, they are counted as separate visitors"
+    const visitors = totalVisits;
+    
     let totalPageviews = 0;
     let totalDuration = 0;
     let bounceCount = 0;
 
     filteredSessions.forEach((session) => {
-      // Simple visitor identification (similar to Plausible's privacy-friendly approach)
-      // We use country + browser as a simple, privacy-friendly identifier
-      const visitorId = `${session.country || "unknown"}-${session.browser || "unknown"}`;
-      uniqueVisitorsSet.add(visitorId);
-
       // Calculate pageviews for this session
       const pageViewsCount = Array.isArray(session.page_views)
         ? session.page_views.length
@@ -563,13 +565,13 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       // Calculate session duration
       const sessionPageViews = session.page_views || [];
       let sessionTotalDuration = 0;
-      
-      sessionPageViews.forEach(pv => {
+
+      sessionPageViews.forEach((pv) => {
         const pageDuration = pv.duration_seconds || 0;
         const cappedPageDuration = Math.min(pageDuration, 1800); // 30min cap
         sessionTotalDuration += cappedPageDuration;
       });
-      
+
       if (sessionTotalDuration > 0) {
         totalDuration += sessionTotalDuration;
       }
@@ -580,20 +582,19 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       }
     });
 
-    const uniqueVisitors = uniqueVisitorsSet.size;
-
     // Plausible-style metric calculations
-    const viewsPerVisit = totalVisits > 0
-      ? parseFloat((totalPageviews / totalVisits).toFixed(2))
-      : 0;
-    
-    const bounceRate = totalVisits > 0
-      ? parseFloat(((bounceCount / totalVisits) * 100).toFixed(1))
-      : 0;
-    
-    const avgDuration = totalVisits > 0
-      ? Math.round(totalDuration / totalVisits)
-      : 0;
+    const viewsPerVisit =
+      totalVisits > 0
+        ? parseFloat((totalPageviews / totalVisits).toFixed(2))
+        : 0;
+
+    const bounceRate =
+      totalVisits > 0
+        ? parseFloat(((bounceCount / totalVisits) * 100).toFixed(1))
+        : 0;
+
+    const avgDuration =
+      totalVisits > 0 ? Math.round(totalDuration / totalVisits) : 0;
 
     // Calculate trends using previous period data
     const { previousSessions, calculateTrends, dateRangeOption } = state;
@@ -606,50 +607,50 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
 
     if (shouldCalculateTrends) {
       // Calculate metrics for previous period, even if no sessions
-      const prevUniqueVisitorsSet = new Set<string>();
+      const prevTotalVisits = previousSessions.length;
+      const prevVisitors = prevTotalVisits; // 1 session = 1 visitor
+      
       let prevTotalPageviews = 0;
       let prevBounceCount = 0;
       let prevTotalDuration = 0;
 
       previousSessions.forEach((session) => {
-        const visitorFingerprint = `${session.browser || "unknown"}-${
-          session.os || "unknown"
-        }-${session.screen_size || "unknown"}-${session.country || "unknown"}`;
-        prevUniqueVisitorsSet.add(visitorFingerprint);
-
         const pageViewsCount = Array.isArray(session.page_views)
           ? session.page_views.length
           : 1;
         prevTotalPageviews += pageViewsCount;
-        
+
         // Count bounces for previous period
         if (pageViewsCount === 1) {
           prevBounceCount++;
         }
-        
+
         // Calculate total session duration for previous period from individual page durations
         const prevSessionPageViews = session.page_views || [];
         let prevSessionTotalDuration = 0;
-        
-        prevSessionPageViews.forEach(pv => {
+
+        prevSessionPageViews.forEach((pv) => {
           const pageDuration = pv.duration_seconds || 0;
           // Cap individual page duration at 30 minutes to avoid unrealistic values
           const cappedPageDuration = Math.min(pageDuration, 1800);
           prevSessionTotalDuration += cappedPageDuration;
         });
-        
+
         // Only count sessions with positive duration
         if (prevSessionTotalDuration > 0) {
           prevTotalDuration += prevSessionTotalDuration;
         }
       });
-      
-      const prevTotalVisits = previousSessions.length;
-      const prevBounceRate = prevTotalVisits > 0 ? (prevBounceCount / prevTotalVisits) * 100 : 0;
-      const prevAvgDuration = prevTotalVisits > 0 ? Math.round(prevTotalDuration / prevTotalVisits) : 0;
+
+      const prevBounceRate =
+        prevTotalVisits > 0 ? (prevBounceCount / prevTotalVisits) * 100 : 0;
+      const prevAvgDuration =
+        prevTotalVisits > 0
+          ? Math.round(prevTotalDuration / prevTotalVisits)
+          : 0;
 
       const previousMetrics = {
-        uniqueVisitors: prevUniqueVisitorsSet.size,
+        visitors: prevVisitors,
         totalVisits: prevTotalVisits,
         totalPageviews: prevTotalPageviews,
         bounceRate: prevBounceRate,
@@ -657,7 +658,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       };
 
       const currentMetrics = {
-        uniqueVisitors,
+        visitors,
         totalVisits,
         totalPageviews,
         bounceRate,
@@ -688,7 +689,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
         campaigns: [], // UTM campaigns will be calculated separately when needed
       },
       metrics: {
-        uniqueVisitors,
+        visitors,
         totalVisits,
         totalPageviews,
         viewsPerVisit,
@@ -721,15 +722,13 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
 
   calculateTrends: (
     currentMetrics: {
-      uniqueVisitors: number;
-      totalVisits: number;
+      visitors: number;
       totalPageviews: number;
       bounceRate: number;
       avgDuration: number;
     },
     previousMetrics: {
-      uniqueVisitors: number;
-      totalVisits: number;
+      visitors: number;
       totalPageviews: number;
       bounceRate: number;
       avgDuration: number;
@@ -746,13 +745,13 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
     };
 
     return {
-      uniqueVisitors: calculatePercentageChange(
-        currentMetrics.uniqueVisitors,
-        previousMetrics.uniqueVisitors
+      visitors: calculatePercentageChange(
+        currentMetrics.visitors,
+        previousMetrics.visitors
       ),
       totalVisits: calculatePercentageChange(
-        currentMetrics.totalVisits,
-        previousMetrics.totalVisits
+        currentMetrics.visitors,
+        previousMetrics.visitors
       ),
       totalPageviews: calculatePercentageChange(
         currentMetrics.totalPageviews,
@@ -801,9 +800,9 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       }
 
       // Fetch page views for all sessions
-      const sessionIds = sessions?.map(s => s.id) || [];
+      const sessionIds = sessions?.map((s) => s.id) || [];
       let pageViewsData: PageView[] = [];
-      
+
       if (sessionIds.length > 0) {
         let pageViewQuery = supabase
           .from("page_views")
@@ -822,28 +821,34 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
             .lte("created_at", dateRange.to.toISOString());
         }
 
-        const { data: pageViews } = await pageViewQuery.order("created_at", { ascending: true });
-        
+        const { data: pageViews } = await pageViewQuery.order("created_at", {
+          ascending: true,
+        });
+
         pageViewsData = pageViews || [];
       }
 
       // Group page views by session
-      const pageViewsBySession = new Map<string, Array<{ page_path: string; duration_seconds?: number }>>();
-      pageViewsData.forEach(pv => {
+      const pageViewsBySession = new Map<
+        string,
+        Array<{ page_path: string; duration_seconds?: number }>
+      >();
+      pageViewsData.forEach((pv) => {
         if (!pageViewsBySession.has(pv.session_id)) {
           pageViewsBySession.set(pv.session_id, []);
         }
-        pageViewsBySession.get(pv.session_id)?.push({ 
-          page_path: pv.page_path, 
-          duration_seconds: pv.duration_seconds 
+        pageViewsBySession.get(pv.session_id)?.push({
+          page_path: pv.page_path,
+          duration_seconds: pv.duration_seconds,
         });
       });
 
       // Add page views to sessions
-      const sessionsWithPageViews = sessions?.map(session => ({
-        ...session,
-        page_views: pageViewsBySession.get(session.id) || []
-      })) || [];
+      const sessionsWithPageViews =
+        sessions?.map((session) => ({
+          ...session,
+          page_views: pageViewsBySession.get(session.id) || [],
+        })) || [];
 
       // Fetch previous period data for trends
       let previousSessions: Session[] = [];
@@ -863,9 +868,9 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
 
         if (!prevError && prevSessions) {
           // Fetch page views for previous sessions
-          const prevSessionIds = prevSessions?.map(s => s.id) || [];
+          const prevSessionIds = prevSessions?.map((s) => s.id) || [];
           let prevPageViewsData: PageView[] = [];
-          
+
           if (prevSessionIds.length > 0) {
             let prevPageViewQuery = supabase
               .from("page_views")
@@ -879,28 +884,35 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
                 .lte("created_at", previousRange.to.toISOString());
             }
 
-            const { data: prevPageViews } = await prevPageViewQuery.order("created_at", { ascending: true });
-            
+            const { data: prevPageViews } = await prevPageViewQuery.order(
+              "created_at",
+              { ascending: true }
+            );
+
             prevPageViewsData = prevPageViews || [];
           }
 
           // Group page views by session
-          const prevPageViewsBySession = new Map<string, Array<{ page_path: string; duration_seconds?: number }>>();
-          prevPageViewsData.forEach(pv => {
+          const prevPageViewsBySession = new Map<
+            string,
+            Array<{ page_path: string; duration_seconds?: number }>
+          >();
+          prevPageViewsData.forEach((pv) => {
             if (!prevPageViewsBySession.has(pv.session_id)) {
               prevPageViewsBySession.set(pv.session_id, []);
             }
-            prevPageViewsBySession.get(pv.session_id)?.push({ 
-              page_path: pv.page_path, 
-              duration_seconds: pv.duration_seconds 
+            prevPageViewsBySession.get(pv.session_id)?.push({
+              page_path: pv.page_path,
+              duration_seconds: pv.duration_seconds,
             });
           });
 
           // Add page views to previous sessions
-          previousSessions = prevSessions?.map(session => ({
-            ...session,
-            page_views: prevPageViewsBySession.get(session.id) || []
-          })) || [];
+          previousSessions =
+            prevSessions?.map((session) => ({
+              ...session,
+              page_views: prevPageViewsBySession.get(session.id) || [],
+            })) || [];
         }
       }
 

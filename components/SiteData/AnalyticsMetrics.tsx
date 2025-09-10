@@ -4,7 +4,6 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Eye,
-  MousePointerClick,
   Clock,
   Activity,
   ArrowUpRight,
@@ -21,16 +20,14 @@ interface AnalyticsMetricsProps {
 }
 
 interface Metrics {
-  uniqueVisitors: number;
-  totalVisits: number;
+  visitors: number;
   totalPageviews: number;
   viewsPerVisit: number;
   bounceRate: number;
   avgDuration: number;
   realtimePageViews?: number;
   change?: {
-    uniqueVisitors: number;
-    totalVisits: number;
+    visitors: number;
     totalPageviews: number;
     bounceRate: number;
     avgDuration: number;
@@ -46,13 +43,12 @@ export function AnalyticsMetrics({
   const analyticsData = getAnalyticsData();
 
   const metrics: Metrics = {
-    uniqueVisitors: analyticsData.metrics.uniqueVisitors,
-    totalVisits: analyticsData.metrics.totalVisits,
+    visitors: analyticsData.metrics.visitors,
     totalPageviews: analyticsData.metrics.totalPageviews,
     viewsPerVisit: analyticsData.metrics.viewsPerVisit,
     bounceRate: analyticsData.metrics.bounceRate,
     avgDuration: analyticsData.metrics.avgDuration,
-    realtimePageViews: analyticsData.metrics.totalPageviews, // For realtime mode
+    realtimePageViews: analyticsData.metrics.totalPageviews, // For realtime mode show page views
     change: analyticsData.metrics.change, // Add the change data
   };
 
@@ -101,7 +97,8 @@ export function AnalyticsMetrics({
 
     // For bounce rate, lower is better, so invert the colors
     const isInverted = metricKey === "bounceRate";
-    const isPositive = change !== undefined ? (isInverted ? change < 0 : change >= 0) : false;
+    const isPositive =
+      change !== undefined ? (isInverted ? change < 0 : change >= 0) : false;
     const displayChange = Math.abs(change || 0);
 
     return (
@@ -127,14 +124,16 @@ export function AnalyticsMetrics({
                   <>
                     <ArrowUpRight className="h-3 w-3 text-green-500 mr-1 inline" />
                     <span className="text-green-500">
-                      {change >= 0 ? "+" : "-"}{displayChange}%
+                      {change >= 0 ? "+" : "-"}
+                      {displayChange}%
                     </span>
                   </>
                 ) : (
                   <>
                     <ArrowDownRight className="h-3 w-3 text-red-500 mr-1 inline" />
                     <span className="text-red-500">
-                      {change >= 0 ? "+" : "-"}{displayChange}%
+                      {change >= 0 ? "+" : "-"}
+                      {displayChange}%
                     </span>
                   </>
                 )}
@@ -168,18 +167,18 @@ export function AnalyticsMetrics({
   const isRealtimeMode = dateRangeOption === "realtime";
   const gridCols = isRealtimeMode
     ? "grid-cols-2 lg:grid-cols-2"
-    : "grid-cols-2 lg:grid-cols-5 ";
+    : "grid-cols-2 lg:grid-cols-5";
 
   return (
     <div className="space-y-6 dark:bg-slate-800 dark:border-0 bg-white shadow-sm border border-gray-200 p-4 rounded-sm">
       <div className={`grid gap-4 ${gridCols}`}>
         <MetricCard
-          title="Unique Visitors"
-          value={metrics.uniqueVisitors}
+          title="Visitors"
+          value={metrics.visitors}
           icon={User}
           format="number"
-          change={metrics.change?.uniqueVisitors}
-          metricKey="uniqueVisitors"
+          change={metrics.change?.visitors}
+          metricKey="visitors"
         />
         {isRealtimeMode && (
           <MetricCard
@@ -193,20 +192,19 @@ export function AnalyticsMetrics({
         {!isRealtimeMode && (
           <>
             <MetricCard
-              title="Total Visits"
-              value={metrics.totalVisits}
-              icon={MousePointerClick}
-              format="number"
-              change={metrics.change?.totalVisits}
-              metricKey="totalVisits"
-            />
-            <MetricCard
-              title="Total pageviews"
+              title="Total Page Views"
               value={metrics.totalPageviews}
               icon={Eye}
               format="number"
               change={metrics.change?.totalPageviews}
               metricKey="totalPageviews"
+            />
+            <MetricCard
+              title="Views per Visit"
+              value={metrics.viewsPerVisit}
+              icon={Eye}
+              format="number"
+              metricKey="viewsPerVisit"
             />
             <MetricCard
               title="Bounce Rate"
