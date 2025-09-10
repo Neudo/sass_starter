@@ -102,6 +102,7 @@ export interface AnalyticsData {
       visitors: number;
       totalVisits: number;
       totalPageviews: number;
+      viewsPerVisit: number;
       bounceRate: number;
       avgDuration: number;
     };
@@ -137,12 +138,14 @@ interface AnalyticsStore {
     currentMetrics: {
       visitors: number;
       totalPageviews: number;
+      viewsPerVisit: number;
       bounceRate: number;
       avgDuration: number;
     },
     previousMetrics: {
       visitors: number;
       totalPageviews: number;
+      viewsPerVisit: number;
       bounceRate: number;
       avgDuration: number;
     }
@@ -150,6 +153,7 @@ interface AnalyticsStore {
     visitors: number;
     totalVisits: number;
     totalPageviews: number;
+    viewsPerVisit: number;
     bounceRate: number;
     avgDuration: number;
   };
@@ -648,11 +652,16 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
         prevTotalVisits > 0
           ? Math.round(prevTotalDuration / prevTotalVisits)
           : 0;
+      const prevViewsPerVisit =
+        prevTotalVisits > 0
+          ? parseFloat((prevTotalPageviews / prevTotalVisits).toFixed(2))
+          : 0;
 
       const previousMetrics = {
         visitors: prevVisitors,
         totalVisits: prevTotalVisits,
         totalPageviews: prevTotalPageviews,
+        viewsPerVisit: prevViewsPerVisit,
         bounceRate: prevBounceRate,
         avgDuration: prevAvgDuration,
       };
@@ -661,6 +670,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
         visitors,
         totalVisits,
         totalPageviews,
+        viewsPerVisit,
         bounceRate,
         avgDuration,
       };
@@ -724,12 +734,14 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
     currentMetrics: {
       visitors: number;
       totalPageviews: number;
+      viewsPerVisit: number;
       bounceRate: number;
       avgDuration: number;
     },
     previousMetrics: {
       visitors: number;
       totalPageviews: number;
+      viewsPerVisit: number;
       bounceRate: number;
       avgDuration: number;
     }
@@ -756,6 +768,10 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       totalPageviews: calculatePercentageChange(
         currentMetrics.totalPageviews,
         previousMetrics.totalPageviews
+      ),
+      viewsPerVisit: calculatePercentageChange(
+        currentMetrics.viewsPerVisit,
+        previousMetrics.viewsPerVisit
       ),
       bounceRate: calculatePercentageChange(
         currentMetrics.bounceRate,

@@ -29,6 +29,7 @@ interface Metrics {
   change?: {
     visitors: number;
     totalPageviews: number;
+    viewsPerVisit: number;
     bounceRate: number;
     avgDuration: number;
   };
@@ -204,6 +205,7 @@ export function AnalyticsMetrics({
               value={metrics.viewsPerVisit}
               icon={Eye}
               format="number"
+              change={metrics.change?.viewsPerVisit}
               metricKey="viewsPerVisit"
             />
             <MetricCard
