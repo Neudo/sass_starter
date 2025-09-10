@@ -9,7 +9,7 @@
     c = [],
     g = false;
   const u = (p) => {
-    return `https://hectoranalytics.com/api/${p}`;
+    return `/api/${p}`;
   };
   const r = (url, data) =>
     fetch(url, {
