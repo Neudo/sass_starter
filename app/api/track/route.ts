@@ -4,7 +4,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { extractClientIP, getLocationFromIP } from "@/lib/analytics/location";
 import { parseUserAgent } from "@/lib/analytics/device";
 import { parseTrafficSource } from "@/lib/analytics/sources";
-import { calculatePageData } from "@/lib/analytics/pages";
 import { shouldBlockRequest } from "@/lib/analytics/bot-detector";
 
 export async function POST(req: NextRequest) {
@@ -114,28 +113,19 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Check if this is a new session - use a more robust approach to prevent race conditions
-    let existingSession = null;
+    // Check if this is a new session
     let isNewSession = false;
 
     // First, try to get existing session
     const { data: sessionData } = await supabase
       .from("sessions")
-      .select("id, visited_pages, created_at")
+      .select("id, created_at")
       .eq("id", sessionId)
       .single();
 
-    if (sessionData) {
-      existingSession = sessionData;
-    } else {
-      // If no session exists, this is potentially a new session
-      // But we need to handle race conditions where multiple requests 
-      // try to create the same session simultaneously
+    if (!sessionData) {
       isNewSession = true;
     }
-
-    // Calculate page data
-    const pageData = calculatePageData(page, existingSession);
 
     // Prepare base session data that's always updated
     const currentTime = new Date().toISOString();
@@ -155,8 +145,6 @@ export async function POST(req: NextRequest) {
       screen_size: deviceData.deviceCategory,
       // Language data
       language: language || "en",
-      // Page tracking
-      visited_pages: pageData.visitedPages,
     };
 
     // Add source tracking data only for new sessions
@@ -175,15 +163,69 @@ export async function POST(req: NextRequest) {
       : baseSessionData;
 
     // Use upsert with onConflict to handle race conditions properly
-    const { error } = await supabase
+    const { error: sessionError } = await supabase
       .from("sessions")
       .upsert(sessionDataWithSource, { 
         onConflict: 'id',
         ignoreDuplicates: false 
       });
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (sessionError) {
+      return NextResponse.json({ error: sessionError.message }, { status: 500 });
+    }
+
+    // Insert or update page view record if page is provided
+    if (page) {
+      // Check if there's already a page view for this session+page in the last 30 minutes
+      // This handles both immediate duplicates and session continuation
+      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      const { data: existingPageView } = await supabase
+        .from("page_views")
+        .select("id, created_at, entry_page")
+        .eq("session_id", sessionId)
+        .eq("page_path", page)
+        .gte("created_at", thirtyMinutesAgo)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (existingPageView) {
+        // Update existing page view with new timestamp (user is still/back on this page)
+        const { error: updateError } = await supabase
+          .from("page_views")
+          .update({ 
+            created_at: currentTime // Update to show most recent visit
+          })
+          .eq("id", existingPageView.id);
+
+        if (updateError) {
+          console.error("Error updating page view:", updateError);
+        }
+      } else {
+        // Create new page view record
+        // Check if this is the first page view for this session (entry page)
+        const { count } = await supabase
+          .from("page_views")
+          .select("id", { count: 'exact' })
+          .eq("session_id", sessionId)
+          .limit(1);
+
+        const isEntryPage = count === 0;
+
+        const { error: pageViewError } = await supabase
+          .from("page_views")
+          .insert({
+            session_id: sessionId,
+            site_id: siteId,
+            page_path: page,
+            created_at: currentTime,
+            entry_page: isEntryPage,
+          });
+
+        if (pageViewError) {
+          console.error("Error inserting page view:", pageViewError);
+        }
+      }
     }
 
     return new NextResponse(null, {

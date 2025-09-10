@@ -438,18 +438,35 @@ async function generatePagesCsv(
   // Since we don't have detailed page data, we'll create a simplified version
   const { data: sessions } = await adminClient
     .from("sessions")
-    .select("created_at, visited_pages, page_views, last_seen")
+    .select("id, created_at, last_seen")
     .eq("site_id", siteId)
     .gte("created_at", startDate)
     .lte("created_at", endDate + "T23:59:59")
     .order("created_at");
+
+  // Fetch page views for these sessions
+  const sessionIds = sessions?.map(s => s.id) || [];
+  const { data: pageViews } = await adminClient
+    .from("page_views")
+    .select("session_id, page_path, created_at")
+    .in("session_id", sessionIds)
+    .order("created_at", { ascending: true });
+
+  // Group page views by session
+  const pageViewsBySession = new Map<string, string[]>();
+  pageViews?.forEach(pv => {
+    if (!pageViewsBySession.has(pv.session_id)) {
+      pageViewsBySession.set(pv.session_id, []);
+    }
+    pageViewsBySession.get(pv.session_id)?.push(pv.page_path);
+  });
 
   const pageStats: { [key: string]: any } = {};
 
   sessions?.forEach((session: any) => {
     const date = session.created_at.split("T")[0];
     const hostname = domain;
-    const visitedPages = session.visited_pages || ["/"];
+    const visitedPages = pageViewsBySession.get(session.id) || ["/"];
     const page = visitedPages[0] || "/";
 
     const key = `${date}_${hostname}_${page}`;

@@ -35,7 +35,6 @@ interface SessionData {
   os?: string;
   screen_size?: string;
   country?: string;
-  visited_pages?: string[];
 }
 
 interface ChartDataPoint {
@@ -210,6 +209,14 @@ export function MetricsChart({
           return;
         }
 
+        // Fetch page views for these sessions
+        const sessionIds = recentSessions?.map(s => s.id) || [];
+        const { data: pageViews } = await supabase
+          .from("page_views")
+          .select("session_id, created_at")
+          .in("session_id", sessionIds)
+          .gte("created_at", thirtyMinutesAgo.toISOString());
+
         // Create 8 time intervals (every 4 minutes for the last 30 minutes)
         for (let i = 7; i >= 0; i--) {
           const intervalEnd = new Date(now.getTime() - i * 4 * 60 * 1000);
@@ -225,8 +232,7 @@ export function MetricsChart({
             }) || [];
 
           const uniqueVisitorsSet = new Set<string>();
-          let intervalPageViews = 0;
-
+          
           intervalSessions.forEach((session) => {
             const visitorFingerprint = `${session.browser || "unknown"}-${
               session.os || "unknown"
@@ -234,11 +240,13 @@ export function MetricsChart({
               session.country || "unknown"
             }`;
             uniqueVisitorsSet.add(visitorFingerprint);
-            const visitedPagesCount = Array.isArray(session.visited_pages)
-              ? session.visited_pages.length
-              : 1;
-            intervalPageViews += visitedPagesCount;
           });
+
+          // Count page views in this interval
+          const intervalPageViews = pageViews?.filter((pv) => {
+            const pvTime = new Date(pv.created_at);
+            return pvTime >= intervalStart && pvTime <= intervalEnd;
+          }).length || 0;
 
           const minutesAgo = i * 4;
           const displayLabel = minutesAgo === 0 ? "Now" : `-${minutesAgo}min`;
@@ -317,6 +325,20 @@ export function MetricsChart({
         return;
       }
 
+      // Fetch page views count for each session
+      const sessionIds = sessions?.map(s => s.id) || [];
+      const { data: pageViewCounts } = await supabase
+        .from("page_views")
+        .select("session_id")
+        .in("session_id", sessionIds);
+
+      // Create a map of session_id to page view count
+      const pageViewsPerSession = new Map<string, number>();
+      pageViewCounts?.forEach(pv => {
+        const count = pageViewsPerSession.get(pv.session_id) || 0;
+        pageViewsPerSession.set(pv.session_id, count + 1);
+      });
+
       // Group data by interval
       const groupedData = new Map<string, SessionData[]>();
 
@@ -372,10 +394,7 @@ export function MetricsChart({
             session.country || "unknown"
           }`;
           uniqueVisitorsSet.add(visitorFingerprint);
-          const visitedPagesCount = Array.isArray(session.visited_pages)
-            ? session.visited_pages.length
-            : 1;
-          const sessionPageviews = visitedPagesCount;
+          const sessionPageviews = pageViewsPerSession.get(session.id) || 1;
           totalPageviews += sessionPageviews;
 
           if (session.created_at && session.last_seen) {

@@ -1,6 +1,5 @@
 "use client";
 
-import { Navigation } from "@/components/navigation";
 import { faqs } from "@/data/faq";
 import {
   Accordion,
@@ -11,13 +10,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { HelpCircle } from "lucide-react";
 import { motion } from "motion/react";
-import Footer from "@/components/footer";
 
 export default function FaqPageClient() {
   return (
     <>
       <div className="min-h-screen bg-background text-foreground theme-transition">
-        <Navigation />
         <section className="py-24">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
@@ -62,7 +59,6 @@ export default function FaqPageClient() {
           </div>
         </section>
       </div>
-      <Footer />
     </>
   );
 }
