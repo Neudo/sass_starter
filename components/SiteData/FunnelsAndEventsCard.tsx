@@ -20,6 +20,7 @@ import {
   Send,
 } from "lucide-react";
 import { FunnelChart } from "./FunnelChart";
+import { useAnalyticsStore } from "@/lib/stores/analytics";
 
 interface Funnel {
   id: string;
@@ -62,45 +63,61 @@ export function FunnelsAndEventsCard({
   const [selectedFunnel, setSelectedFunnel] = useState<string>("");
   const [funnels, setFunnels] = useState<Funnel[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Get filters from analytics store for authenticated users
+  const { filters } = useAnalyticsStore();
 
   useEffect(() => {
     const fetchFunnels = async () => {
       try {
         let url: string;
 
+        let funnelsData: any[] = [];
+        
         if (isPublic && domain) {
-          // Use public endpoint for public dashboard
+          // Use public endpoint for public dashboard (no additional filters)
           url = `/api/public-funnels-analytics?domain=${domain}`;
+          // Add date filters if provided
+          if (dateRange?.from && dateRange?.to) {
+            url += `&from=${dateRange.from.toISOString()}&to=${dateRange.to.toISOString()}`;
+          }
+          
+          const response = await fetch(url);
+          if (response.ok) {
+            funnelsData = await response.json();
+          }
         } else {
-          // Use private endpoint for authenticated dashboard
-          url = `/api/funnels?siteId=${siteId}`;
+          // Use new filtered endpoint for authenticated dashboard
+          const payload = {
+            siteId,
+            dateRange,
+            filters: filters.map(f => ({ type: f.type, value: f.value }))
+          };
+          
+          const response = await fetch('/api/filtered-funnels', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (response.ok) {
+            funnelsData = await response.json();
+          }
         }
-
-        // Add date filters if provided
-        if (dateRange?.from && dateRange?.to) {
-          url += `&from=${dateRange.from.toISOString()}&to=${dateRange.to.toISOString()}`;
-        }
-
-        const response = await fetch(url);
-        if (response.ok) {
-          const funnelsData = await response.json();
-          // Filter only active funnels and extract basic info
-          const activeFunnels = funnelsData
-            .filter((funnel: any) => funnel.is_active)
-            .map((funnel: any) => ({
+        
+        // Filter only active funnels and extract basic info
+        const activeFunnels = funnelsData
+          .filter((funnel: any) => funnel.is_active)
+          .map((funnel: any) => ({
               id: funnel.id,
               name: funnel.name,
               description: funnel.description,
               is_active: funnel.is_active,
             }));
-          setFunnels(activeFunnels);
+        setFunnels(activeFunnels);
 
-          // Select first funnel by default if available
-          if (activeFunnels.length > 0 && !selectedFunnel) {
-            setSelectedFunnel(activeFunnels[0].id);
-          }
-        } else {
-          console.error("Failed to fetch funnels:", response.status);
+        // Select first funnel by default if available
+        if (activeFunnels.length > 0 && !selectedFunnel) {
+          setSelectedFunnel(activeFunnels[0].id);
         }
       } catch (error) {
         console.error("Error fetching funnels:", error);
@@ -120,7 +137,7 @@ export function FunnelsAndEventsCard({
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [siteId, dateRange, isRealtimeMode, isPublic, domain, selectedFunnel]);
+  }, [siteId, dateRange, isRealtimeMode, isPublic, domain, selectedFunnel, filters]);
 
   const [customEvents, setCustomEvents] = useState<
     Array<{
@@ -146,38 +163,51 @@ export function FunnelsAndEventsCard({
   useEffect(() => {
     const fetchCustomEvents = async () => {
       try {
-        let url: string;
-
+        let eventsData: any[] = [];
+        
         if (isPublic && domain) {
-          // Use public endpoint for public dashboard
-          url = `/api/public-custom-events-analytics?domain=${domain}`;
+          // Use public endpoint for public dashboard (no additional filters)
+          let url = `/api/public-custom-events-analytics?domain=${domain}`;
+          // Add realtime parameter or date filters
+          if (isRealtimeMode) {
+            url += `&realtime=true`;
+          } else if (dateRange?.from && dateRange?.to) {
+            url += `&from=${dateRange.from.toISOString()}&to=${dateRange.to.toISOString()}`;
+          }
+          
+          const response = await fetch(url);
+          if (response.ok) {
+            eventsData = await response.json();
+          }
         } else {
-          // Use private endpoint for authenticated dashboard
-          url = `/api/custom-events?siteId=${siteId}`;
+          // Use new filtered endpoint for authenticated dashboard
+          const payload = {
+            siteId,
+            dateRange,
+            filters: filters.map(f => ({ type: f.type, value: f.value }))
+          };
+          
+          const response = await fetch('/api/filtered-custom-events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          
+          if (response.ok) {
+            eventsData = await response.json();
+          }
         }
 
-        // Add realtime parameter or date filters
-        if (isRealtimeMode) {
-          url += `&realtime=true`;
-        } else if (dateRange?.from && dateRange?.to) {
-          url += `&from=${dateRange.from.toISOString()}&to=${dateRange.to.toISOString()}`;
-        }
-
-        const response = await fetch(url);
-        if (response.ok) {
-          const events = await response.json();
-
-          const customEventsData = events.map((event: any) => ({
-            id: event.id,
-            name: event.name,
-            count: event.total_triggers || 0,
-            event_type: event.event_type,
-            is_active: event.is_active,
-            source_breakdown: event.source_breakdown || [],
-            country_breakdown: event.country_breakdown || [],
-          }));
-          setCustomEvents(customEventsData);
-        }
+        const customEventsData = eventsData.map((event: any) => ({
+          id: event.id,
+          name: event.name,
+          count: event.completions_count || event.total_triggers || 0,
+          event_type: event.event_type,
+          is_active: event.is_active,
+          source_breakdown: event.source_breakdown || [],
+          country_breakdown: event.country_breakdown || [],
+        }));
+        setCustomEvents(customEventsData);
       } catch (error) {
         console.error("Error fetching custom events:", error);
       } finally {
@@ -196,7 +226,7 @@ export function FunnelsAndEventsCard({
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [siteId, dateRange, isRealtimeMode, isPublic, domain]);
+  }, [siteId, dateRange, isRealtimeMode, isPublic, domain, filters]);
 
   return (
     <Card className="w-full min-h-[400px] md:min-h-[558px]">
