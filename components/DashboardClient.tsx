@@ -85,6 +85,7 @@ export function DashboardClient({
         <ActiveVisitors
           siteId={siteId}
           onActivateRealtime={() => setDateRange("realtime")}
+          isRealtimeActive={selectedDateRange === "realtime"}
         />
         <DateFilter
           selectedRange={selectedDateRange}

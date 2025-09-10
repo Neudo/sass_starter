@@ -1,5 +1,4 @@
 (function () {
-  // Prevent multiple executions
   if (window.h && window.h.initialized) return;
   window.h = { initialized: true };
   let i,
@@ -10,7 +9,6 @@
     c = [],
     g = false;
   const u = (p) => {
-    // Use relative URL for local development, absolute for production
     const host = location.hostname;
     if (host === 'localhost' || host === '127.0.0.1' || host.includes('localhost:')) {
       return `/api/${p}`;
@@ -25,7 +23,6 @@
       keepalive: true,
     }).catch(() => {});
   const d = () => {
-    // Check if we already have the ID in memory (prevents race conditions)
     if (window.h_session_id) return window.h_session_id;
     
     try {
@@ -34,11 +31,9 @@
         id = crypto.randomUUID();
         localStorage.setItem("user_session_id", id);
       }
-      // Store in memory to prevent race conditions
       window.h_session_id = id;
       return id;
     } catch {
-      // If localStorage fails, use a session-only ID stored in memory
       if (!window.h_session_id) {
         window.h_session_id = crypto.randomUUID();
       }
@@ -48,7 +43,6 @@
   const l = () => navigator.language || navigator.languages?.[0] || "en";
   function h() {
     if (document.hidden) return;
-    // Skip tracking for dashboard pages (security: don't track private data)
     if (location.pathname && location.pathname.includes("/dashboard")) return;
     const id = d(),
       dom = location.hostname;
@@ -285,7 +279,6 @@
     }
   };
   const updateSession = () => {
-    // Skip session updates for dashboard pages
     if (location.pathname && location.pathname.includes("/dashboard")) return;
     const id = d();
     r(u("update-session"), {
@@ -294,14 +287,11 @@
   };
   function startHeartbeat() {
     if (i) clearInterval(i);
-    // Don't track initial page if it's a dashboard page
     if (!document.hidden && !location.pathname.includes("/dashboard")) h();
     i = setInterval(() => {
       if (Date.now() - t > 18e5) {
         stopHeartbeat();
       } else {
-        // Always use updateSession for heartbeats
-        // Page changes are handled by the checkPath function
         updateSession();
       }
     }, 6e4);
@@ -314,13 +304,12 @@
   }
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
-      updateSession(); // Update duration when user hides page
+      updateSession();
       stopHeartbeat();
     } else {
       startHeartbeat();
     }
   });
-  // Update session when user is about to leave
   window.addEventListener("beforeunload", updateSession);
   window.addEventListener("pagehide", updateSession);
   ["mousemove", "keypress", "scroll", "click", "touchstart"].forEach((ev) => {
@@ -337,11 +326,8 @@
       g = false;
       c = [];
       const id = d();
-      // Track the new page (this will finalize the previous page)
-      // Skip if it's a dashboard page
       if (!location.pathname.includes("/dashboard")) {
         h();
-        // Then load new config
         k(location.hostname, id);
       }
     }
