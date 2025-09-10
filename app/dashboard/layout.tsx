@@ -114,26 +114,6 @@ export default function ProtectedLayout({
                     >
                       <Logo size="md" showText={true} />
                     </button>
-
-                    {/* Show trial badge only if user is in trial and doesn't have active subscription */}
-                    {trialInfo &&
-                      trialInfo.isActive &&
-                      !trialInfo.hasActiveSubscription && (
-                        <Badge
-                          variant="outline"
-                          className={`border-ring/30 text-ring bg-ring/5 px-3 py-1 hidden sm:block ${
-                            trialInfo.daysLeft <= 3
-                              ? "border-destructive/30 text-destructive bg-destructive/5"
-                              : ""
-                          }`}
-                        >
-                          <Clock className="w-3 h-3 mr-1" />
-                          <Link href="/pricing">
-                            {trialInfo.daysLeft} free day
-                            {trialInfo.daysLeft !== 1 ? "s" : ""} left
-                          </Link>
-                        </Badge>
-                      )}
                   </div>
 
                   {/* User section + Theme toggle */}
