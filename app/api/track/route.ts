@@ -174,44 +174,59 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: sessionError.message }, { status: 500 });
     }
 
-    // Insert or update page view record if page is provided
+    // Handle page view tracking with duration and exit page logic
     if (page) {
-      // Check if there's already a page view for this session+page in the last 30 minutes
-      // This handles both immediate duplicates and session continuation
-      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-      const { data: existingPageView } = await supabase
+      // Get the most recent page view for this session (regardless of page)
+      const { data: lastPageView } = await supabase
         .from("page_views")
-        .select("id, created_at, entry_page")
+        .select("id, page_path, created_at")
         .eq("session_id", sessionId)
-        .eq("page_path", page)
-        .gte("created_at", thirtyMinutesAgo)
         .order("created_at", { ascending: false })
         .limit(1)
         .single();
 
-      if (existingPageView) {
-        // Update existing page view with new timestamp (user is still/back on this page)
-        const { error: updateError } = await supabase
-          .from("page_views")
-          .update({ 
-            created_at: currentTime // Update to show most recent visit
-          })
-          .eq("id", existingPageView.id);
-
-        if (updateError) {
-          console.error("Error updating page view:", updateError);
-        }
+      // Check if this is the same page as the last one (heartbeat vs new page)
+      const isSamePage = lastPageView && lastPageView.page_path === page;
+      
+      if (isSamePage) {
+        // This is a heartbeat on the same page - DON'T update created_at
+        // The duration will be calculated later by update-session endpoint
+        console.log("Heartbeat on same page - no update needed");
       } else {
-        // Create new page view record
+        // This is a new page visit
+        
+        // First, finalize the previous page if it exists
+        if (lastPageView) {
+          const lastPageTime = new Date(lastPageView.created_at).getTime();
+          const currentTimeMs = new Date(currentTime).getTime();
+          const duration = Math.round((currentTimeMs - lastPageTime) / 1000);
+          
+          // Cap duration at 30 minutes to avoid unrealistic values
+          const cappedDuration = Math.min(Math.max(duration, 1), 1800);
+          
+          // Update the previous page with duration
+          const { error: updateLastError } = await supabase
+            .from("page_views")
+            .update({ 
+              duration_seconds: cappedDuration,
+              exit_page: false // Not an exit since user continues to another page
+            })
+            .eq("id", lastPageView.id);
+
+          if (updateLastError) {
+            console.error("Error updating last page view:", updateLastError);
+          }
+        }
+
         // Check if this is the first page view for this session (entry page)
         const { count } = await supabase
           .from("page_views")
           .select("id", { count: 'exact' })
-          .eq("session_id", sessionId)
-          .limit(1);
+          .eq("session_id", sessionId);
 
-        const isEntryPage = count === 0;
+        const isEntryPage = (count || 0) === 0;
 
+        // Create new page view record
         const { error: pageViewError } = await supabase
           .from("page_views")
           .insert({
@@ -220,6 +235,8 @@ export async function POST(req: NextRequest) {
             page_path: page,
             created_at: currentTime,
             entry_page: isEntryPage,
+            exit_page: false,
+            duration_seconds: 0
           });
 
         if (pageViewError) {

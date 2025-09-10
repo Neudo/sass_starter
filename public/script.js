@@ -37,7 +37,7 @@
       // Store in memory to prevent race conditions
       window.h_session_id = id;
       return id;
-    } catch (e) {
+    } catch {
       // If localStorage fails, use a session-only ID stored in memory
       if (!window.h_session_id) {
         window.h_session_id = crypto.randomUUID();
@@ -282,14 +282,22 @@
       if (id) w(eventName, location.hostname, id, data || {});
     }
   };
+  const updateSession = () => {
+    const id = d();
+    r(u("update-session"), {
+      sessionId: id,
+    });
+  };
   function startHeartbeat() {
     if (i) clearInterval(i);
-    if (!document.hidden) h();
+    if (!document.hidden) h(); // Always track initial page
     i = setInterval(() => {
       if (Date.now() - t > 18e5) {
         stopHeartbeat();
       } else {
-        h();
+        // Always use updateSession for heartbeats
+        // Page changes are handled by the checkPath function
+        updateSession();
       }
     }, 6e4);
   }
@@ -301,11 +309,15 @@
   }
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
+      updateSession(); // Update duration when user hides page
       stopHeartbeat();
     } else {
       startHeartbeat();
     }
   });
+  // Update session when user is about to leave
+  window.addEventListener("beforeunload", updateSession);
+  window.addEventListener("pagehide", updateSession);
   ["mousemove", "keypress", "scroll", "click", "touchstart"].forEach((ev) => {
     document.addEventListener(ev, () => {
       t = Date.now();
@@ -320,6 +332,9 @@
       g = false;
       c = [];
       const id = d();
+      // Track the new page (this will finalize the previous page)
+      h();
+      // Then load new config
       k(location.hostname, id);
     }
   };
