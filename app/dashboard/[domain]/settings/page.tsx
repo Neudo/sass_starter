@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -25,7 +31,7 @@ export default function GeneralSettingsPage() {
               placeholder="example.com"
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="site-name">Site Name</Label>
             <Input
@@ -59,10 +65,10 @@ export default function GeneralSettingsPage() {
           <div className="space-y-2">
             <Label>HTML Tracking Code</Label>
             <div className="p-4 bg-muted rounded-lg font-mono text-sm">
-              {`<script defer data-domain="example.com" src="https://www.hectoranalytics.com/js/script.js"></script>`}
+              {`<script defer src="https://www.hectoranalytics.com/js/script.js"></script>`}
             </div>
           </div>
-          
+
           <div className="flex gap-2">
             <Button variant="outline">Copy Code</Button>
             <Button variant="outline">Download</Button>
@@ -84,7 +90,7 @@ export default function GeneralSettingsPage() {
               Your analytics data will be automatically deleted after 3 years
             </p>
           </div>
-          
+
           <Button variant="outline">Upgrade Plan</Button>
         </CardContent>
       </Card>
