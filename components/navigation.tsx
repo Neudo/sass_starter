@@ -6,7 +6,7 @@ import { Menu, X, LogOut, User, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Avatar, AvatarFallback } from "./ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -108,11 +108,7 @@ export function Navigation() {
                       className="flex items-center gap-2 hover:bg-primary/10"
                     >
                       <Avatar className="w-8 h-8">
-                        <AvatarImage
-                          src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
-                          alt="User"
-                        />
-                        <AvatarFallback className="bg-primary text-primary-foreground">
+                        <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-semibold">
                           JD
                         </AvatarFallback>
                       </Avatar>
@@ -224,11 +220,7 @@ export function Navigation() {
                     <div className="flex flex-col space-y-2 px-3">
                       <div className="flex items-center gap-3 mb-3">
                         <Avatar className="w-10 h-10">
-                          <AvatarImage
-                            src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
-                            alt="User"
-                          />
-                          <AvatarFallback className="bg-primary text-primary-foreground">
+                          <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-semibold">
                             JD
                           </AvatarFallback>
                         </Avatar>

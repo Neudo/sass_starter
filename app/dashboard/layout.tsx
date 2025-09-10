@@ -1,7 +1,6 @@
 "use client";
 import { Logo } from "@/components/logo";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,13 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
-import {
-  BookOpen,
-  ChevronDown,
-  Clock,
-  Lightbulb,
-  Settings,
-} from "lucide-react";
+import { BookOpen, ChevronDown, Lightbulb, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { LogoutButton } from "@/components/logout-button";
 import { QueryClient } from "@tanstack/react-query";
@@ -25,8 +18,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { RequestFeatureModal } from "@/components/request-feature-modal";
 import Link from "next/link";
 import { useShowUserInfos } from "@/hooks/useLoggedUser";
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useState } from "react";
 
 export default function ProtectedLayout({
   children,
@@ -39,65 +31,8 @@ export default function ProtectedLayout({
     useShowUserInfos("email");
   const { userInfo: userName, loading: nameLoading } = useShowUserInfos("name");
 
-  const [trialInfo, setTrialInfo] = useState<{
-    daysLeft: number;
-    isActive: boolean;
-    hasActiveSubscription: boolean;
-  } | null>(null);
-
   const [requestFeatureOpen, setRequestFeatureOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchTrialStatus = async () => {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) return;
-
-      const { data: subscription } = await supabase
-        .from("subscriptions")
-        .select("created_at, status, stripe_subscription_id, plan_tier")
-        .eq("user_id", user.id)
-        .single();
-
-      if (subscription) {
-        // Check if user has a paid subscription (not free plan)
-        const hasPaidSubscription =
-          subscription.plan_tier !== "free" &&
-          subscription.stripe_subscription_id &&
-          subscription.stripe_subscription_id !== "";
-
-        if (hasPaidSubscription) {
-          // User has paid subscription - no limitations
-          setTrialInfo({
-            daysLeft: 0,
-            isActive: false,
-            hasActiveSubscription: true,
-          });
-        } else {
-          // User is on free plan - calculate days left from created_at + 30 days
-          const freeEndDate = new Date(subscription.created_at);
-          freeEndDate.setDate(freeEndDate.getDate() + 30);
-          const now = new Date();
-          const diffTime = freeEndDate.getTime() - now.getTime();
-          const daysLeft = Math.max(
-            0,
-            Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-          );
-
-          setTrialInfo({
-            daysLeft,
-            isActive: daysLeft > 0,
-            hasActiveSubscription: false,
-          });
-        }
-      }
-    };
-
-    fetchTrialStatus();
-  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <main className="min-h-screen flex flex-col items-center">
@@ -124,11 +59,7 @@ export default function ProtectedLayout({
                       <DropdownMenuTrigger asChild>
                         <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
                           <Avatar className="w-8 h-8">
-                            <AvatarImage
-                              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
-                              alt="User"
-                            />
-                            <AvatarFallback className="bg-primary text-primary-foreground">
+                            <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-semibold">
                               {userName
                                 ? userName
                                     .split(" ")
