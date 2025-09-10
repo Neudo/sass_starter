@@ -48,6 +48,8 @@
   const l = () => navigator.language || navigator.languages?.[0] || "en";
   function h() {
     if (document.hidden) return;
+    // Skip tracking for dashboard pages (security: don't track private data)
+    if (location.pathname && location.pathname.includes("/dashboard")) return;
     const id = d(),
       dom = location.hostname;
     r(u("track"), {
@@ -283,6 +285,8 @@
     }
   };
   const updateSession = () => {
+    // Skip session updates for dashboard pages
+    if (location.pathname && location.pathname.includes("/dashboard")) return;
     const id = d();
     r(u("update-session"), {
       sessionId: id,
@@ -290,7 +294,8 @@
   };
   function startHeartbeat() {
     if (i) clearInterval(i);
-    if (!document.hidden) h(); // Always track initial page
+    // Don't track initial page if it's a dashboard page
+    if (!document.hidden && !location.pathname.includes("/dashboard")) h();
     i = setInterval(() => {
       if (Date.now() - t > 18e5) {
         stopHeartbeat();
@@ -333,9 +338,12 @@
       c = [];
       const id = d();
       // Track the new page (this will finalize the previous page)
-      h();
-      // Then load new config
-      k(location.hostname, id);
+      // Skip if it's a dashboard page
+      if (!location.pathname.includes("/dashboard")) {
+        h();
+        // Then load new config
+        k(location.hostname, id);
+      }
     }
   };
   setInterval(checkPath, 1000);

@@ -199,16 +199,29 @@ export async function POST(req: NextRequest) {
         if (lastPageView) {
           const lastPageTime = new Date(lastPageView.created_at).getTime();
           const currentTimeMs = new Date(currentTime).getTime();
-          const duration = Math.round((currentTimeMs - lastPageTime) / 1000);
+          const sessionDuration = Math.round((currentTimeMs - lastPageTime) / 1000);
           
-          // Cap duration at 30 minutes to avoid unrealistic values
-          const cappedDuration = Math.min(Math.max(duration, 1), 1800);
+          // Cap session duration at 30 minutes to avoid unrealistic values
+          const cappedSessionDuration = Math.min(Math.max(sessionDuration, 1), 1800);
           
-          // Update the previous page with duration
+          // For page changes, we need to add this session to any existing cumulative time
+          // Get the current duration to see if this page was visited before
+          const { data: currentPageData } = await supabase
+            .from("page_views")
+            .select("duration_seconds")
+            .eq("id", lastPageView.id)
+            .single();
+          
+          // If there was already duration recorded (from previous visits to this page)
+          // add this session's duration to it
+          const existingDuration = currentPageData?.duration_seconds || 0;
+          const newTotalDuration = existingDuration + cappedSessionDuration;
+          
+          // Update the previous page with final duration
           const { error: updateLastError } = await supabase
             .from("page_views")
             .update({ 
-              duration_seconds: cappedDuration,
+              duration_seconds: newTotalDuration, // Cumulative duration for this page
               exit_page: false // Not an exit since user continues to another page
             })
             .eq("id", lastPageView.id);
@@ -218,29 +231,55 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // Check if this is the first page view for this session (entry page)
-        const { count } = await supabase
+        // Check if this page already exists in this session (optimization)
+        const { data: existingPageInSession } = await supabase
           .from("page_views")
-          .select("id", { count: 'exact' })
-          .eq("session_id", sessionId);
+          .select("id, created_at, entry_page, duration_seconds")
+          .eq("session_id", sessionId)
+          .eq("page_path", page)
+          .single();
 
-        const isEntryPage = (count || 0) === 0;
+        if (existingPageInSession) {
+          // Page already visited in this session - reuse the existing record
+          // Just update the timestamp and reset exit flag (duration will be added when leaving)
+          const { error: reuseError } = await supabase
+            .from("page_views")
+            .update({ 
+              created_at: currentTime, // Update to new visit time
+              exit_page: false // Reset exit flag (duration stays cumulative)
+            })
+            .eq("id", existingPageInSession.id);
 
-        // Create new page view record
-        const { error: pageViewError } = await supabase
-          .from("page_views")
-          .insert({
-            session_id: sessionId,
-            site_id: siteId,
-            page_path: page,
-            created_at: currentTime,
-            entry_page: isEntryPage,
-            exit_page: false,
-            duration_seconds: 0
-          });
+          if (reuseError) {
+            console.error("Error reusing page view:", reuseError);
+          }
+        } else {
+          // This is a genuinely new page for this session
+          
+          // Check if this is the first page view for this session (entry page)
+          const { count } = await supabase
+            .from("page_views")
+            .select("id", { count: 'exact' })
+            .eq("session_id", sessionId);
 
-        if (pageViewError) {
-          console.error("Error inserting page view:", pageViewError);
+          const isEntryPage = (count || 0) === 0;
+
+          // Create new page view record
+          const { error: pageViewError } = await supabase
+            .from("page_views")
+            .insert({
+              session_id: sessionId,
+              site_id: siteId,
+              page_path: page,
+              created_at: currentTime,
+              entry_page: isEntryPage,
+              exit_page: false,
+              duration_seconds: 0
+            });
+
+          if (pageViewError) {
+            console.error("Error inserting page view:", pageViewError);
+          }
         }
       }
     }

@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
 }
 
 // Generate all CSV files
- 
+
 async function generateAllCsvs(
   adminClient: any,
   siteId: string,
@@ -445,7 +445,7 @@ async function generatePagesCsv(
     .order("created_at");
 
   // Fetch page views for these sessions
-  const sessionIds = sessions?.map(s => s.id) || [];
+  const sessionIds = sessions?.map((s: any) => s.id) || [];
   const { data: pageViews } = await adminClient
     .from("page_views")
     .select("session_id, page_path, created_at")
@@ -454,7 +454,7 @@ async function generatePagesCsv(
 
   // Group page views by session
   const pageViewsBySession = new Map<string, string[]>();
-  pageViews?.forEach(pv => {
+  pageViews?.forEach((pv: any) => {
     if (!pageViewsBySession.has(pv.session_id)) {
       pageViewsBySession.set(pv.session_id, []);
     }

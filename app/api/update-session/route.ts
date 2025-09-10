@@ -39,17 +39,17 @@ export async function POST(req: NextRequest) {
     if (lastPageView) {
       const lastPageTime = new Date(lastPageView.created_at).getTime();
       const currentTimeMs = new Date(currentTime).getTime();
-      const duration = Math.round((currentTimeMs - lastPageTime) / 1000);
+      const totalTimeOnPage = Math.round((currentTimeMs - lastPageTime) / 1000);
       
-      // Cap duration at 30 minutes and ensure it's at least 1 second
-      const cappedDuration = Math.min(Math.max(duration, 1), 1800);
+      // Cap total time at 30 minutes and ensure it's at least 1 second
+      const cappedTotalTime = Math.min(Math.max(totalTimeOnPage, 1), 1800);
       
-      // Always update duration and mark as potential exit page
-      // (exit_page will be set to false if user navigates to another page)
+      // REPLACE (not add) the duration with total time since page started
+      // This prevents accumulation on heartbeats
       await supabase
         .from("page_views")
         .update({ 
-          duration_seconds: cappedDuration,
+          duration_seconds: cappedTotalTime, // Total time since page visit started
           exit_page: true // Mark as potential exit page
         })
         .eq("id", lastPageView.id);

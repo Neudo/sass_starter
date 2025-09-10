@@ -31,6 +31,7 @@ interface PageView {
   session_id: string;
   page_path: string;
   created_at: string;
+  duration_seconds?: number;
 }
 
 export interface Session {
@@ -47,7 +48,7 @@ export interface Session {
   language: string | null;
   referrer: string | null;
   referrer_domain: string | null;
-  page_views?: Array<{ page_path: string }>;
+  page_views?: Array<{ page_path: string; duration_seconds?: number }>;
   utm_source: string | null;
   utm_medium: string | null;
   utm_campaign: string | null;
@@ -584,24 +585,20 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
         : 1;
       totalPageviews += pageViewsCount;
 
-      // Calculate duration (difference between created_at and last_seen)
-      // Cap session duration at 30 minutes (1800 seconds) to avoid unrealistic values
-      if (session.created_at && session.last_seen) {
-        const created = new Date(session.created_at).getTime();
-        const lastSeen = new Date(session.last_seen).getTime();
-        let duration = Math.round((lastSeen - created) / 1000); // in seconds
-
-        // Cap duration at 30 minutes (1800 seconds)
-        // Sessions longer than this are likely idle/inactive
-        const MAX_SESSION_DURATION = 1800; // 30 minutes in seconds
-        if (duration > MAX_SESSION_DURATION) {
-          duration = MAX_SESSION_DURATION;
-        }
-
-        // Only count positive durations
-        if (duration > 0) {
-          totalDuration += duration;
-        }
+      // Calculate total session duration from individual page durations
+      const sessionPageViews = session.page_views || [];
+      let sessionTotalDuration = 0;
+      
+      sessionPageViews.forEach(pv => {
+        const pageDuration = pv.duration_seconds || 0;
+        // Cap individual page duration at 30 minutes to avoid unrealistic values
+        const cappedPageDuration = Math.min(pageDuration, 1800);
+        sessionTotalDuration += cappedPageDuration;
+      });
+      
+      // Only count sessions with positive duration
+      if (sessionTotalDuration > 0) {
+        totalDuration += sessionTotalDuration;
       }
 
       // Count bounces (sessions with only 1 pageview)
@@ -654,18 +651,20 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
           prevBounceCount++;
         }
         
-        // Calculate duration for previous period
-        if (session.created_at && session.last_seen) {
-          const created = new Date(session.created_at).getTime();
-          const lastSeen = new Date(session.last_seen).getTime();
-          let duration = Math.round((lastSeen - created) / 1000);
-          const MAX_SESSION_DURATION = 1800;
-          if (duration > MAX_SESSION_DURATION) {
-            duration = MAX_SESSION_DURATION;
-          }
-          if (duration > 0) {
-            prevTotalDuration += duration;
-          }
+        // Calculate total session duration for previous period from individual page durations
+        const prevSessionPageViews = session.page_views || [];
+        let prevSessionTotalDuration = 0;
+        
+        prevSessionPageViews.forEach(pv => {
+          const pageDuration = pv.duration_seconds || 0;
+          // Cap individual page duration at 30 minutes to avoid unrealistic values
+          const cappedPageDuration = Math.min(pageDuration, 1800);
+          prevSessionTotalDuration += cappedPageDuration;
+        });
+        
+        // Only count sessions with positive duration
+        if (prevSessionTotalDuration > 0) {
+          prevTotalDuration += prevSessionTotalDuration;
         }
       });
       
@@ -832,7 +831,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       if (sessionIds.length > 0) {
         const { data: pageViews } = await supabase
           .from("page_views")
-          .select("session_id, page_path, created_at")
+          .select("session_id, page_path, created_at, duration_seconds")
           .in("session_id", sessionIds)
           .order("created_at", { ascending: true });
         
@@ -840,12 +839,15 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       }
 
       // Group page views by session
-      const pageViewsBySession = new Map<string, Array<{ page_path: string }>>();
+      const pageViewsBySession = new Map<string, Array<{ page_path: string; duration_seconds?: number }>>();
       pageViewsData.forEach(pv => {
         if (!pageViewsBySession.has(pv.session_id)) {
           pageViewsBySession.set(pv.session_id, []);
         }
-        pageViewsBySession.get(pv.session_id)?.push({ page_path: pv.page_path });
+        pageViewsBySession.get(pv.session_id)?.push({ 
+          page_path: pv.page_path, 
+          duration_seconds: pv.duration_seconds 
+        });
       });
 
       // Add page views to sessions
@@ -878,7 +880,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
           if (prevSessionIds.length > 0) {
             const { data: prevPageViews } = await supabase
               .from("page_views")
-              .select("session_id, page_path, created_at")
+              .select("session_id, page_path, created_at, duration_seconds")
               .in("session_id", prevSessionIds)
               .order("created_at", { ascending: true });
             
@@ -886,12 +888,15 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
           }
 
           // Group page views by session
-          const prevPageViewsBySession = new Map<string, Array<{ page_path: string }>>();
+          const prevPageViewsBySession = new Map<string, Array<{ page_path: string; duration_seconds?: number }>>();
           prevPageViewsData.forEach(pv => {
             if (!prevPageViewsBySession.has(pv.session_id)) {
               prevPageViewsBySession.set(pv.session_id, []);
             }
-            prevPageViewsBySession.get(pv.session_id)?.push({ page_path: pv.page_path });
+            prevPageViewsBySession.get(pv.session_id)?.push({ 
+              page_path: pv.page_path, 
+              duration_seconds: pv.duration_seconds 
+            });
           });
 
           // Add page views to previous sessions
