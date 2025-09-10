@@ -37,8 +37,8 @@ export function DashboardClient({
   const { filters, setDateRange, isLoaded } = usePersistedFilters(domain);
   const selectedDateRange = filters.dateRange;
   const dateRange = useMemo(
-    () => getDateRange(selectedDateRange),
-    [selectedDateRange]
+    () => isLoaded ? getDateRange(selectedDateRange) : null,
+    [selectedDateRange, isLoaded]
   );
 
   const { fetchAllData } = useAnalyticsStore();
@@ -46,11 +46,35 @@ export function DashboardClient({
   // Load all data when component mounts or parameters change
   // Only fetch after filters are loaded to prevent duplicate requests
   useEffect(() => {
-    if (isLoaded) {
+    if (isLoaded && dateRange) {
       fetchAllData(siteId, dateRange, selectedDateRange);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [siteId, dateRange, selectedDateRange, isLoaded]);
+
+  // Don't render until filters are loaded to prevent flash of wrong data
+  if (!isLoaded) {
+    return (
+      <div className="space-y-6">
+        <div className="flex gap-4 flex-wrap items-center justify-between">
+          {!isPublic && <SiteSelector sites={userSites} currentDomain={domain} />}
+          <div className="h-10" /> {/* Placeholder for ActiveVisitors */}
+          <div className="h-10 w-40" /> {/* Placeholder for DateFilter */}
+        </div>
+        {/* Loading skeleton or empty state */}
+        <div className="animate-pulse space-y-6">
+          <div className="h-32 bg-muted rounded-lg" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2 h-64 bg-muted rounded-lg" />
+            <div className="h-96 bg-muted rounded-lg" />
+            <div className="h-96 bg-muted rounded-lg" />
+            <div className="h-96 bg-muted rounded-lg" />
+            <div className="h-96 bg-muted rounded-lg" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
