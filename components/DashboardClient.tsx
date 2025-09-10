@@ -37,7 +37,7 @@ export function DashboardClient({
   const { filters, setDateRange, isLoaded } = usePersistedFilters(domain);
   const selectedDateRange = filters.dateRange;
   const dateRange = useMemo(
-    () => isLoaded ? getDateRange(selectedDateRange) : null,
+    () => (isLoaded ? getDateRange(selectedDateRange) : null),
     [selectedDateRange, isLoaded]
   );
 
@@ -57,7 +57,9 @@ export function DashboardClient({
     return (
       <div className="space-y-6">
         <div className="flex gap-4 flex-wrap items-center justify-between">
-          {!isPublic && <SiteSelector sites={userSites} currentDomain={domain} />}
+          {!isPublic && (
+            <SiteSelector sites={userSites} currentDomain={domain} />
+          )}
           <div className="h-10" /> {/* Placeholder for ActiveVisitors */}
           <div className="h-10 w-40" /> {/* Placeholder for DateFilter */}
         </div>

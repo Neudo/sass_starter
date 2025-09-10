@@ -210,7 +210,7 @@ export function MetricsChart({
         }
 
         // Fetch page views for these sessions
-        const sessionIds = recentSessions?.map(s => s.id) || [];
+        const sessionIds = recentSessions?.map((s) => s.id) || [];
         const { data: pageViews } = await supabase
           .from("page_views")
           .select("session_id, created_at")
@@ -232,7 +232,7 @@ export function MetricsChart({
             }) || [];
 
           const uniqueVisitorsSet = new Set<string>();
-          
+
           intervalSessions.forEach((session) => {
             const visitorFingerprint = `${session.browser || "unknown"}-${
               session.os || "unknown"
@@ -243,10 +243,11 @@ export function MetricsChart({
           });
 
           // Count page views in this interval
-          const intervalPageViews = pageViews?.filter((pv) => {
-            const pvTime = new Date(pv.created_at);
-            return pvTime >= intervalStart && pvTime <= intervalEnd;
-          }).length || 0;
+          const intervalPageViews =
+            pageViews?.filter((pv) => {
+              const pvTime = new Date(pv.created_at);
+              return pvTime >= intervalStart && pvTime <= intervalEnd;
+            }).length || 0;
 
           const minutesAgo = i * 4;
           const displayLabel = minutesAgo === 0 ? "Now" : `-${minutesAgo}min`;
@@ -326,7 +327,7 @@ export function MetricsChart({
       }
 
       // Fetch page views count for each session
-      const sessionIds = sessions?.map(s => s.id) || [];
+      const sessionIds = sessions?.map((s) => s.id) || [];
       const { data: pageViewCounts } = await supabase
         .from("page_views")
         .select("session_id")
@@ -334,7 +335,7 @@ export function MetricsChart({
 
       // Create a map of session_id to page view count
       const pageViewsPerSession = new Map<string, number>();
-      pageViewCounts?.forEach(pv => {
+      pageViewCounts?.forEach((pv) => {
         const count = pageViewsPerSession.get(pv.session_id) || 0;
         pageViewsPerSession.set(pv.session_id, count + 1);
       });

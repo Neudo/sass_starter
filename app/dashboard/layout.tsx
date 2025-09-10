@@ -175,7 +175,7 @@ export default function ProtectedLayout({
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="p-4 relative">
                           <Link
-                            className="before:absolute before:content-[''] before:-inset-0flex items-center gap-2"
+                            className="before:absolute before:content-[''] before:-inset-0 flex items-center gap-2"
                             href="/settings"
                           >
                             <Settings className="h-4 w-4" />
