@@ -235,37 +235,11 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
     });
   },
 
-  // New getter for sessions filtered by metric selection (for analytics display)
+  // Get sessions for analytics display - always returns all filtered sessions
+  // Analytics should always show complete data regardless of metric mode
   getSessionsForAnalytics: () => {
-    const { selectedMetric } = get();
     const state = get();
-    let filteredSessions = state.getFilteredSessions();
-
-    // If unique visitors is selected, keep only one session per unique visitor
-    if (selectedMetric === "uniqueVisitors") {
-      const uniqueVisitorsMap = new Map<string, Session>();
-
-      filteredSessions.forEach((session) => {
-        const visitorFingerprint = `${session.browser || "unknown"}-${
-          session.os || "unknown"
-        }-${session.screen_size || "unknown"}-${session.country || "unknown"}`;
-
-        // Keep the first session for each unique visitor (by creation time)
-        if (
-          !uniqueVisitorsMap.has(visitorFingerprint) ||
-          new Date(session.created_at).getTime() <
-            new Date(
-              uniqueVisitorsMap.get(visitorFingerprint)!.created_at
-            ).getTime()
-        ) {
-          uniqueVisitorsMap.set(visitorFingerprint, session);
-        }
-      });
-
-      filteredSessions = Array.from(uniqueVisitorsMap.values());
-    }
-
-    return filteredSessions;
+    return state.getFilteredSessions();
   },
 
   getAnalyticsData: () => {
@@ -563,40 +537,39 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       }))
       .sort((a, b) => b.count - a.count);
 
-    // Metrics
-    const totalVisits = filteredSessions.length;
+    // Plausible-style metrics calculation
+    const totalVisits = filteredSessions.length; // Total sessions/visits
 
-    // Calculate unique visitors using fingerprinting (like in the original code)
+    // Simple unique visitors calculation (like Plausible - count distinct sessions, not complex fingerprinting)
+    // In our case, each session is already a "visit" so unique visitors ≈ unique sessions
+    // But we'll use a simple approach: count unique combinations of basic identifiers
     const uniqueVisitorsSet = new Set<string>();
     let totalPageviews = 0;
     let totalDuration = 0;
     let bounceCount = 0;
 
     filteredSessions.forEach((session) => {
-      // Create visitor fingerprint for unique visitor identification
-      const visitorFingerprint = `${session.browser || "unknown"}-${
-        session.os || "unknown"
-      }-${session.screen_size || "unknown"}-${session.country || "unknown"}`;
-      uniqueVisitorsSet.add(visitorFingerprint);
+      // Simple visitor identification (similar to Plausible's privacy-friendly approach)
+      // We use country + browser as a simple, privacy-friendly identifier
+      const visitorId = `${session.country || "unknown"}-${session.browser || "unknown"}`;
+      uniqueVisitorsSet.add(visitorId);
 
-      // Calculate pageviews from the page_views array length
+      // Calculate pageviews for this session
       const pageViewsCount = Array.isArray(session.page_views)
         ? session.page_views.length
         : 1;
       totalPageviews += pageViewsCount;
 
-      // Calculate total session duration from individual page durations
+      // Calculate session duration
       const sessionPageViews = session.page_views || [];
       let sessionTotalDuration = 0;
       
       sessionPageViews.forEach(pv => {
         const pageDuration = pv.duration_seconds || 0;
-        // Cap individual page duration at 30 minutes to avoid unrealistic values
-        const cappedPageDuration = Math.min(pageDuration, 1800);
+        const cappedPageDuration = Math.min(pageDuration, 1800); // 30min cap
         sessionTotalDuration += cappedPageDuration;
       });
       
-      // Only count sessions with positive duration
       if (sessionTotalDuration > 0) {
         totalDuration += sessionTotalDuration;
       }
@@ -608,16 +581,19 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
     });
 
     const uniqueVisitors = uniqueVisitorsSet.size;
-    const viewsPerVisit =
-      totalVisits > 0
-        ? parseFloat((totalPageviews / totalVisits).toFixed(2))
-        : 0;
-    const bounceRate =
-      totalVisits > 0
-        ? parseFloat(((bounceCount / totalVisits) * 100).toFixed(1))
-        : 0;
-    const avgDuration =
-      totalVisits > 0 ? Math.round(totalDuration / totalVisits) : 0;
+
+    // Plausible-style metric calculations
+    const viewsPerVisit = totalVisits > 0
+      ? parseFloat((totalPageviews / totalVisits).toFixed(2))
+      : 0;
+    
+    const bounceRate = totalVisits > 0
+      ? parseFloat(((bounceCount / totalVisits) * 100).toFixed(1))
+      : 0;
+    
+    const avgDuration = totalVisits > 0
+      ? Math.round(totalDuration / totalVisits)
+      : 0;
 
     // Calculate trends using previous period data
     const { previousSessions, calculateTrends, dateRangeOption } = state;
@@ -829,11 +805,24 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       let pageViewsData: PageView[] = [];
       
       if (sessionIds.length > 0) {
-        const { data: pageViews } = await supabase
+        let pageViewQuery = supabase
           .from("page_views")
           .select("session_id, page_path, created_at, duration_seconds")
-          .in("session_id", sessionIds)
-          .order("created_at", { ascending: true });
+          .in("session_id", sessionIds);
+
+        // Apply same date filter as sessions for consistency
+        if (isRealtimeMode) {
+          const thirtyMinutesAgo = new Date(
+            Date.now() - 30 * 60 * 1000
+          ).toISOString();
+          pageViewQuery = pageViewQuery.gte("created_at", thirtyMinutesAgo);
+        } else if (dateRange) {
+          pageViewQuery = pageViewQuery
+            .gte("created_at", dateRange.from.toISOString())
+            .lte("created_at", dateRange.to.toISOString());
+        }
+
+        const { data: pageViews } = await pageViewQuery.order("created_at", { ascending: true });
         
         pageViewsData = pageViews || [];
       }
@@ -878,11 +867,19 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
           let prevPageViewsData: PageView[] = [];
           
           if (prevSessionIds.length > 0) {
-            const { data: prevPageViews } = await supabase
+            let prevPageViewQuery = supabase
               .from("page_views")
               .select("session_id, page_path, created_at, duration_seconds")
-              .in("session_id", prevSessionIds)
-              .order("created_at", { ascending: true });
+              .in("session_id", prevSessionIds);
+
+            // Apply date filter for previous period consistency
+            if (previousRange) {
+              prevPageViewQuery = prevPageViewQuery
+                .gte("created_at", previousRange.from.toISOString())
+                .lte("created_at", previousRange.to.toISOString());
+            }
+
+            const { data: prevPageViews } = await prevPageViewQuery.order("created_at", { ascending: true });
             
             prevPageViewsData = prevPageViews || [];
           }

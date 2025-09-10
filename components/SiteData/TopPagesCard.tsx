@@ -85,7 +85,7 @@ export function TopPagesCard() {
     return (
       <>
         {renderItems(data)}
-        {allData && allData.length > 7 && (
+        {allData && allData.length > data.length && (
           <DetailsModal
             title={title || "All pages"}
             description={`Showing ${allData.length} pages total`}
