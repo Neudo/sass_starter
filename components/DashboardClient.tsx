@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeviceCard } from "@/components/SiteData/DeviceCard";
 import { LocationCard } from "@/components/SiteData/LocationCard";
@@ -11,7 +11,8 @@ import { WorldMapCard } from "@/components/SiteData/WorldMapCard";
 import { SiteSelector } from "@/components/SiteSelector";
 import { ActiveVisitors } from "@/components/SiteData/ActiveVisitors";
 import { ActiveFilters } from "@/components/SiteData/ActiveFilters";
-import { DateFilter, getDateRange } from "@/components/DateFilter";
+import { DateFilter } from "@/components/DateFilter";
+import { createClient } from "@/lib/supabase/client";
 import { FunnelsAndEventsCard } from "./SiteData/FunnelsAndEventsCard";
 import { useAnalyticsStore } from "@/lib/stores/analytics";
 import { usePersistedFilters } from "@/hooks/usePersistedFilters";
@@ -36,24 +37,46 @@ export function DashboardClient({
 }: DashboardClientProps) {
   const { filters, setDateRange, isLoaded } = usePersistedFilters(domain);
   const selectedDateRange = filters.dateRange;
-  const dateRange = useMemo(
-    () => (isLoaded ? getDateRange(selectedDateRange) : null),
-    [selectedDateRange, isLoaded]
-  );
+  const [siteTimezone, setSiteTimezone] = useState<string>("UTC");
+  const [timezoneLoaded, setTimezoneLoaded] = useState(false);
+  const supabase = createClient();
 
-  const { fetchAllData } = useAnalyticsStore();
+  const { fetchAllData, dateRange } = useAnalyticsStore();
+
+  // Load site timezone
+  useEffect(() => {
+    const loadSiteTimezone = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("sites")
+          .select("timezone")
+          .eq("domain", domain)
+          .single();
+
+        if (!error && data?.timezone) {
+          setSiteTimezone(data.timezone);
+        }
+      } catch (error) {
+        console.warn("Could not load site timezone:", error);
+      } finally {
+        setTimezoneLoaded(true);
+      }
+    };
+
+    loadSiteTimezone();
+  }, [domain, supabase]);
 
   // Load all data when component mounts or parameters change
-  // Only fetch after filters are loaded to prevent duplicate requests
+  // Only fetch after both filters and timezone are loaded
   useEffect(() => {
-    if (isLoaded && (dateRange || selectedDateRange === "alltime")) {
-      fetchAllData(siteId, dateRange, selectedDateRange);
+    if (isLoaded && timezoneLoaded) {
+      fetchAllData(siteId, selectedDateRange, siteTimezone);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [siteId, dateRange, selectedDateRange, isLoaded]);
+  }, [siteId, selectedDateRange, siteTimezone, isLoaded, timezoneLoaded]);
 
-  // Don't render until filters are loaded to prevent flash of wrong data
-  if (!isLoaded) {
+  // Don't render until filters and timezone are loaded to prevent flash of wrong data
+  if (!isLoaded || !timezoneLoaded) {
     return (
       <div className="space-y-6">
         <div className="flex gap-4 flex-wrap items-center justify-between">

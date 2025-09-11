@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     // Update duration for the most recent page view if it exists
     if (lastPageView) {
       const lastPageTime = new Date(lastPageView.created_at).getTime();
-      const currentTimeMs = new Date(currentTime).getTime();
+      const currentTimeMs = new Date().getTime(); // Use actual current time for duration calculation
       const totalTimeOnPage = Math.round((currentTimeMs - lastPageTime) / 1000);
       
       // Cap total time at 30 minutes and ensure it's at least 1 second

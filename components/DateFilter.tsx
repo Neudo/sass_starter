@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar } from "lucide-react";
+import { getDayBoundsInTimezone } from "@/lib/constants/timezones";
 
 export type DateRangeOption =
   | "today"
@@ -54,45 +55,55 @@ export function DateFilter({ selectedRange, onRangeChange }: DateFilterProps) {
 }
 
 export function getDateRange(
-  option: DateRangeOption
+  option: DateRangeOption,
+  timezone: string = "UTC"
 ): { from: Date; to: Date } | null {
   const now = new Date();
-  // Use UTC for consistent timezone handling
-  const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+
+  // Get today's boundaries in the specified timezone
+  const todayBounds = getDayBoundsInTimezone(timezone, now);
+  const todayStart = todayBounds.start;
+  const todayEnd = todayBounds.end;
 
   switch (option) {
     case "today":
       return {
-        from: todayUTC,
-        to: new Date(todayUTC.getTime() + 24 * 60 * 60 * 1000 - 1),
+        from: todayStart,
+        to: todayEnd,
       };
     case "yesterday":
-      const yesterdayUTC = new Date(todayUTC.getTime() - 24 * 60 * 60 * 1000);
+      const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const yesterdayBounds = getDayBoundsInTimezone(timezone, yesterday);
       return {
-        from: yesterdayUTC,
-        to: new Date(todayUTC.getTime() - 1),
+        from: yesterdayBounds.start,
+        to: yesterdayBounds.end,
       };
     case "last7days":
-      const sevenDaysAgoUTC = new Date(todayUTC.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const sevenDaysAgoBounds = getDayBoundsInTimezone(timezone, sevenDaysAgo);
       return {
-        from: sevenDaysAgoUTC,
-        to: now,
+        from: sevenDaysAgoBounds.start,
+        to: todayEnd,
       };
     case "last30days":
-      const thirtyDaysAgoUTC = new Date(
-        todayUTC.getTime() - 30 * 24 * 60 * 60 * 1000
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const thirtyDaysAgoBounds = getDayBoundsInTimezone(
+        timezone,
+        thirtyDaysAgo
       );
       return {
-        from: thirtyDaysAgoUTC,
-        to: now,
+        from: thirtyDaysAgoBounds.start,
+        to: todayEnd,
       };
     case "last90days":
-      const ninetyDaysAgoUTC = new Date(
-        todayUTC.getTime() - 90 * 24 * 60 * 60 * 1000
+      const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+      const ninetyDaysAgoBounds = getDayBoundsInTimezone(
+        timezone,
+        ninetyDaysAgo
       );
       return {
-        from: ninetyDaysAgoUTC,
-        to: now,
+        from: ninetyDaysAgoBounds.start,
+        to: todayEnd,
       };
     case "alltime":
       return null; // No date filter
@@ -107,50 +118,78 @@ export function getDateRange(
 }
 
 export function getPreviousDateRange(
-  option: DateRangeOption
+  option: DateRangeOption,
+  timezone: string = "UTC"
 ): { from: Date; to: Date } | null {
   const now = new Date();
-  const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
   switch (option) {
     case "today":
       // Previous period: yesterday
-      const yesterdayUTC = new Date(todayUTC.getTime() - 24 * 60 * 60 * 1000);
+      const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const yesterdayBounds = getDayBoundsInTimezone(timezone, yesterday);
       return {
-        from: yesterdayUTC,
-        to: new Date(todayUTC.getTime() - 1),
+        from: yesterdayBounds.start,
+        to: yesterdayBounds.end,
       };
     case "yesterday":
       // Previous period: day before yesterday
-      const dayBeforeYesterdayUTC = new Date(todayUTC.getTime() - 2 * 24 * 60 * 60 * 1000);
-      const yesterdayStartUTC = new Date(todayUTC.getTime() - 24 * 60 * 60 * 1000);
+      const dayBeforeYesterday = new Date(
+        now.getTime() - 2 * 24 * 60 * 60 * 1000
+      );
+      const dayBeforeYesterdayBounds = getDayBoundsInTimezone(
+        timezone,
+        dayBeforeYesterday
+      );
       return {
-        from: dayBeforeYesterdayUTC,
-        to: new Date(yesterdayStartUTC.getTime() - 1),
+        from: dayBeforeYesterdayBounds.start,
+        to: dayBeforeYesterdayBounds.end,
       };
     case "last7days":
       // Previous period: 7 days before the last 7 days (14 days ago to 7 days ago)
-      const fourteenDaysAgoUTC = new Date(todayUTC.getTime() - 14 * 24 * 60 * 60 * 1000);
-      const sevenDaysAgoUTC = new Date(todayUTC.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const fourteenDaysAgo = new Date(
+        now.getTime() - 14 * 24 * 60 * 60 * 1000
+      );
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const fourteenDaysAgoBounds = getDayBoundsInTimezone(
+        timezone,
+        fourteenDaysAgo
+      );
+      const sevenDaysAgoBounds = getDayBoundsInTimezone(timezone, sevenDaysAgo);
       return {
-        from: fourteenDaysAgoUTC,
-        to: sevenDaysAgoUTC,
+        from: fourteenDaysAgoBounds.start,
+        to: sevenDaysAgoBounds.end,
       };
     case "last30days":
       // Previous period: 30 days before the last 30 days (60 days ago to 30 days ago)
-      const sixtyDaysAgoUTC = new Date(todayUTC.getTime() - 60 * 24 * 60 * 60 * 1000);
-      const thirtyDaysAgoUTC = new Date(todayUTC.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const sixtyDaysAgoBounds = getDayBoundsInTimezone(timezone, sixtyDaysAgo);
+      const thirtyDaysAgoBounds = getDayBoundsInTimezone(
+        timezone,
+        thirtyDaysAgo
+      );
       return {
-        from: sixtyDaysAgoUTC,
-        to: thirtyDaysAgoUTC,
+        from: sixtyDaysAgoBounds.start,
+        to: thirtyDaysAgoBounds.end,
       };
     case "last90days":
       // Previous period: 90 days before the last 90 days (180 days ago to 90 days ago)
-      const oneEightyDaysAgoUTC = new Date(todayUTC.getTime() - 180 * 24 * 60 * 60 * 1000);
-      const ninetyDaysAgoUTC = new Date(todayUTC.getTime() - 90 * 24 * 60 * 60 * 1000);
+      const oneEightyDaysAgo = new Date(
+        now.getTime() - 180 * 24 * 60 * 60 * 1000
+      );
+      const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+      const oneEightyDaysAgoBounds = getDayBoundsInTimezone(
+        timezone,
+        oneEightyDaysAgo
+      );
+      const ninetyDaysAgoBounds = getDayBoundsInTimezone(
+        timezone,
+        ninetyDaysAgo
+      );
       return {
-        from: oneEightyDaysAgoUTC,
-        to: ninetyDaysAgoUTC,
+        from: oneEightyDaysAgoBounds.start,
+        to: ninetyDaysAgoBounds.end,
       };
     case "alltime":
       return null; // No comparison for all time

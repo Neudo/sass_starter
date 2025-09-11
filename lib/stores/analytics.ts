@@ -1,7 +1,11 @@
 import { create } from "zustand";
 import { createClient } from "@/lib/supabase/client";
 import { normalizeReferrer, getChannel } from "@/lib/referrer-helper";
-import { getPreviousDateRange, DateRangeOption } from "@/components/DateFilter";
+import {
+  getPreviousDateRange,
+  getDateRange,
+  DateRangeOption,
+} from "@/components/DateFilter";
 
 export interface Filter {
   type: FilterType;
@@ -112,8 +116,9 @@ export interface AnalyticsData {
 interface AnalyticsStore {
   // State
   siteId: string | null;
+  timezone: string;
   dateRange: { from: Date; to: Date } | null;
-  dateRangeOption: string;
+  dateRangeOption: DateRangeOption;
   allSessions: Session[];
   previousSessions: Session[];
   loading: boolean;
@@ -161,8 +166,8 @@ interface AnalyticsStore {
   // Actions
   fetchAllData: (
     siteId: string,
-    dateRange: { from: Date; to: Date } | null,
-    dateRangeOption: string
+    dateRangeOption: DateRangeOption,
+    timezone: string
   ) => Promise<void>;
   addFilter: (filter: Filter) => void;
   removeFilter: (type: FilterType, value: string) => void;
@@ -175,8 +180,9 @@ interface AnalyticsStore {
 export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
   // Initial state
   siteId: null,
+  timezone: "UTC",
   dateRange: null,
-  dateRangeOption: "alltime",
+  dateRangeOption: "alltime" as DateRangeOption,
   allSessions: [],
   previousSessions: [],
   loading: false,
@@ -481,8 +487,10 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
 
     // Sources
     const channelCounts: Record<string, number> = {};
-    const sourceCounts: Record<string, { count: number; displayName: string; rawValues: string[] }> =
-      {};
+    const sourceCounts: Record<
+      string,
+      { count: number; displayName: string; rawValues: string[] }
+    > = {};
 
     analyticsFilteredSessions.forEach((session) => {
       // Channels
@@ -521,7 +529,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
         sourceCounts[displayName] = { count: 0, displayName, rawValues: [] };
       }
       sourceCounts[displayName].count += 1;
-      
+
       // Keep track of all raw values for this display name
       if (!sourceCounts[displayName].rawValues.includes(rawSource)) {
         sourceCounts[displayName].rawValues.push(rawSource);
@@ -556,11 +564,11 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
 
     // Plausible-style metrics calculation
     const totalVisits = filteredSessions.length; // Total sessions/visits
-    
+
     // Following Plausible's approach: 1 session = 1 visitor
     // "If a person visits from multiple devices or on multiple days, they are counted as separate visitors"
     const visitors = totalVisits;
-    
+
     let totalPageviews = 0;
     let totalDuration = 0;
     let bounceCount = 0;
@@ -619,7 +627,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       // Calculate metrics for previous period, even if no sessions
       const prevTotalVisits = previousSessions.length;
       const prevVisitors = prevTotalVisits; // 1 session = 1 visitor
-      
+
       let prevTotalPageviews = 0;
       let prevBounceCount = 0;
       let prevTotalDuration = 0;
@@ -793,10 +801,18 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
   // Actions
   fetchAllData: async (
     siteId: string,
-    dateRange: { from: Date; to: Date } | null,
-    dateRangeOption: string
+    dateRangeOption: DateRangeOption,
+    timezone: string
   ) => {
-    set({ loading: true, error: null, siteId, dateRange, dateRangeOption });
+    const dateRange = getDateRange(dateRangeOption, timezone);
+    set({
+      loading: true,
+      error: null,
+      siteId,
+      timezone,
+      dateRange,
+      dateRangeOption,
+    });
 
     try {
       const supabase = createClient();
@@ -875,7 +891,8 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       // Fetch previous period data for trends
       let previousSessions: Session[] = [];
       const previousRange = getPreviousDateRange(
-        dateRangeOption as DateRangeOption
+        dateRangeOption as DateRangeOption,
+        timezone
       );
 
       if (previousRange && !isRealtimeMode) {

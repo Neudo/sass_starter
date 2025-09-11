@@ -237,7 +237,7 @@ export function FunnelsAndEventsCard({
   }, [siteId, dateRange, isRealtimeMode, isPublic, domain, filters]);
 
   return (
-    <Card className="w-full min-h-[400px] md:min-h-[558px]">
+    <Card className="w-full min-h-[400px] md:min-h-[570px]">
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Activity className="h-4 w-4 text-muted-foreground" />
@@ -245,8 +245,8 @@ export function FunnelsAndEventsCard({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="funnels" className="w-full h-[490px]">
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs defaultValue="funnels" className="w-full h-[500px]">
+          <TabsList className="grid w-full grid-cols-2 md:h-14">
             <TabsTrigger value="funnels" className="flex items-center gap-2">
               <Funnel className="h-4 w-4" />
               Funnels
@@ -257,10 +257,7 @@ export function FunnelsAndEventsCard({
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent
-            value="funnels"
-            className="space-y-4 flex flex-col justify-center"
-          >
+          <TabsContent value="funnels" className="space-y-4">
             <div className="space-y-3">
               {loading ? (
                 <div className="text-sm text-muted-foreground">
@@ -277,9 +274,6 @@ export function FunnelsAndEventsCard({
               ) : (
                 <>
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Select Funnel
-                    </label>
                     <Select
                       value={selectedFunnel}
                       onValueChange={setSelectedFunnel}
@@ -314,10 +308,7 @@ export function FunnelsAndEventsCard({
             </div>
           </TabsContent>
 
-          <TabsContent
-            value="events"
-            className="space-y-4 flex flex-col justify-center"
-          >
+          <TabsContent value="events" className="space-y-4">
             <div className="space-y-3">
               {loadingCustomEvents ? (
                 <div className="text-sm text-muted-foreground">
@@ -325,7 +316,7 @@ export function FunnelsAndEventsCard({
                 </div>
               ) : (
                 <>
-                  <div className="space-y-2">
+                  <div className="space-y-2 pt-4 md:pt-8">
                     {customEvents
                       .filter((event) => event.is_active)
                       .map((event) => (

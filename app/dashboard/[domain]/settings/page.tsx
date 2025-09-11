@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useRef } from "react";
+import { useParams } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -14,27 +15,74 @@ import { Button } from "@/components/ui/button";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TIMEZONES } from "@/lib/constants/timezones";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
+
+interface SiteData {
+  domain: string;
+  timezone: string;
+}
 
 export default function GeneralSettingsPage() {
+  const params = useParams();
+  const domain = params.domain as string;
+
+  const [siteData, setSiteData] = useState<SiteData | null>(null);
   const [selectedTimezone, setSelectedTimezone] = useState("UTC");
   const [openTimezoneCombobox, setOpenTimezoneCombobox] = useState(false);
   const [timezoneSearchQuery, setTimezoneSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const supabase = createClient();
+
+  // Load site data on mount
+  useEffect(() => {
+    const loadSiteData = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("sites")
+          .select("domain, timezone")
+          .eq("domain", domain)
+          .single();
+
+        if (error) {
+          console.error("Error loading site data:", error);
+          toast.error("Failed to load site data");
+          return;
+        }
+
+        setSiteData(data);
+        setSelectedTimezone(data.timezone || "UTC");
+      } catch (error) {
+        console.error("Error loading site data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (domain) {
+      loadSiteData();
+    }
+  }, [domain, supabase]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setOpenTimezoneCombobox(false);
       }
     };
 
     if (openTimezoneCombobox) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [openTimezoneCombobox]);
 
@@ -44,10 +92,42 @@ export default function GeneralSettingsPage() {
 
     return TIMEZONES.filter(
       (timezone) =>
-        timezone.label.toLowerCase().includes(timezoneSearchQuery.toLowerCase()) ||
+        timezone.label
+          .toLowerCase()
+          .includes(timezoneSearchQuery.toLowerCase()) ||
         timezone.value.toLowerCase().includes(timezoneSearchQuery.toLowerCase())
     );
   }, [timezoneSearchQuery]);
+
+  // Handle timezone change and update database
+  const handleTimezoneChange = async (newTimezone: string) => {
+    const oldTimezone = selectedTimezone;
+    setSelectedTimezone(newTimezone);
+    setOpenTimezoneCombobox(false);
+    setTimezoneSearchQuery("");
+
+    try {
+      const { error } = await supabase
+        .from("sites")
+        .update({ timezone: newTimezone })
+        .eq("domain", domain);
+
+      if (error) {
+        // Revert on error
+        setSelectedTimezone(oldTimezone);
+        console.error("Error updating timezone:", error);
+        toast.error("Failed to update timezone");
+        return;
+      }
+
+      toast.success("Timezone updated successfully");
+    } catch (error) {
+      // Revert on error
+      setSelectedTimezone(oldTimezone);
+      console.error("Error updating timezone:", error);
+      toast.error("Failed to update timezone");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -66,7 +146,7 @@ export default function GeneralSettingsPage() {
               type="text"
               disabled
               className="bg-muted"
-              placeholder="example.com"
+              value={isLoading ? "Loading..." : siteData?.domain || domain}
             />
           </div>
 
@@ -81,14 +161,15 @@ export default function GeneralSettingsPage() {
             >
               {selectedTimezone ? (
                 <span className="truncate">
-                  {TIMEZONES.find((tz) => tz.value === selectedTimezone)?.label || selectedTimezone}
+                  {TIMEZONES.find((tz) => tz.value === selectedTimezone)
+                    ?.label || selectedTimezone}
                 </span>
               ) : (
                 "Select timezone..."
               )}
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
-            
+
             {/* Custom Dropdown */}
             {openTimezoneCombobox && (
               <div className="absolute top-full mt-1 w-full bg-popover border rounded-md shadow-lg z-50">
@@ -110,11 +191,7 @@ export default function GeneralSettingsPage() {
                         <div
                           key={timezone.value}
                           className="flex items-center p-2 cursor-pointer hover:bg-accent rounded-sm"
-                          onClick={() => {
-                            setSelectedTimezone(timezone.value);
-                            setOpenTimezoneCombobox(false);
-                            setTimezoneSearchQuery("");
-                          }}
+                          onClick={() => handleTimezoneChange(timezone.value)}
                         >
                           <Check
                             className={cn(
@@ -132,13 +209,12 @@ export default function GeneralSettingsPage() {
                 </div>
               </div>
             )}
-            
+
             <p className="text-sm text-muted-foreground">
-              This ensures your analytics filters (Today, Yesterday, etc.) are accurate
+              This ensures your analytics filters (Today, Yesterday, etc.) are
+              accurate
             </p>
           </div>
-
-          <Button>Save Changes</Button>
         </CardContent>
       </Card>
 
