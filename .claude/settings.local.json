@@ -26,7 +26,8 @@
       "Bash(pnpm lint:*)",
       "Bash(sed:*)",
       "Bash(grep:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "mcp__supabase__list_migrations"
     ]
   },
   "enableAllProjectMcpServers": true,
