@@ -12,11 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Loader2,
-  Copy,
-  ExternalLink,
-} from "lucide-react";
+import { Loader2, Copy, ExternalLink } from "lucide-react";
 import { togglePublicDashboard } from "../actions";
 import { toast } from "sonner";
 
@@ -128,48 +124,6 @@ export function PublicDashboardSettings({
               <span>Updating settings...</span>
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Privacy Settings</CardTitle>
-          <CardDescription>
-            Control what data is visible in your public dashboard
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Show visitor locations</Label>
-              <p className="text-sm text-muted-foreground">
-                Display country and city information
-              </p>
-            </div>
-            <Switch defaultChecked />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Show referrer information</Label>
-              <p className="text-sm text-muted-foreground">
-                Display where visitors came from
-              </p>
-            </div>
-            <Switch defaultChecked />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Show top pages</Label>
-              <p className="text-sm text-muted-foreground">
-                Display most visited pages
-              </p>
-            </div>
-            <Switch defaultChecked />
-          </div>
-
-          <Button variant="outline">Save Privacy Settings</Button>
         </CardContent>
       </Card>
     </div>

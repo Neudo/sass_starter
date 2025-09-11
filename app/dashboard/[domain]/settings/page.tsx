@@ -1,3 +1,6 @@
+"use client";
+
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -8,9 +11,44 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { TIMEZONES } from "@/lib/constants/timezones";
 
 export default function GeneralSettingsPage() {
+  const [selectedTimezone, setSelectedTimezone] = useState("UTC");
+  const [openTimezoneCombobox, setOpenTimezoneCombobox] = useState(false);
+  const [timezoneSearchQuery, setTimezoneSearchQuery] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpenTimezoneCombobox(false);
+      }
+    };
+
+    if (openTimezoneCombobox) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openTimezoneCombobox]);
+
+  // Filter timezones based on search query
+  const filteredTimezones = useMemo(() => {
+    if (!timezoneSearchQuery) return TIMEZONES;
+
+    return TIMEZONES.filter(
+      (timezone) =>
+        timezone.label.toLowerCase().includes(timezoneSearchQuery.toLowerCase()) ||
+        timezone.value.toLowerCase().includes(timezoneSearchQuery.toLowerCase())
+    );
+  }, [timezoneSearchQuery]);
+
   return (
     <div className="space-y-6">
       <Card>
@@ -32,22 +70,72 @@ export default function GeneralSettingsPage() {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="site-name">Site Name</Label>
-            <Input
-              id="site-name"
-              type="text"
-              placeholder="My Awesome Website"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              placeholder="A brief description of your website..."
-              rows={3}
-            />
+          <div className="space-y-2 relative" ref={dropdownRef}>
+            <Label htmlFor="timezone">Site Timezone</Label>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={openTimezoneCombobox}
+              className="w-full justify-between"
+              onClick={() => setOpenTimezoneCombobox(!openTimezoneCombobox)}
+            >
+              {selectedTimezone ? (
+                <span className="truncate">
+                  {TIMEZONES.find((tz) => tz.value === selectedTimezone)?.label || selectedTimezone}
+                </span>
+              ) : (
+                "Select timezone..."
+              )}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+            
+            {/* Custom Dropdown */}
+            {openTimezoneCombobox && (
+              <div className="absolute top-full mt-1 w-full bg-popover border rounded-md shadow-lg z-50">
+                <div className="p-2">
+                  <Input
+                    placeholder="Search timezone..."
+                    value={timezoneSearchQuery}
+                    onChange={(e) => setTimezoneSearchQuery(e.target.value)}
+                    className="mb-2"
+                    autoFocus
+                  />
+                  <div className="max-h-60 overflow-y-auto">
+                    {filteredTimezones.length === 0 ? (
+                      <div className="py-6 text-center text-sm text-muted-foreground">
+                        No results found.
+                      </div>
+                    ) : (
+                      filteredTimezones.map((timezone) => (
+                        <div
+                          key={timezone.value}
+                          className="flex items-center p-2 cursor-pointer hover:bg-accent rounded-sm"
+                          onClick={() => {
+                            setSelectedTimezone(timezone.value);
+                            setOpenTimezoneCombobox(false);
+                            setTimezoneSearchQuery("");
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "h-4 w-4 mr-2",
+                              selectedTimezone === timezone.value
+                                ? "opacity-100"
+                                : "opacity-0"
+                            )}
+                          />
+                          <span className="truncate">{timezone.label}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <p className="text-sm text-muted-foreground">
+              This ensures your analytics filters (Today, Yesterday, etc.) are accurate
+            </p>
           </div>
 
           <Button>Save Changes</Button>

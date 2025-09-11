@@ -63,7 +63,7 @@ export function FunnelsAndEventsCard({
   const [selectedFunnel, setSelectedFunnel] = useState<string>("");
   const [funnels, setFunnels] = useState<Funnel[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Get filters from analytics store for authenticated users
   const { filters } = useAnalyticsStore();
 
@@ -73,7 +73,7 @@ export function FunnelsAndEventsCard({
         let url: string;
 
         let funnelsData: any[] = [];
-        
+
         if (isPublic && domain) {
           // Use public endpoint for public dashboard (no additional filters)
           url = `/api/public-funnels-analytics?domain=${domain}`;
@@ -81,7 +81,7 @@ export function FunnelsAndEventsCard({
           if (dateRange?.from && dateRange?.to) {
             url += `&from=${dateRange.from.toISOString()}&to=${dateRange.to.toISOString()}`;
           }
-          
+
           const response = await fetch(url);
           if (response.ok) {
             funnelsData = await response.json();
@@ -91,28 +91,28 @@ export function FunnelsAndEventsCard({
           const payload = {
             siteId,
             dateRange,
-            filters: filters.map(f => ({ type: f.type, value: f.value }))
+            filters: filters.map((f) => ({ type: f.type, value: f.value })),
           };
-          
-          const response = await fetch('/api/filtered-funnels', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+
+          const response = await fetch("/api/filtered-funnels", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
           });
           if (response.ok) {
             funnelsData = await response.json();
           }
         }
-        
+
         // Filter only active funnels and extract basic info
         const activeFunnels = funnelsData
           .filter((funnel: any) => funnel.is_active)
           .map((funnel: any) => ({
-              id: funnel.id,
-              name: funnel.name,
-              description: funnel.description,
-              is_active: funnel.is_active,
-            }));
+            id: funnel.id,
+            name: funnel.name,
+            description: funnel.description,
+            is_active: funnel.is_active,
+          }));
         setFunnels(activeFunnels);
 
         // Select first funnel by default if available
@@ -137,7 +137,15 @@ export function FunnelsAndEventsCard({
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [siteId, dateRange, isRealtimeMode, isPublic, domain, selectedFunnel, filters]);
+  }, [
+    siteId,
+    dateRange,
+    isRealtimeMode,
+    isPublic,
+    domain,
+    selectedFunnel,
+    filters,
+  ]);
 
   const [customEvents, setCustomEvents] = useState<
     Array<{
@@ -164,7 +172,7 @@ export function FunnelsAndEventsCard({
     const fetchCustomEvents = async () => {
       try {
         let eventsData: any[] = [];
-        
+
         if (isPublic && domain) {
           // Use public endpoint for public dashboard (no additional filters)
           let url = `/api/public-custom-events-analytics?domain=${domain}`;
@@ -174,7 +182,7 @@ export function FunnelsAndEventsCard({
           } else if (dateRange?.from && dateRange?.to) {
             url += `&from=${dateRange.from.toISOString()}&to=${dateRange.to.toISOString()}`;
           }
-          
+
           const response = await fetch(url);
           if (response.ok) {
             eventsData = await response.json();
@@ -184,15 +192,15 @@ export function FunnelsAndEventsCard({
           const payload = {
             siteId,
             dateRange,
-            filters: filters.map(f => ({ type: f.type, value: f.value }))
+            filters: filters.map((f) => ({ type: f.type, value: f.value })),
           };
-          
-          const response = await fetch('/api/filtered-custom-events', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+
+          const response = await fetch("/api/filtered-custom-events", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
           });
-          
+
           if (response.ok) {
             eventsData = await response.json();
           }
@@ -237,7 +245,7 @@ export function FunnelsAndEventsCard({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="funnels" className="w-full">
+        <Tabs defaultValue="funnels" className="w-full h-[490px]">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="funnels" className="flex items-center gap-2">
               <Funnel className="h-4 w-4" />
@@ -249,7 +257,10 @@ export function FunnelsAndEventsCard({
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="funnels" className="space-y-4">
+          <TabsContent
+            value="funnels"
+            className="space-y-4 flex flex-col justify-center"
+          >
             <div className="space-y-3">
               {loading ? (
                 <div className="text-sm text-muted-foreground">
@@ -303,12 +314,11 @@ export function FunnelsAndEventsCard({
             </div>
           </TabsContent>
 
-          <TabsContent value="events" className="space-y-4">
+          <TabsContent
+            value="events"
+            className="space-y-4 flex flex-col justify-center"
+          >
             <div className="space-y-3">
-              <div className="text-sm text-muted-foreground mb-3">
-                Active custom events on your site
-              </div>
-
               {loadingCustomEvents ? (
                 <div className="text-sm text-muted-foreground">
                   Loading custom events...

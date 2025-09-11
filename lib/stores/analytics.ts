@@ -481,7 +481,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
 
     // Sources
     const channelCounts: Record<string, number> = {};
-    const sourceCounts: Record<string, { count: number; displayName: string }> =
+    const sourceCounts: Record<string, { count: number; displayName: string; rawValues: string[] }> =
       {};
 
     analyticsFilteredSessions.forEach((session) => {
@@ -516,10 +516,16 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       const sourceInfo = normalizeReferrer(rawSource, !!session.utm_source);
       const displayName = sourceInfo.displayName;
 
-      if (!sourceCounts[rawSource]) {
-        sourceCounts[rawSource] = { count: 0, displayName };
+      // Group by displayName instead of rawSource to merge duplicates
+      if (!sourceCounts[displayName]) {
+        sourceCounts[displayName] = { count: 0, displayName, rawValues: [] };
       }
-      sourceCounts[rawSource].count += 1;
+      sourceCounts[displayName].count += 1;
+      
+      // Keep track of all raw values for this display name
+      if (!sourceCounts[displayName].rawValues.includes(rawSource)) {
+        sourceCounts[displayName].rawValues.push(rawSource);
+      }
     });
 
     const channelTotal = Object.values(channelCounts).reduce(
@@ -540,9 +546,9 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       .sort((a, b) => b.count - a.count);
 
     const sources = Object.entries(sourceCounts)
-      .map(([rawValue, data]) => ({
+      .map(([, data]) => ({
         name: data.displayName,
-        rawValue,
+        rawValue: data.rawValues[0], // Use the first raw value for filtering
         count: data.count,
         percentage: sourceTotal > 0 ? (data.count / sourceTotal) * 100 : 0,
       }))
