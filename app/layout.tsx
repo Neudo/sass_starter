@@ -28,8 +28,10 @@ export const metadata: Metadata = {
     url: "https://www.hectoranalytics.com",
     siteName: "Hector Analytics",
     type: "website",
+    images: ["/images/twitter-card.jpg"],
   },
   twitter: {
+    images: ["/images/twitter-card.jpg"],
     card: "summary_large_image",
     title: "Hector Analytics | Privacy-First Web Analytics",
     description:
