@@ -14,7 +14,7 @@ Now that you've added your website, it's time to install the tracking script. Th
 Your script will look something like this:
 
 ```html
-<script async src="https://analytics.hectoranalytics.com/script.js"></script>
+<script src="https://www.hectoranalytics.com/script.js" defer></script>
 ```
 
 ## Installation
@@ -33,10 +33,7 @@ Place the script just before the closing `</body>` tag:
     <!-- Your content -->
 
     <!-- Hector Analytics -->
-    <script
-      async
-      src="https://analytics.hectoranalytics.com/script.js"
-    ></script>
+    <script src="https://www.hectoranalytics.com/script.js" defer></script>
   </body>
 </html>
 ```
@@ -45,21 +42,9 @@ Place the script just before the closing `</body>` tag:
 
 ### WordPress
 
-**Option A: Theme Files**
+**Plugin**
 
-1. Go to Appearance → Theme Editor
-2. Edit `header.php`
-3. Add the script before `</head>`
-
-**Option B: Plugin**
-
-1. Install a "Header and Footer Scripts" plugin
-2. Paste the script in the header section
-
-**Option C: WordPress Admin**
-
-1. Go to Appearance → Customize
-2. Additional CSS → Add the script in a Custom HTML widget
+Puglin for WordPress coming soon.
 
 ### React/Next.js
 

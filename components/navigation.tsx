@@ -57,7 +57,7 @@ export function Navigation() {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8 text-xl">
+            <div className="hidden-el md:flex items-center space-x-8 text-xl">
               {/* Resources Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -99,7 +99,7 @@ export function Navigation() {
             </div>
 
             {/* CTA Buttons + Theme Toggle */}
-            <div className="hidden md:flex items-center space-x-4">
+            <div className="hidden-el md:flex items-center space-x-4">
               {isLoggedIn ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

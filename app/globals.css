@@ -543,3 +543,7 @@ svg {
     @apply list-disc list-inside mb-6;
   }
 }
+
+.hidden-el {
+  display: none;
+}
