@@ -100,8 +100,11 @@ export async function POST(req: NextRequest) {
     // Block sessions with suspicious null geolocation data (likely bots/proxies)
     if (
       locationData.country === null ||
+      locationData.country === "unknown" ||
       locationData.region === null ||
-      locationData.city === null
+      locationData.region === "unknown" ||
+      locationData.city === null ||
+      locationData.city === "unknown"
     ) {
       return new NextResponse(null, {
         status: 204,
