@@ -59,6 +59,15 @@ export default function RootLayout({
 }>) {
   return (
     <html suppressHydrationWarning lang="en" className={geistSans.variable}>
+      <head>
+        <Script
+          id="schema-org"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(combinedHomeSchema),
+          }}
+        />
+      </head>
       <body suppressHydrationWarning className="antialiased">
         <ThemeProvider
           attribute="class"
@@ -68,14 +77,7 @@ export default function RootLayout({
           {children}
           <Toaster />
         </ThemeProvider>
-        <Script
-          id="schema-org"
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(combinedHomeSchema),
-          }}
-        />
-        <Script src="/script.js" />
+        <Script src="/script.js" defer />
       </body>
     </html>
   );
