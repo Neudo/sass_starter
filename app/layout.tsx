@@ -8,7 +8,7 @@ import Script from "next/script";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
+  : "https://www.hectoranalytics.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
@@ -19,18 +19,18 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
   },
   alternates: {
-    canonical: "https://www.hectoranalytics.com",
+    canonical: defaultUrl,
   },
   openGraph: {
     title: "Hector Analytics | Privacy-First Web Analytics",
     description:
       "Cookie-free, GDPR compliant analytics that respects user privacy while delivering powerful insights.",
-    url: "https://www.hectoranalytics.com",
+    url: defaultUrl,
     siteName: "Hector Analytics",
     type: "website",
     images: [
       {
-        url: "https://www.hectoranalytics.com/images/twitter-card.jpg",
+        url: "/images/twitter-card.jpg",
         width: 1200,
         height: 630,
         alt: "Hector Analytics - Privacy-First Web Analytics",
@@ -38,11 +38,11 @@ export const metadata: Metadata = {
     ],
   },
   twitter: {
-    images: ["https://www.hectoranalytics.com/images/twitter-card.jpg"],
     card: "summary_large_image",
     title: "Hector Analytics | Privacy-First Web Analytics",
     description:
       "Cookie-free, GDPR compliant analytics that respects user privacy while delivering powerful insights.",
+    images: ["/images/twitter-card.jpg"],
   },
 };
 
