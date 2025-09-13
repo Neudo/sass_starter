@@ -6,8 +6,8 @@ import { combinedHomeSchema } from "@/lib/schema";
 import "./globals.css";
 import Script from "next/script";
 
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
+const defaultUrl = process.env.NEXT_PUBLIC_SITE_URL
+  ? `https://${process.env.NEXT_PUBLIC_SITE_URL}`
   : "https://www.hectoranalytics.com";
 
 export const metadata: Metadata = {
