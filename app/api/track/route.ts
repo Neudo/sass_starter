@@ -45,8 +45,25 @@ export async function POST(req: NextRequest) {
     const ip = extractClientIP(req.headers);
     const locationData = await getLocationFromIP(ip);
 
-    // Parse traffic source
-    const trafficSource = parseTrafficSource(urlParams, referrer);
+    // Filter out internal referrers before parsing traffic source
+    let filteredReferrer = referrer;
+    if (referrer) {
+      try {
+        const referrerUrl = new URL(referrer);
+        const referrerHost = referrerUrl.hostname.replace('www.', '');
+        const currentHost = domain.replace('www.', '');
+        
+        // If referrer is from the same domain, treat as no referrer
+        if (referrerHost === currentHost) {
+          filteredReferrer = null;
+        }
+      } catch {
+        // Keep referrer as is if not a valid URL
+      }
+    }
+    
+    // Parse traffic source with filtered referrer
+    const trafficSource = parseTrafficSource(urlParams, filteredReferrer);
 
     // Normalize domain - handle both with and without www
     const domainVariants = [domain];

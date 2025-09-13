@@ -20,7 +20,7 @@
     }).catch(() => {});
   const d = () => {
     if (window.h_session_id) return window.h_session_id;
-
+    
     try {
       let id = localStorage.getItem("user_session_id");
       if (!id) {
@@ -57,7 +57,7 @@
   }
   function k(dom, id) {
     r(u(`tracking-config?siteId=${dom}`))
-      .then((res) => (res?.ok ? res.json() : null))
+      .then((res) => res?.ok ? res.json() : null)
       .then((config) => {
         if (config) {
           f = config.funnelSteps || [];
@@ -82,7 +82,8 @@
             step_id: step.id,
             session_id: id,
             site_domain: dom,
-          }).catch(() => {});
+          })
+          .catch(() => {});
         }
         return;
       }
@@ -221,7 +222,8 @@
             step_id: config.id,
             session_id: id,
             site_domain: dom,
-          }).catch(() => {});
+          })
+          .catch(() => {});
         } else {
           w(config.name, dom, id, data);
         }
