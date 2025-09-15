@@ -11,6 +11,7 @@ interface VerificationStepProps {
   timezone: string;
   onPrevious: () => void;
   cleanDomainName: (domain: string) => string;
+  redirectPath?: string;
 }
 
 export function VerificationStep({
@@ -18,6 +19,7 @@ export function VerificationStep({
   timezone,
   onPrevious,
   cleanDomainName,
+  redirectPath,
 }: VerificationStepProps) {
   const [verificationStatus, setVerificationStatus] = useState<
     "idle" | "checking" | "success" | "error"
@@ -140,7 +142,8 @@ export function VerificationStep({
 
         // Redirect to dashboard after 2 seconds
         setTimeout(() => {
-          router.push(`/dashboard/${cleanDomain}`);
+          const redirectUrl = redirectPath || `/dashboard/${cleanDomain}`;
+          router.push(redirectUrl);
         }, 2000);
       } else if (!earlyCheck) {
         // If not an early check and still not installed, show error

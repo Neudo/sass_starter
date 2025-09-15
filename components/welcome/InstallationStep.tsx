@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { CheckCircle2, Copy, ArrowRight, ArrowLeft, Info } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Checkbox } from "@/components/ui/checkbox";
 interface InstallationStepProps {
   onNext: () => void;
   onPrevious: () => void;
@@ -17,13 +16,9 @@ export function InstallationStep({
   onPrevious,
 }: InstallationStepProps) {
   const [copied, setCopied] = useState(false);
-  const [scriptType, setScriptType] = useState<boolean>(false);
 
   const getScriptCode = () => {
-    const scriptFile = scriptType
-      ? "script-funnels-and-custom-events.js"
-      : "script.js";
-    return `<script defer src="https://www.hectoranalytics.com/${scriptFile}"></script>`;
+    return `<script defer src="https://www.hectoranalytics.com/script.js"></script>`;
   };
 
   const handleCopyScript = () => {
@@ -48,17 +43,6 @@ export function InstallationStep({
       </div>
 
       <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="script-type">Script options</Label>
-          <div className="flex items-center gap-3">
-            <Checkbox
-              id="full"
-              checked={scriptType}
-              onCheckedChange={(checked) => setScriptType(checked === true)}
-            />
-            <Label htmlFor="full">Funnel & customs events</Label>
-          </div>
-        </div>
         <div className="space-y-2">
           <Label>Tracking Script</Label>
           <div className="relative">
