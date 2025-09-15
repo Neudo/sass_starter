@@ -840,6 +840,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       // Fetch page views for all sessions
       const sessionIds = sessions?.map((s) => s.id) || [];
       let pageViewsData: PageView[] = [];
+      let entryPagesData: Array<{ session_id: string; page_path: string }> = [];
 
       if (sessionIds.length > 0) {
         let pageViewQuery = supabase
@@ -853,6 +854,15 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
             Date.now() - 30 * 60 * 1000
           ).toISOString();
           pageViewQuery = pageViewQuery.gte("created_at", thirtyMinutesAgo);
+          
+          // For realtime mode, also fetch entry pages separately (without time filter)
+          const { data: entryPages } = await supabase
+            .from("page_views")
+            .select("session_id, page_path")
+            .in("session_id", sessionIds)
+            .eq("entry_page", true);
+          
+          entryPagesData = entryPages || [];
         } else if (dateRange) {
           pageViewQuery = pageViewQuery
             .gte("created_at", dateRange.from.toISOString())
@@ -881,12 +891,35 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
         });
       });
 
+      // Create a map of entry pages by session for realtime mode
+      const entryPagesBySession = new Map<string, string>();
+      if (isRealtimeMode) {
+        entryPagesData.forEach((ep) => {
+          entryPagesBySession.set(ep.session_id, ep.page_path);
+        });
+      }
+
       // Add page views to sessions
       const sessionsWithPageViews =
-        sessions?.map((session) => ({
-          ...session,
-          page_views: pageViewsBySession.get(session.id) || [],
-        })) || [];
+        sessions?.map((session) => {
+          const pageViews = pageViewsBySession.get(session.id) || [];
+          
+          // For realtime mode, ensure entry page is included if we have it
+          if (isRealtimeMode && entryPagesBySession.has(session.id)) {
+            const entryPage = entryPagesBySession.get(session.id)!;
+            // Check if entry page is already in page_views
+            const hasEntryPage = pageViews.some(pv => pv.page_path === entryPage);
+            if (!hasEntryPage) {
+              // Add entry page at the beginning
+              pageViews.unshift({ page_path: entryPage, duration_seconds: 0 });
+            }
+          }
+          
+          return {
+            ...session,
+            page_views: pageViews,
+          };
+        }) || [];
 
       // Fetch previous period data for trends
       let previousSessions: Session[] = [];
