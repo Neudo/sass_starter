@@ -7,7 +7,6 @@ import { parseTrafficSource } from "@/lib/analytics/sources";
 import { shouldBlockRequest } from "@/lib/analytics/bot-detector";
 
 export async function POST(req: NextRequest) {
-  console.log("🚀 Tracking request received");
   try {
     // Get the origin of the request
     const origin = req.headers.get("origin") || "";
@@ -33,13 +32,6 @@ export async function POST(req: NextRequest) {
     const isProduction =
       process.env.NODE_ENV === "production" ||
       process.env.VERCEL_ENV === "production";
-    console.log("🚀 Environment check:", {
-      NODE_ENV: process.env.NODE_ENV,
-      VERCEL_ENV: process.env.VERCEL_ENV,
-      isProduction,
-      origin,
-      domain,
-    });
 
     // Verify that the origin matches the declared domain
     if (origin && isProduction) {

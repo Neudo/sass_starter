@@ -4,7 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Switch } from "./ui/switch";
 import { Slider } from "./ui/slider";
-import { Check, ArrowRight } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
+import { Check, ArrowRight, HelpCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
@@ -68,234 +74,256 @@ export function PricingSection({
   const yearlyPrice = professionalPrice.yearly[eventTier];
 
   return (
-    <section className={`${showFullPage ? "py-24" : "py-16"} bg-background`}>
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="text-center mb-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-          >
-            <Badge
-              variant="secondary"
-              className="mb-4 bg-primary/10 text-primary border-primary/20"
+    <TooltipProvider>
+      <section className={`${showFullPage ? "py-24" : "py-16"} bg-background`}>
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
             >
-              Pricing
-            </Badge>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-8">
-              Start Free, Scale When Ready
-            </h2>
-
-            {/* Annual/Monthly toggle */}
-            <div className="relative flex items-center justify-center gap-4 mb-10 bg-slate-50 dark:bg-slate-800 w-fit px-4 py-4 mx-auto rounded-lg">
-              <button
-                onClick={() => setIsYearly(false)}
-                className={`text-xl cursor-pointer transition-colors ${
-                  !isYearly
-                    ? "text-foreground font-medium"
-                    : "text-muted-foreground hover:text-foreground/80"
-                }`}
-              >
-                Monthly
-              </button>
-              <Switch
-                checked={isYearly}
-                onCheckedChange={setIsYearly}
-                className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-gray-300"
-              />
-              <button
-                onClick={() => setIsYearly(true)}
-                className={`text-xl cursor-pointer transition-colors ${
-                  isYearly
-                    ? "text-foreground font-medium"
-                    : "text-muted-foreground hover:text-foreground/80"
-                }`}
-              >
-                Annual
-              </button>
               <Badge
                 variant="secondary"
-                className="bg-green-50 text-green-700 border-green-200 absolute top-[-7px] right-[-30px]"
+                className="mb-4 bg-primary/10 text-primary border-primary/20"
               >
-                2 months free
+                Pricing
               </Badge>
-            </div>
-          </motion.div>
-        </div>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-8">
+                Start Free, Scale When Ready
+              </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 max-w-4xl mx-auto">
-          {/* Hobby Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            viewport={{ once: true }}
-          >
-            <Card className="relative h-full border-slate-100 hover:border-slate-200 dark:border-slate-800 dark:hover:border-slate-700 transition-colors">
-              <CardHeader className="text-center pb-8">
-                <CardTitle className="text-xl mb-2">Hobby</CardTitle>
-                <p className="text-muted-foreground mb-4">
-                  Perfect for personal projects and to discover.
-                </p>
-
-                <div className="space-y-2">
-                  <div className="text-lg font-semibold text-primary">
-                    3K events/month
-                  </div>
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-4xl font-bold text-white">$0</span>
-                  </div>
-                </div>
-              </CardHeader>
-
-              <CardContent className="space-y-4">
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  onClick={() => handleStartTrial("hobby")}
-                  disabled={loading}
+              {/* Annual/Monthly toggle */}
+              <div className="relative flex items-center justify-center gap-4 mb-10 bg-slate-50 dark:bg-slate-800 w-fit px-4 py-4 mx-auto rounded-lg">
+                <button
+                  onClick={() => setIsYearly(false)}
+                  className={`text-xl cursor-pointer transition-colors ${
+                    !isYearly
+                      ? "text-foreground font-medium"
+                      : "text-muted-foreground hover:text-foreground/80"
+                  }`}
                 >
-                  Start for free
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
+                  Monthly
+                </button>
+                <Switch
+                  checked={isYearly}
+                  onCheckedChange={setIsYearly}
+                  className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-gray-300"
+                />
+                <button
+                  onClick={() => setIsYearly(true)}
+                  className={`text-xl cursor-pointer transition-colors ${
+                    isYearly
+                      ? "text-foreground font-medium"
+                      : "text-muted-foreground hover:text-foreground/80"
+                  }`}
+                >
+                  Annual
+                </button>
+                <Badge
+                  variant="secondary"
+                  className="bg-green-50 text-green-700 border-green-200 absolute top-[-7px] right-[-30px]"
+                >
+                  2 months free
+                </Badge>
+              </div>
+            </motion.div>
+          </div>
 
-                <div className="flex items-start gap-3">
-                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-secondary" />
-                  <span className="text-sm">
-                    {PLAN_LIMITS.hobby.websites} websites max
-                  </span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-secondary" />
-                  <span className="text-sm">
-                    {PLAN_LIMITS.hobby.retention} data retention
-                  </span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-secondary" />
-                  <span className="text-sm">Basic analytics</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-secondary" />
-                  <span className="text-sm">Export data</span>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 max-w-4xl mx-auto">
+            {/* Hobby Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              viewport={{ once: true }}
+            >
+              <Card className="relative h-full border-slate-100 hover:border-slate-200 dark:border-slate-800 dark:hover:border-slate-700 transition-colors">
+                <CardHeader className="text-center pb-8">
+                  <CardTitle className="text-xl mb-2">Hobby</CardTitle>
+                  <p className="text-muted-foreground mb-4">
+                    Perfect for personal projects and to discover.
+                  </p>
 
-          {/* Professional Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            viewport={{ once: true }}
-          >
-            <Card className="relative h-full border-primary shadow-lg scale-105 ring-2 ring-primary/20">
-              <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground">
-                Most Popular
-              </Badge>
-
-              <CardHeader className="text-center pb-4">
-                <CardTitle className="text-xl mb-2">Professional</CardTitle>
-                <p className="text-muted-foreground mb-4">
-                  For serious businesses
-                </p>
-
-                {/* Event tier selector */}
-                <div className="mb-4">
-                  <div className="relative px-2">
-                    <Slider
-                      value={[eventTier]}
-                      onValueChange={(value) => setEventTier(value[0])}
-                      min={0}
-                      max={EVENT_TIERS.length - 1}
-                      step={1}
-                      className="mb-2"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="text-lg font-semibold text-primary mb-2">
-                    {EVENT_TIERS[eventTier].label} events/month
-                  </div>
-                  {isCustomTier ? (
-                    <div className="flex items-baseline justify-center gap-1">
-                      <span className="text-3xl font-bold text-primary">
-                        Custom
-                      </span>
+                  <div className="space-y-2">
+                    <div className="text-lg font-semibold text-primary flex items-center justify-center gap-1.5">
+                      3K events/month
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs text-sm">
+                            An event includes page views and custom events.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
-                  ) : (
-                    <>
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className="text-4xl font-bold text-white">$0</span>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={() => handleStartTrial("hobby")}
+                    disabled={loading}
+                  >
+                    Start for free
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+
+                  <div className="flex items-start gap-3">
+                    <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-secondary" />
+                    <span className="text-sm">
+                      {PLAN_LIMITS.hobby.websites} websites max
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-secondary" />
+                    <span className="text-sm">
+                      {PLAN_LIMITS.hobby.retention} data retention
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-secondary" />
+                    <span className="text-sm">Basic analytics</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-secondary" />
+                    <span className="text-sm">Export data</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Professional Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              viewport={{ once: true }}
+            >
+              <Card className="relative h-full border-primary shadow-lg scale-105 ring-2 ring-primary/20">
+                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground">
+                  Most Popular
+                </Badge>
+
+                <CardHeader className="text-center pb-4">
+                  <CardTitle className="text-xl mb-2">Professional</CardTitle>
+                  <p className="text-muted-foreground mb-4">
+                    For serious businesses
+                  </p>
+
+                  {/* Event tier selector */}
+                  <div className="mb-4">
+                    <div className="relative px-2">
+                      <Slider
+                        value={[eventTier]}
+                        onValueChange={(value) => setEventTier(value[0])}
+                        min={0}
+                        max={EVENT_TIERS.length - 1}
+                        step={1}
+                        className="mb-2"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="text-lg font-semibold text-primary mb-2 flex items-center justify-center gap-1.5">
+                      {EVENT_TIERS[eventTier].label} events/month
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs text-sm">
+                            An event includes page views and custom events.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    {isCustomTier ? (
                       <div className="flex items-baseline justify-center gap-1">
-                        <span className="text-4xl font-bold">
-                          ${isYearly ? yearlyPrice : monthlyPrice}
-                        </span>
-                        <span className="text-muted-foreground">
-                          {isYearly ? "/year" : "/month"}
+                        <span className="text-3xl font-bold text-primary">
+                          Custom
                         </span>
                       </div>
-                      {isYearly &&
-                        typeof monthlyPrice === "number" &&
-                        typeof yearlyPrice === "number" && (
-                          <div className="text-sm text-muted-foreground">
-                            <span className="line-through">
-                              ${monthlyPrice * 12}
-                            </span>
-                            <span className="ml-2 text-slate-500">
-                              ${(yearlyPrice / 12).toFixed(2)}/month
-                            </span>
-                          </div>
-                        )}
-                    </>
-                  )}
-                </div>
-              </CardHeader>
+                    ) : (
+                      <>
+                        <div className="flex items-baseline justify-center gap-1">
+                          <span className="text-4xl font-bold">
+                            ${isYearly ? yearlyPrice : monthlyPrice}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {isYearly ? "/year" : "/month"}
+                          </span>
+                        </div>
+                        {isYearly &&
+                          typeof monthlyPrice === "number" &&
+                          typeof yearlyPrice === "number" && (
+                            <div className="text-sm text-muted-foreground">
+                              <span className="line-through">
+                                ${monthlyPrice * 12}
+                              </span>
+                              <span className="ml-2 text-slate-500">
+                                ${(yearlyPrice / 12).toFixed(2)}/month
+                              </span>
+                            </div>
+                          )}
+                      </>
+                    )}
+                  </div>
+                </CardHeader>
 
-              <CardContent className="space-y-4">
-                <Button
-                  className="w-full"
-                  onClick={() => handleStartTrial("professional")}
-                  disabled={loading}
-                >
-                  {isCustomTier
-                    ? "Contact us"
-                    : showUpgradeButtons
-                      ? "Upgrade"
-                      : "Start now"}
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
+                <CardContent className="space-y-4">
+                  <Button
+                    className="w-full"
+                    onClick={() => handleStartTrial("professional")}
+                    disabled={loading}
+                  >
+                    {isCustomTier
+                      ? "Contact us"
+                      : showUpgradeButtons
+                        ? "Upgrade"
+                        : "Start now"}
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
 
-                <div className="flex items-start gap-3">
-                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
-                  <span className="text-sm">Unlimited websites</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
-                  <span className="text-sm">5 years data retention</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
-                  <span className="text-sm">Custom events</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
-                  <span className="text-sm">Funnels</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
-                  <span className="text-sm">Export/import data</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
-                  <span className="text-sm">Google Analytics import</span>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+                  <div className="flex items-start gap-3">
+                    <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
+                    <span className="text-sm">Unlimited websites</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
+                    <span className="text-sm">5 years data retention</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
+                    <span className="text-sm">Custom events</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
+                    <span className="text-sm">Funnels</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
+                    <span className="text-sm">Export/import data</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Check className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary" />
+                    <span className="text-sm">Google Analytics import</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </TooltipProvider>
   );
 }

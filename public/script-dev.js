@@ -1,6 +1,5 @@
 (function () {
   if (window.h && window.h.initialized) return;
-  console.log("🚀 Script-dev.js loaded");
   window.h = { initialized: true };
   let i,
     t = Date.now(),

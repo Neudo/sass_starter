@@ -28,7 +28,8 @@
       "Bash(grep:*)",
       "Bash(mv:*)",
       "mcp__supabase__list_migrations",
-      "Bash(npx terser:*)"
+      "Bash(npx terser:*)",
+      "Bash(npx shadcn@latest add:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
