@@ -15,7 +15,7 @@ import { TIMEZONES } from "@/lib/constants/timezones";
 import { ArrowRight, Loader2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { validatePublicDomain, cleanDomainName } from "@/lib/utils/domain";
+import { validatePublicDomain } from "@/lib/utils/domain";
 
 interface DomainInfoStepProps {
   domain: string;
@@ -36,7 +36,9 @@ export function DomainInfoStep({
 }: DomainInfoStepProps) {
   const [domainError, setDomainError] = useState<string | null>(null);
   const [isCheckingDomain, setIsCheckingDomain] = useState(false);
-  const [isDomainAvailable, setIsDomainAvailable] = useState<boolean | null>(null);
+  const [isDomainAvailable, setIsDomainAvailable] = useState<boolean | null>(
+    null
+  );
 
   // Check domain availability with debounce
   useEffect(() => {
@@ -142,7 +144,8 @@ export function DomainInfoStep({
           </SelectContent>
         </Select>
         <p className="text-sm text-muted-foreground">
-          This ensures your analytics filters (Today, Yesterday, etc.) are accurate
+          This ensures your analytics filters (Today, Yesterday, etc.) are
+          accurate
         </p>
       </div>
 
