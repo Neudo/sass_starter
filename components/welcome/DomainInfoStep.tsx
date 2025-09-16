@@ -15,6 +15,7 @@ import { TIMEZONES } from "@/lib/constants/timezones";
 import { ArrowRight, Loader2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { validatePublicDomain, cleanDomainName } from "@/lib/utils/domain";
 
 interface DomainInfoStepProps {
   domain: string;
@@ -50,11 +51,17 @@ export function DomainInfoStep({
       setIsCheckingDomain(true);
       setDomainError(null);
 
+      // Validate domain first
+      const validation = validatePublicDomain(domain);
+      if (!validation.isValid) {
+        setDomainError(validation.error!);
+        setIsDomainAvailable(false);
+        setIsCheckingDomain(false);
+        return;
+      }
+
       const supabase = createClient();
       const cleanDomain = cleanDomainName(domain);
-
-      console.log("🔍 Domain check - Original:", domain);
-      console.log("🔍 Domain check - Cleaned:", cleanDomain);
 
       try {
         const { data: existingSite } = await supabase
