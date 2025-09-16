@@ -8,9 +8,7 @@
     e = [],
     c = [],
     g = false;
-  const u = (p) => {
-    return `https://hectoranalytics.com/api/${p}`;
-  };
+  const u = (p) => `https://hectoranalytics.com/api/${p}`;
   const r = (url, data) =>
     fetch(url, {
       method: data ? "POST" : "GET",

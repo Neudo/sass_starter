@@ -8,6 +8,9 @@ import { shouldBlockRequest } from "@/lib/analytics/bot-detector";
 
 export async function POST(req: NextRequest) {
   try {
+    // Get the origin of the request
+    const origin = req.headers.get("origin") || "";
+    
     const { sessionId, page, domain, referrer, urlParams, language } =
       await req.json();
 
@@ -17,12 +20,60 @@ export async function POST(req: NextRequest) {
         {
           status: 400,
           headers: {
-            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Origin": origin || "*",
             "Access-Control-Allow-Methods": "POST, OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type",
           },
         }
       );
+    }
+    
+    // Environment-based domain validation
+    const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
+    
+    // Verify that the origin matches the declared domain
+    if (origin) {
+      const originDomain = new URL(origin).hostname.replace('www.', '');
+      const declaredDomain = domain.replace('www.', '');
+      
+      // In production: block localhost domains completely
+      if (isProduction) {
+        const isLocalhost = originDomain === 'localhost' || originDomain === '127.0.0.1' || originDomain.includes('.local');
+        const isLocalDomain = declaredDomain === 'localhost' || declaredDomain === '127.0.0.1' || declaredDomain.includes('.local');
+        
+        if (isLocalhost || isLocalDomain) {
+          return NextResponse.json(
+            { error: "Localhost domains not allowed in production" },
+            {
+              status: 403,
+              headers: {
+                "Access-Control-Allow-Origin": origin,
+                "Access-Control-Allow-Methods": "POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type",
+              },
+            }
+          );
+        }
+      }
+      
+      // Allow localhost for development, require exact match for production
+      const isLocalhost = originDomain === 'localhost' || originDomain === '127.0.0.1';
+      const isLocalDomain = declaredDomain === 'localhost' || declaredDomain === '127.0.0.1';
+      
+      // For production: origin must match declared domain exactly
+      if (!isLocalhost && !isLocalDomain && originDomain !== declaredDomain) {
+        return NextResponse.json(
+          { error: "Origin does not match declared domain" },
+          {
+            status: 403,
+            headers: {
+              "Access-Control-Allow-Origin": origin,
+              "Access-Control-Allow-Methods": "POST, OPTIONS",
+              "Access-Control-Allow-Headers": "Content-Type",
+            },
+          }
+        );
+      }
     }
 
     // Skip tracking for ALL dashboard pages (security: don't track private data)
@@ -30,7 +81,7 @@ export async function POST(req: NextRequest) {
       return new NextResponse(null, {
         status: 204,
         headers: {
-          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Origin": origin || "*",
           "Access-Control-Allow-Methods": "POST, OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type",
         },
@@ -86,7 +137,7 @@ export async function POST(req: NextRequest) {
         {
           status: 404,
           headers: {
-            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Origin": origin || "*",
             "Access-Control-Allow-Methods": "POST, OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type",
           },
@@ -107,7 +158,7 @@ export async function POST(req: NextRequest) {
       return new NextResponse(null, {
         status: 204,
         headers: {
-          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Origin": origin || "*",
           "Access-Control-Allow-Methods": "POST, OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type",
         },
@@ -126,7 +177,7 @@ export async function POST(req: NextRequest) {
       return new NextResponse(null, {
         status: 204,
         headers: {
-          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Origin": origin || "*",
           "Access-Control-Allow-Methods": "POST, OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type",
         },
@@ -322,7 +373,7 @@ export async function POST(req: NextRequest) {
     return new NextResponse(null, {
       status: 204,
       headers: {
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin": origin || "*",
         "Access-Control-Allow-Methods": "POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type",
       },
@@ -342,11 +393,12 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function OPTIONS() {
+export async function OPTIONS(req: NextRequest) {
+  const origin = req.headers.get("origin") || "";
   return new NextResponse(null, {
     status: 200,
     headers: {
-      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Origin": origin || "*",
       "Access-Control-Allow-Methods": "POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     },
