@@ -7,10 +7,11 @@ import { parseTrafficSource } from "@/lib/analytics/sources";
 import { shouldBlockRequest } from "@/lib/analytics/bot-detector";
 
 export async function POST(req: NextRequest) {
+  console.log("🚀 Tracking request received");
   try {
     // Get the origin of the request
     const origin = req.headers.get("origin") || "";
-    
+
     const { sessionId, page, domain, referrer, urlParams, language } =
       await req.json();
 
@@ -27,41 +28,50 @@ export async function POST(req: NextRequest) {
         }
       );
     }
-    
+
     // Environment-based domain validation
-    const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
-    
+    const isProduction =
+      process.env.NODE_ENV === "production" ||
+      process.env.VERCEL_ENV === "production";
+    console.log("🚀 Environment check:", {
+      NODE_ENV: process.env.NODE_ENV,
+      VERCEL_ENV: process.env.VERCEL_ENV,
+      isProduction,
+      origin,
+      domain,
+    });
+
     // Verify that the origin matches the declared domain
-    if (origin) {
-      const originDomain = new URL(origin).hostname.replace('www.', '');
-      const declaredDomain = domain.replace('www.', '');
-      
+    if (origin && isProduction) {
+      const originDomain = new URL(origin).hostname.replace("www.", "");
+      const declaredDomain = domain.replace("www.", "");
+
       // In production: block localhost domains completely
-      if (isProduction) {
-        const isLocalhost = originDomain === 'localhost' || originDomain === '127.0.0.1' || originDomain.includes('.local');
-        const isLocalDomain = declaredDomain === 'localhost' || declaredDomain === '127.0.0.1' || declaredDomain.includes('.local');
-        
-        if (isLocalhost || isLocalDomain) {
-          return NextResponse.json(
-            { error: "Localhost domains not allowed in production" },
-            {
-              status: 403,
-              headers: {
-                "Access-Control-Allow-Origin": origin,
-                "Access-Control-Allow-Methods": "POST, OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type",
-              },
-            }
-          );
-        }
+      const isLocalhost =
+        originDomain === "localhost" ||
+        originDomain === "127.0.0.1" ||
+        originDomain.includes(".local");
+      const isLocalDomain =
+        declaredDomain === "localhost" ||
+        declaredDomain === "127.0.0.1" ||
+        declaredDomain.includes(".local");
+
+      if (isLocalhost || isLocalDomain) {
+        return NextResponse.json(
+          { error: "Localhost domains not allowed in production" },
+          {
+            status: 403,
+            headers: {
+              "Access-Control-Allow-Origin": origin,
+              "Access-Control-Allow-Methods": "POST, OPTIONS",
+              "Access-Control-Allow-Headers": "Content-Type",
+            },
+          }
+        );
       }
-      
-      // Allow localhost for development, require exact match for production
-      const isLocalhost = originDomain === 'localhost' || originDomain === '127.0.0.1';
-      const isLocalDomain = declaredDomain === 'localhost' || declaredDomain === '127.0.0.1';
-      
+
       // For production: origin must match declared domain exactly
-      if (!isLocalhost && !isLocalDomain && originDomain !== declaredDomain) {
+      if (originDomain !== declaredDomain) {
         return NextResponse.json(
           { error: "Origin does not match declared domain" },
           {
@@ -101,9 +111,9 @@ export async function POST(req: NextRequest) {
     if (referrer) {
       try {
         const referrerUrl = new URL(referrer);
-        const referrerHost = referrerUrl.hostname.replace('www.', '');
-        const currentHost = domain.replace('www.', '');
-        
+        const referrerHost = referrerUrl.hostname.replace("www.", "");
+        const currentHost = domain.replace("www.", "");
+
         // If referrer is from the same domain, treat as no referrer
         if (referrerHost === currentHost) {
           filteredReferrer = null;
@@ -112,7 +122,7 @@ export async function POST(req: NextRequest) {
         // Keep referrer as is if not a valid URL
       }
     }
-    
+
     // Parse traffic source with filtered referrer
     const trafficSource = parseTrafficSource(urlParams, filteredReferrer);
 

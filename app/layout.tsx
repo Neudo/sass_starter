@@ -57,6 +57,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isDev = process.env.NODE_ENV === "development";
   return (
     <html suppressHydrationWarning lang="en" className={geistSans.variable}>
       <head>
@@ -77,7 +78,7 @@ export default function RootLayout({
           {children}
           <Toaster />
         </ThemeProvider>
-        <Script src="/script.js" defer />
+        <Script src={isDev ? "/script-dev.js" : "/script.js"} defer />
       </body>
     </html>
   );

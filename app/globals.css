@@ -544,7 +544,7 @@ svg {
   }
 }
 
-@media (max-width: 47.9rem) {
+@media (max-width: 960px) {
   .hidden-el {
     display: none;
   }

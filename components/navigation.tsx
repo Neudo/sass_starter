@@ -163,7 +163,7 @@ export function Navigation() {
             </div>
 
             {/* Mobile menu button */}
-            <div className="md:hidden flex items-center gap-2">
+            <div className="min-[961px]:hidden flex items-center gap-2">
               <ThemeToggle />
               <Button
                 variant="ghost"
