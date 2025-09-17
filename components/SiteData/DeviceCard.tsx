@@ -13,6 +13,7 @@ import {
 import Image from "next/image";
 import { DetailsModal } from "@/components/ui/details-modal";
 import { useAnalyticsStore } from "@/lib/stores/analytics";
+import { SkeletonCard } from "./SkeletonCard";
 
 
 interface DeviceStats {
@@ -359,7 +360,7 @@ export function DeviceCard() {
   };
 
   if (loading) {
-    return <div className="text-muted-foreground">Loading device data...</div>;
+    return <SkeletonCard title="Devices" description="Analyze visitor devices and browsers" itemCount={7} />;
   }
 
   return (

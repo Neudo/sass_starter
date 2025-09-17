@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { DetailsModal } from "@/components/ui/details-modal";
 import { useAnalyticsStore } from "@/lib/stores/analytics";
+import { SkeletonCard } from "./SkeletonCard";
 
 interface SourceData {
   name: string;
@@ -169,7 +170,14 @@ export function SourcesCard() {
   }, [analyticsData.sources]);
 
   const handleItemClick = (
-    type: "channel" | "referrer_domain" | "utm_source" | "utm_medium" | "utm_campaign" | "utm_term" | "utm_content",
+    type:
+      | "channel"
+      | "referrer_domain"
+      | "utm_source"
+      | "utm_medium"
+      | "utm_campaign"
+      | "utm_term"
+      | "utm_content",
     value: string
   ) => {
     if (hasFilter(type, value)) {
@@ -184,10 +192,17 @@ export function SourcesCard() {
     showIcons = false,
     allData?: SourceData[],
     title?: string,
-    clickType?: "channel" | "referrer_domain" | "utm_source" | "utm_medium" | "utm_campaign" | "utm_term" | "utm_content"
+    clickType?:
+      | "channel"
+      | "referrer_domain"
+      | "utm_source"
+      | "utm_medium"
+      | "utm_campaign"
+      | "utm_term"
+      | "utm_content"
   ) => {
     if (loading) {
-      return <div className="text-muted-foreground">Loading...</div>;
+      return <SkeletonCard title="Sources" itemCount={5} />;
     }
 
     if (data.length === 0) {

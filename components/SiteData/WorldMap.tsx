@@ -4,6 +4,7 @@ import { Mercator } from "@visx/geo";
 import * as topojson from "topojson-client";
 import { useTheme } from "next-themes";
 import { useAnalyticsStore } from "@/lib/stores/analytics";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const background = "#0f172a";
 
@@ -36,7 +37,7 @@ export default function WorldMap({ width, height }: GeoMercatorProps) {
   } | null>(null);
 
   const { theme } = useTheme();
-  const { addFilter, hasFilter, removeFilter, getAnalyticsData } =
+  const { addFilter, hasFilter, removeFilter, getAnalyticsData, loading } =
     useAnalyticsStore();
   const analyticsData = getAnalyticsData();
   // Charger les données géographiques
@@ -80,6 +81,14 @@ export default function WorldMap({ width, height }: GeoMercatorProps) {
 
   const centerX = width / 2;
   const centerY = height / 2;
+
+  if (loading || !world) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <Skeleton className="w-full h-full" />
+      </div>
+    );
+  }
   const scale = (width / 630) * 100;
 
   // Calculer le maximum de visiteurs pour le gradient

@@ -19,6 +19,8 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAnalyticsStore } from "@/lib/stores/analytics";
 
 interface MetricsChartProps {
   siteId: string;
@@ -82,9 +84,7 @@ export function MetricsChart({
   const getMetricTitle = (metric: string): string => {
     const titles: Record<string, string> = {
       visitors:
-        dateRange === "realtime"
-          ? "Visitors (last 30 min)"
-          : "Visitors",
+        dateRange === "realtime" ? "Visitors (last 30 min)" : "Visitors",
       totalVisits: "Total Visits",
       totalPageviews: "Total Page Views",
       viewsPerVisit: "Views per Visit",
@@ -95,7 +95,9 @@ export function MetricsChart({
     return titles[metric] || metric;
   };
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [localLoading, setLocalLoading] = useState(true);
+  const { loading: globalLoading } = useAnalyticsStore();
+  const loading = globalLoading || localLoading;
 
   // Helper function to format date for display
   const formatDateDisplay = (date: Date): string => {
@@ -182,11 +184,11 @@ export function MetricsChart({
     const fetchChartData = async () => {
       if (!siteId) {
         console.warn("MetricsChart: No siteId available, skipping fetch");
-        setLoading(false);
+        setLocalLoading(false);
         return;
       }
 
-      setLoading(true);
+      setLocalLoading(true);
       const supabase = createClient();
       const range = getDateRange(dateRange);
 
@@ -210,10 +212,9 @@ export function MetricsChart({
 
         if (error) {
           console.error("Error fetching realtime data:", error);
-          setLoading(false);
+          setLocalLoading(false);
           return;
         }
-
 
         // Create 8 time intervals (every 4 minutes for the last 30 minutes)
         for (let i = 7; i >= 0; i--) {
@@ -234,7 +235,7 @@ export function MetricsChart({
           // Need to fetch page views for realtime
           const sessionIds = intervalSessions.map((s) => s.id);
           let intervalPageViews = 0;
-          
+
           if (sessionIds.length > 0) {
             const { data: pageViews } = await supabase
               .from("page_views")
@@ -242,7 +243,7 @@ export function MetricsChart({
               .in("session_id", sessionIds)
               .gte("created_at", intervalStart.toISOString())
               .lte("created_at", intervalEnd.toISOString());
-            
+
             intervalPageViews = pageViews?.length || 0;
           }
 
@@ -263,14 +264,14 @@ export function MetricsChart({
         }
 
         setChartData(realtimeData);
-        setLoading(false);
+        setLocalLoading(false);
         return;
       }
 
       // Build query for other metrics
       if (!siteId) {
         console.error("No siteId available for MetricsChart");
-        setLoading(false);
+        setLocalLoading(false);
         return;
       }
 
@@ -320,7 +321,7 @@ export function MetricsChart({
 
       if (error) {
         console.error("Error fetching chart data:", error);
-        setLoading(false);
+        setLocalLoading(false);
         return;
       }
 
@@ -432,7 +433,7 @@ export function MetricsChart({
       });
 
       setChartData(chartPoints);
-      setLoading(false);
+      setLocalLoading(false);
     };
 
     fetchChartData();
@@ -440,18 +441,57 @@ export function MetricsChart({
 
   if (loading) {
     return (
-      <Card>
+      <Card className="h-[350px] ">
         <CardHeader>
           <CardTitle>Metrics Over Time</CardTitle>
+          <CardDescription>
+            <Skeleton className="h-4 w-48" />
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center">
-            <div className="text-muted-foreground">Loading chart...</div>
+          <div className="h-[250px] w-full space-y-4">
+            {/* Y-axis labels */}
+            <div className="flex flex-col justify-between h-full">
+              <div className="flex items-end gap-4">
+                <div className="flex flex-col gap-8">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <Skeleton key={i} className="h-3 w-8" />
+                  ))}
+                </div>
+                {/* Chart area */}
+                <div className="flex-1 h-full relative">
+                  <Skeleton className="w-full h-full" />
+                  {/* X-axis labels */}
+                  <div className="flex justify-between mt-2">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Skeleton key={i} className="h-3 w-12" />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
     );
   }
+
+  // Generate default data if no data exists
+  const displayData =
+    chartData.length > 0
+      ? chartData
+      : [
+          {
+            date: new Date().toISOString().split("T")[0],
+            displayDate: "Today",
+            visitors: 0,
+            totalVisits: 0,
+            totalPageviews: 0,
+            viewsPerVisit: 0,
+            bounceRate: 0,
+            avgDuration: 0,
+          },
+        ];
 
   return (
     <Card>
@@ -466,7 +506,7 @@ export function MetricsChart({
           config={chartConfig}
           className="aspect-auto h-[250px] w-full"
         >
-          <AreaChart accessibilityLayer data={chartData}>
+          <AreaChart accessibilityLayer data={displayData}>
             <defs>
               {selectedMetrics.map((metric) => (
                 <linearGradient
@@ -499,16 +539,16 @@ export function MetricsChart({
               minTickGap={32}
               interval={(() => {
                 // For last 7 days or realtime: show all labels
-                if (chartData.length <= 8) return 0;
+                if (displayData.length <= 8) return 0;
 
                 // For last 30 days: show every 4th day (30/4 ≈ 7 labels)
                 if (dateRange === "last30days") {
-                  return Math.floor(chartData.length / 7) - 1;
+                  return Math.floor(displayData.length / 7) - 1;
                 }
 
                 // For last 90 days: show every 11th day (90/11 ≈ 8 labels)
                 if (dateRange === "last90days") {
-                  return Math.floor(chartData.length / 8) - 1;
+                  return Math.floor(displayData.length / 8) - 1;
                 }
 
                 // Default behavior for other periods

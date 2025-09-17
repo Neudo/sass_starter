@@ -16,6 +16,8 @@ import { createClient } from "@/lib/supabase/client";
 import { FunnelsAndEventsCard } from "./SiteData/FunnelsAndEventsCard";
 import { useAnalyticsStore } from "@/lib/stores/analytics";
 import { usePersistedFilters } from "@/hooks/usePersistedFilters";
+import { RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface Site {
   id: string;
@@ -41,7 +43,7 @@ export function DashboardClient({
   const [timezoneLoaded, setTimezoneLoaded] = useState(false);
   const supabase = createClient();
 
-  const { fetchAllData, dateRange } = useAnalyticsStore();
+  const { fetchAllData, dateRange, loading } = useAnalyticsStore();
 
   // Load site timezone
   useEffect(() => {
@@ -75,31 +77,10 @@ export function DashboardClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [siteId, selectedDateRange, siteTimezone, isLoaded, timezoneLoaded]);
 
-  // Don't render until filters and timezone are loaded to prevent flash of wrong data
-  if (!isLoaded || !timezoneLoaded) {
-    return (
-      <div className="space-y-6">
-        <div className="flex gap-4 flex-wrap items-center justify-between">
-          {!isPublic && (
-            <SiteSelector sites={userSites} currentDomain={domain} />
-          )}
-          <div className="h-10" /> {/* Placeholder for ActiveVisitors */}
-          <div className="h-10 w-40" /> {/* Placeholder for DateFilter */}
-        </div>
-        {/* Loading skeleton or empty state */}
-        <div className="animate-pulse space-y-6">
-          <div className="h-32 bg-muted rounded-lg" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="sm:col-span-2 h-64 bg-muted rounded-lg" />
-            <div className="h-96 bg-muted rounded-lg" />
-            <div className="h-96 bg-muted rounded-lg" />
-            <div className="h-96 bg-muted rounded-lg" />
-            <div className="h-96 bg-muted rounded-lg" />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Handle manual refresh
+  const handleRefresh = async () => {
+    await fetchAllData(siteId, selectedDateRange, siteTimezone);
+  };
 
   return (
     <div className="space-y-6">
@@ -110,10 +91,21 @@ export function DashboardClient({
           onActivateRealtime={() => setDateRange("realtime")}
           isRealtimeActive={selectedDateRange === "realtime"}
         />
-        <DateFilter
-          selectedRange={selectedDateRange}
-          onRangeChange={setDateRange}
-        />
+        <div className="flex gap-2 items-center">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleRefresh}
+            disabled={loading}
+            title="Refresh data"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          </Button>
+          <DateFilter
+            selectedRange={selectedDateRange}
+            onRangeChange={setDateRange}
+          />
+        </div>
       </div>
       <ActiveFilters />
       <AnalyticsMetrics siteId={siteId} dateRangeOption={selectedDateRange} />

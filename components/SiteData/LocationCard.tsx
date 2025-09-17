@@ -7,7 +7,7 @@ import { getCountryFlag } from "@/data/country-flags";
 import { getLanguageName, getLanguageFlag } from "@/lib/language-helper";
 import { DetailsModal } from "@/components/ui/details-modal";
 import { useAnalyticsStore } from "@/lib/stores/analytics";
-
+import { SkeletonCard } from "./SkeletonCard";
 
 interface LocationStats {
   countries: Record<string, number>;
@@ -18,63 +18,77 @@ interface LocationStats {
 
 export function LocationCard() {
   const [showPercentage, setShowPercentage] = useState(false);
-  const { addFilter, hasFilter, removeFilter, getAnalyticsData, loading } = useAnalyticsStore();
+  const { addFilter, hasFilter, removeFilter, getAnalyticsData, loading } =
+    useAnalyticsStore();
   const analyticsData = getAnalyticsData();
 
   // Convert analytics data to LocationStats format using useMemo
   const { locationStats, allLocationStats } = useMemo(() => {
     const locationStats: LocationStats = {
       countries: Object.fromEntries(
-        analyticsData.countries.slice(0, 7).map(item => [item.name, item.count])
+        analyticsData.countries
+          .slice(0, 7)
+          .map((item) => [item.name, item.count])
       ),
       regions: Object.fromEntries(
-        analyticsData.regions.slice(0, 7).map(item => [
-          item.name, 
-          { count: item.count, country: item.country }
-        ])
+        analyticsData.regions
+          .slice(0, 7)
+          .map((item) => [
+            item.name,
+            { count: item.count, country: item.country },
+          ])
       ),
       cities: Object.fromEntries(
-        analyticsData.cities.slice(0, 7).map(item => [
-          item.name, 
-          { count: item.count, country: item.country }
-        ])
+        analyticsData.cities
+          .slice(0, 7)
+          .map((item) => [
+            item.name,
+            { count: item.count, country: item.country },
+          ])
       ),
       languages: Object.fromEntries(
-        analyticsData.languages.slice(0, 7).map(item => [
-          item.name, 
-          { count: item.count }
-        ])
+        analyticsData.languages
+          .slice(0, 7)
+          .map((item) => [item.name, { count: item.count }])
       ),
     };
-    
+
     const allLocationStats: LocationStats = {
       countries: Object.fromEntries(
-        analyticsData.countries.map(item => [item.name, item.count])
+        analyticsData.countries.map((item) => [item.name, item.count])
       ),
       regions: Object.fromEntries(
-        analyticsData.regions.map(item => [
-          item.name, 
-          { count: item.count, country: item.country }
+        analyticsData.regions.map((item) => [
+          item.name,
+          { count: item.count, country: item.country },
         ])
       ),
       cities: Object.fromEntries(
-        analyticsData.cities.map(item => [
-          item.name, 
-          { count: item.count, country: item.country }
+        analyticsData.cities.map((item) => [
+          item.name,
+          { count: item.count, country: item.country },
         ])
       ),
       languages: Object.fromEntries(
-        analyticsData.languages.map(item => [
-          item.name, 
-          { count: item.count }
+        analyticsData.languages.map((item) => [
+          item.name,
+          { count: item.count },
         ])
       ),
     };
-    
-    return { locationStats, allLocationStats };
-  }, [analyticsData.countries, analyticsData.regions, analyticsData.cities, analyticsData.languages]);
 
-  const handleItemClick = (type: "country" | "region" | "city", value: string) => {
+    return { locationStats, allLocationStats };
+  }, [
+    analyticsData.countries,
+    analyticsData.regions,
+    analyticsData.cities,
+    analyticsData.languages,
+  ]);
+
+  const handleItemClick = (
+    type: "country" | "region" | "city",
+    value: string
+  ) => {
     if (hasFilter(type, value)) {
       removeFilter(type, value);
     } else {
@@ -116,10 +130,10 @@ export function LocationCard() {
             {type === "country"
               ? "countries"
               : type === "region"
-              ? "regions"
-              : type === "city"
-              ? "cities"
-              : "languages"}
+                ? "regions"
+                : type === "city"
+                  ? "cities"
+                  : "languages"}
           </div>
           <button
             onClick={() => setShowPercentage(!showPercentage)}
@@ -161,12 +175,14 @@ export function LocationCard() {
 
           const isClickable = type !== "language";
           const isActive = isClickable && hasFilter(type, name);
-          
+
           return (
             <div key={name} className="space-y-1">
-              <div 
+              <div
                 className={`flex justify-between items-center text-sm relative ${
-                  isClickable ? "cursor-pointer hover:bg-muted/50 rounded transition-all" : ""
+                  isClickable
+                    ? "cursor-pointer hover:bg-muted/50 rounded transition-all"
+                    : ""
                 } ${isActive ? "ring-2 ring-primary" : ""}`}
                 onClick={() => isClickable && handleItemClick(type, name)}
               >
@@ -241,14 +257,18 @@ export function LocationCard() {
 
                   const isClickable = type !== "language";
                   const isActive = isClickable && hasFilter(type, name);
-                  
+
                   return (
                     <div key={name} className="space-y-1">
-                      <div 
+                      <div
                         className={`flex justify-between items-center text-sm relative ${
-                          isClickable ? "cursor-pointer hover:bg-muted/50 rounded transition-all" : ""
+                          isClickable
+                            ? "cursor-pointer hover:bg-muted/50 rounded transition-all"
+                            : ""
                         } ${isActive ? "ring-2 ring-primary" : ""}`}
-                        onClick={() => isClickable && handleItemClick(type, name)}
+                        onClick={() =>
+                          isClickable && handleItemClick(type, name)
+                        }
                       >
                         <div
                           className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-primary opacity-15 transition-all rounded-l"
@@ -288,7 +308,11 @@ export function LocationCard() {
 
   if (loading) {
     return (
-      <div className="text-muted-foreground">Loading location data...</div>
+      <SkeletonCard
+        title="Location"
+        description="Analyze visitor locations"
+        itemCount={7}
+      />
     );
   }
 

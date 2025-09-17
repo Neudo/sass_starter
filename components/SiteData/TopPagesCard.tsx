@@ -4,6 +4,7 @@ import React, { useMemo } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DetailsModal } from "@/components/ui/details-modal";
 import { useAnalyticsStore } from "@/lib/stores/analytics";
+import { SkeletonCard } from "./SkeletonCard";
 
 interface PageData {
   page: string;
@@ -12,11 +13,19 @@ interface PageData {
 }
 
 export function TopPagesCard() {
-  const { addFilter, hasFilter, removeFilter, getAnalyticsData, loading } = useAnalyticsStore();
+  const { addFilter, hasFilter, removeFilter, getAnalyticsData, loading } =
+    useAnalyticsStore();
   const analyticsData = getAnalyticsData();
 
   // Convert analytics data to PageData format using useMemo
-  const { topPages, entryPages, exitPages, allTopPages, allEntryPages, allExitPages } = useMemo(() => {
+  const {
+    topPages,
+    entryPages,
+    exitPages,
+    allTopPages,
+    allEntryPages,
+    allExitPages,
+  } = useMemo(() => {
     return {
       topPages: analyticsData.pages.topPages.slice(0, 7),
       entryPages: analyticsData.pages.entryPages.slice(0, 7),
@@ -27,7 +36,10 @@ export function TopPagesCard() {
     };
   }, [analyticsData.pages]);
 
-  const handlePageClick = (type: "visited_page" | "entry_page" | "exit_page", value: string) => {
+  const handlePageClick = (
+    type: "visited_page" | "entry_page" | "exit_page",
+    value: string
+  ) => {
     if (hasFilter(type, value)) {
       removeFilter(type, value);
     } else {
@@ -42,7 +54,7 @@ export function TopPagesCard() {
     clickType?: "visited_page" | "entry_page" | "exit_page"
   ) => {
     if (loading) {
-      return <div className="text-muted-foreground">Loading...</div>;
+      return <SkeletonCard title="Top Pages" itemCount={5} />;
     }
 
     if (data.length === 0) {
@@ -53,14 +65,18 @@ export function TopPagesCard() {
       <div className="space-y-1">
         {items.map((item, index) => {
           const isActive = clickType && hasFilter(clickType, item.page);
-          
+
           return (
             <div key={index} className="space-y-1">
-              <div 
+              <div
                 className={`flex justify-between items-center text-sm relative ${
-                  clickType ? "cursor-pointer hover:bg-muted/50 rounded transition-all" : ""
+                  clickType
+                    ? "cursor-pointer hover:bg-muted/50 rounded transition-all"
+                    : ""
                 } ${isActive ? "ring-2 ring-primary" : ""}`}
-                onClick={() => clickType && handlePageClick(clickType, item.page)}
+                onClick={() =>
+                  clickType && handlePageClick(clickType, item.page)
+                }
               >
                 <div
                   className="absolute top-0 bottom-0 left-0 dark:bg-gray-500 bg-primary opacity-15 transition-all rounded-l"

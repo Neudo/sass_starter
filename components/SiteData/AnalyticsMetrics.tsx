@@ -13,6 +13,7 @@ import {
 import { MetricsChart } from "./MetricsChart";
 import { DateRangeOption } from "@/components/DateFilter";
 import { useAnalyticsStore } from "@/lib/stores/analytics";
+import { Skeleton } from "@/components/ui/skeleton";
 interface AnalyticsMetricsProps {
   siteId: string;
   dateRange?: { from: Date; to: Date } | null;
@@ -98,6 +99,21 @@ export function AnalyticsMetrics({
 
     // For bounce rate, lower is better, so invert the colors
     const isInverted = metricKey === "bounceRate";
+
+    if (loading) {
+      return (
+        <Card className="h-[84px]">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-10 w-24" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
     const isPositive =
       change !== undefined ? (isInverted ? change < 0 : change >= 0) : false;
     const displayChange = Math.abs(change || 0);
@@ -115,7 +131,7 @@ export function AnalyticsMetrics({
           </div>
           <CardTitle className="text-sm font-medium">{title}</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="py-1">
           <div className="text-2xl font-bold">
             {formattedValue}
             {suffix}
@@ -145,24 +161,6 @@ export function AnalyticsMetrics({
       </Card>
     );
   };
-
-  if (loading) {
-    return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {[...Array(6)].map((_, i) => (
-          <Card key={i}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="h-4 w-24 bg-muted animate-pulse rounded" />
-              <div className="h-4 w-4 bg-muted animate-pulse rounded" />
-            </CardHeader>
-            <CardContent>
-              <div className="h-8 w-16 bg-muted animate-pulse rounded" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
 
   // Determine grid columns based on realtime mode
   const isRealtimeMode = dateRangeOption === "realtime";
