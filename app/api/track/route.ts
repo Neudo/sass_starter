@@ -203,10 +203,6 @@ export async function POST(req: NextRequest) {
     // Prepare base session data that's always updated
     const currentTime = new Date().toISOString();
 
-    console.log("Session ID:", sessionId);
-
-    console.log("Current time:", currentTime);
-
     const baseSessionData = {
       id: sessionId,
       site_id: siteId,

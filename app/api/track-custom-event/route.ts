@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
     const eventMetadata = {
       ...metadata,
       source: sessionData?.referrer_domain || "direct",
-      country: sessionData?.country || "unknown",
+      country: sessionData?.country || null,
     };
 
     // Insert completion record
@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
             id: session_id,
             site_id: siteData.id,
             last_seen: new Date().toISOString(),
-            country: "unknown",
+            country: null,
           });
 
         if (sessionCreateError) {
