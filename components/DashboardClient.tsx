@@ -18,6 +18,7 @@ import { useAnalyticsStore } from "@/lib/stores/analytics";
 import { usePersistedFilters } from "@/hooks/usePersistedFilters";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getDateRange } from "@/components/DateFilter";
 
 interface Site {
   id: string;
@@ -43,7 +44,12 @@ export function DashboardClient({
   const [timezoneLoaded, setTimezoneLoaded] = useState(false);
   const supabase = createClient();
 
-  const { fetchAllData, dateRange, loading } = useAnalyticsStore();
+  const { fetchAllData, loading } = useAnalyticsStore();
+  
+  // Calculate dateRange based on selectedDateRange and timezone
+  const calculatedDateRange = selectedDateRange === "realtime" 
+    ? null 
+    : getDateRange(selectedDateRange, siteTimezone);
 
   // Load site timezone
   useEffect(() => {
@@ -148,7 +154,7 @@ export function DashboardClient({
       </div>
       <FunnelsAndEventsCard
         siteId={siteId}
-        dateRange={dateRange}
+        dateRange={calculatedDateRange}
         isRealtimeMode={selectedDateRange === "realtime"}
         isPublic={isPublic}
         domain={domain}

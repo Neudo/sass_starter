@@ -47,6 +47,53 @@ const BOT_USER_AGENTS = [
   "seznambot",
   "chrome headless",
   "headlesschrome",
+  // Additional SEO and monitoring bots
+  "screaming frog",
+  "sitebulb",
+  "deepcrawl",
+  "oncrawl",
+  "contentking",
+  "lumar",
+  "botify",
+  "sistrix",
+  "majestic",
+  "moz.com",
+  "rogerbot",
+  "searchmetrics",
+  "seobility",
+  "woorank",
+  "nibbler",
+  "gtmetrix",
+  "dareboost",
+  "statuscake",
+  "freshping",
+  "hetrixtools",
+  "site24x7",
+  "pulseway",
+  "datadoghq",
+  "newrelic",
+  "appdynamics",
+  "dynatrace",
+  "solarwinds",
+  // Security scanners
+  "nessus",
+  "nikto",
+  "openvas",
+  "qualys",
+  "acunetix",
+  "burp",
+  "zap",
+  "w3af",
+  // Email crawlers
+  "emailharvest",
+  "emailsiphon",
+  "emailwolf",
+  // Academic/Research
+  "ccbot",
+  "academicbot",
+  "ia_archiver",
+  "alexa",
+  "sogou",
 ];
 
 // Common hosting/cloud provider IP ranges that are often used by bots
@@ -127,11 +174,34 @@ export function isBotBrowser(browser: string | null): boolean {
 }
 
 /**
+ * Check for suspicious behavioral patterns
+ */
+export function hasSuspiciousBehavior(
+  ip: string,
+  recentSessions: Array<{ created_at: string; ip?: string }>
+): boolean {
+  // Check for multiple sessions from same IP in short time (bot pattern)
+  const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
+  const sessionsFromSameIp = recentSessions.filter(
+    s => s.ip === ip && new Date(s.created_at) > oneMinuteAgo
+  );
+  
+  // More than 3 sessions in 1 minute from same IP is suspicious
+  if (sessionsFromSameIp.length > 3) {
+    return true;
+  }
+  
+  return false;
+}
+
+/**
  * Comprehensive bot detection (without IP blocking)
  */
 export async function shouldBlockRequest(
   userAgent: string | null,
-  browser: string | null
+  browser: string | null,
+  ip?: string,
+  recentSessions?: Array<{ created_at: string; ip?: string }>
 ): Promise<{ blocked: boolean; reason?: string }> {
   // Check user agent
   if (isBot(userAgent)) {
@@ -151,9 +221,19 @@ export async function shouldBlockRequest(
     if (ua.includes("automation") || ua.includes("webdriver")) {
       return { blocked: true, reason: "automation_tool" };
     }
+    
+    // Check for monitoring/SEO tools that might not identify as bots
+    if (ua.includes("monitor") || ua.includes("seo") || ua.includes("audit")) {
+      return { blocked: true, reason: "monitoring_tool" };
+    }
 
     // Check for missing required headers that real browsers send
     // This would need to be checked in the actual request headers
+  }
+  
+  // Check behavioral patterns if IP and recent sessions provided
+  if (ip && recentSessions && hasSuspiciousBehavior(ip, recentSessions)) {
+    return { blocked: true, reason: "suspicious_behavior" };
   }
 
   return { blocked: false };

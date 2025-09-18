@@ -157,47 +157,22 @@ export async function POST(request: NextRequest) {
       // Check if it's a foreign key constraint error
       if (insertError.code === "23503") {
         console.error(
-          "Foreign key violation - session might not exist:",
+          "Foreign key violation - session does not exist:",
           session_id
         );
-        // Try to create a basic session first
-        const { error: sessionCreateError } = await adminClient
-          .from("sessions")
-          .upsert({
-            id: session_id,
-            site_id: siteData.id,
-            last_seen: new Date().toISOString(),
-            country: null,
-          });
-
-        if (sessionCreateError) {
-          console.error("Failed to create session:", sessionCreateError);
-        } else {
-          // Retry the completion insert
-          const { error: retryError } = await adminClient
-            .from("custom_event_completions")
-            .insert({
-              custom_event_id: customEventData.id,
-              session_id: session_id,
-              page_url: page_url,
-              metadata: eventMetadata,
-            });
-
-          if (retryError) {
-            console.error("Retry failed:", retryError);
-            return NextResponse.json(
-              { error: "Failed to record completion after retry" },
-              {
-                status: 500,
-                headers: {
-                  "Access-Control-Allow-Origin": "*",
-                  "Access-Control-Allow-Methods": "POST, OPTIONS",
-                  "Access-Control-Allow-Headers": "Content-Type",
-                },
-              }
-            );
+        // Don't create a fallback session - the main /api/track endpoint should handle session creation
+        // Custom events should only be tracked for existing valid sessions
+        return NextResponse.json(
+          { error: "Session not found. Please ensure the main tracking script is loaded." },
+          {
+            status: 400,
+            headers: {
+              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Methods": "POST, OPTIONS",
+              "Access-Control-Allow-Headers": "Content-Type",
+            },
           }
-        }
+        );
       } else {
         return NextResponse.json(
           { error: "Failed to record completion" },

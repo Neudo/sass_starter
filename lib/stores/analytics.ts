@@ -848,7 +848,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
           .select("session_id, page_path, created_at, duration_seconds")
           .in("session_id", sessionIds);
 
-        // Apply same date filter as sessions for consistency
+        // Apply date filter to page_views based on when they were created
         if (isRealtimeMode) {
           const thirtyMinutesAgo = new Date(
             Date.now() - 30 * 60 * 1000
@@ -864,6 +864,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
           
           entryPagesData = entryPages || [];
         } else if (dateRange) {
+          // Filter page_views by created_at to only count pages viewed in the selected period
           pageViewQuery = pageViewQuery
             .gte("created_at", dateRange.from.toISOString())
             .lte("created_at", dateRange.to.toISOString());
@@ -949,7 +950,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
               .select("session_id, page_path, created_at, duration_seconds")
               .in("session_id", prevSessionIds);
 
-            // Apply date filter for previous period consistency
+            // Filter page_views by created_at for the previous period
             if (previousRange) {
               prevPageViewQuery = prevPageViewQuery
                 .gte("created_at", previousRange.from.toISOString())
