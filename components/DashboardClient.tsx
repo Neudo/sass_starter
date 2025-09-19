@@ -14,11 +14,13 @@ import { ActiveFilters } from "@/components/SiteData/ActiveFilters";
 import { DateFilter } from "@/components/DateFilter";
 import { createClient } from "@/lib/supabase/client";
 import { FunnelsAndEventsCard } from "./SiteData/FunnelsAndEventsCard";
+import { UserJourney } from "@/components/SiteData/UserJourney";
 import { useAnalyticsStore } from "@/lib/stores/analytics";
 import { usePersistedFilters } from "@/hooks/usePersistedFilters";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, BarChart3, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getDateRange } from "@/components/DateFilter";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Site {
   id: string;
@@ -113,52 +115,86 @@ export function DashboardClient({
           />
         </div>
       </div>
-      <ActiveFilters />
-      <AnalyticsMetrics siteId={siteId} dateRangeOption={selectedDateRange} />
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="sm:col-span-2">
-          <WorldMapCard />
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Locations</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <LocationCard />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Devices</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DeviceCard />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Sources</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <SourcesCard />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Pages</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TopPagesCard />
-          </CardContent>
-        </Card>
-      </div>
-      <FunnelsAndEventsCard
-        siteId={siteId}
-        dateRange={calculatedDateRange}
-        isRealtimeMode={selectedDateRange === "realtime"}
-        isPublic={isPublic}
-        domain={domain}
-      />
+
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList className="grid w-fit grid-cols-2">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="journey" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Users Journey
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          <ActiveFilters />
+          <AnalyticsMetrics siteId={siteId} dateRangeOption={selectedDateRange} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
+              <WorldMapCard />
+            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Locations</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <LocationCard />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Devices</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DeviceCard />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Sources</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SourcesCard />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Top Pages</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TopPagesCard />
+              </CardContent>
+            </Card>
+          </div>
+          <FunnelsAndEventsCard
+            siteId={siteId}
+            dateRange={calculatedDateRange}
+            isRealtimeMode={selectedDateRange === "realtime"}
+            isPublic={isPublic}
+            domain={domain}
+          />
+        </TabsContent>
+
+        <TabsContent value="journey" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Users Journey
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <UserJourney
+                siteId={siteId}
+                dateRange={calculatedDateRange}
+                isRealtimeMode={selectedDateRange === "realtime"}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
