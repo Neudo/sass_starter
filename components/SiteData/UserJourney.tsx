@@ -3,28 +3,51 @@
 import { useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
+import { ExternalLink, Check, X } from "lucide-react";
+import Image from "next/image";
 import {
-  Globe,
-  Monitor,
-  Tablet,
-  Smartphone,
-  Chrome,
-  ExternalLink,
-  UserCheck,
-  UserX
-} from "lucide-react";
+  getBrowserIcon,
+  getOSIcon,
+  getDeviceIcon,
+  renderSourceIcon,
+} from "@/lib/device-icons";
+import {
+  getFlagEmoji,
+  formatDuration,
+  isFirstVisit,
+} from "@/lib/analytics-utils";
+import { normalizeReferrer } from "@/lib/referrer-helper";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Session {
@@ -71,7 +94,39 @@ interface UserJourneyProps {
   isRealtimeMode: boolean;
 }
 
-export function UserJourney({ siteId, dateRange, isRealtimeMode }: UserJourneyProps) {
+// Helper function to get favicon URL for a domain
+const getFaviconUrl = (domain: string | null): string | null => {
+  if (!domain) return null;
+
+  // Clean up the domain
+  let cleanDomain = domain.toLowerCase().trim();
+
+  // Map certain domains to their actual domains for better favicon
+  const domainMappings: Record<string, string> = {
+    "t.co": "x.com",
+    "twitter.com": "x.com",
+    "l.facebook.com": "facebook.com",
+    "m.facebook.com": "facebook.com",
+    "lnkd.in": "linkedin.com",
+    "youtu.be": "youtube.com",
+    "goo.gl": "google.com",
+    "bit.ly": "bitly.com",
+  };
+
+  // Use mapped domain if available
+  if (domainMappings[cleanDomain]) {
+    cleanDomain = domainMappings[cleanDomain];
+  }
+
+  // Return Google Favicon API URL
+  return `https://www.google.com/s2/favicons?domain=${cleanDomain}&sz=16`;
+};
+
+export function UserJourney({
+  siteId,
+  dateRange,
+  isRealtimeMode,
+}: UserJourneyProps) {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [pageViews, setPageViews] = useState<PageView[]>([]);
@@ -79,6 +134,10 @@ export function UserJourney({ siteId, dateRange, isRealtimeMode }: UserJourneyPr
   const [loading, setLoading] = useState(true);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalSessions, setTotalSessions] = useState(0);
+  const [sessionsPerPage] = useState(50);
+  const [failedFavicons, setFailedFavicons] = useState<Set<string>>(new Set());
 
   const supabase = createClient();
 
@@ -87,12 +146,36 @@ export function UserJourney({ siteId, dateRange, isRealtimeMode }: UserJourneyPr
     const fetchSessions = async () => {
       setLoading(true);
       try {
+        // First, get the total count
+        let countQuery = supabase
+          .from("sessions")
+          .select("*", { count: "exact", head: true })
+          .eq("site_id", siteId);
+
+        // Apply date range filter for count
+        if (!isRealtimeMode && dateRange) {
+          countQuery = countQuery
+            .gte("created_at", dateRange.from.toISOString())
+            .lte("created_at", dateRange.to.toISOString());
+        } else if (isRealtimeMode) {
+          const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+          countQuery = countQuery.gte(
+            "last_seen",
+            thirtyMinutesAgo.toISOString()
+          );
+        }
+
+        const { count } = await countQuery;
+        setTotalSessions(count || 0);
+
+        // Then fetch the paginated data
+        const offset = (currentPage - 1) * sessionsPerPage;
         let query = supabase
           .from("sessions")
           .select("*")
           .eq("site_id", siteId)
           .order("last_seen", { ascending: false })
-          .limit(50);
+          .range(offset, offset + sessionsPerPage - 1);
 
         // Apply date range filter if not in realtime mode
         if (!isRealtimeMode && dateRange) {
@@ -140,7 +223,14 @@ export function UserJourney({ siteId, dateRange, isRealtimeMode }: UserJourneyPr
         supabase.removeChannel(channel);
       };
     }
-  }, [siteId, dateRange, isRealtimeMode, supabase]);
+  }, [
+    siteId,
+    dateRange,
+    isRealtimeMode,
+    currentPage,
+    sessionsPerPage,
+    supabase,
+  ]);
 
   // Fetch session details (page views and custom events)
   const fetchSessionDetails = async (sessionId: string) => {
@@ -157,25 +247,36 @@ export function UserJourney({ siteId, dateRange, isRealtimeMode }: UserJourneyPr
       setPageViews(pageViewsData || []);
 
       // Fetch custom events
-      const { data: customEventsData, error: customEventsError } = await supabase
-        .from("custom_event_completions")
-        .select(`
+      const { data: customEventsData, error: customEventsError } =
+        await supabase
+          .from("custom_event_completions")
+          .select(
+            `
           id,
           created_at,
           metadata,
           custom_events!inner(name)
-        `)
-        .eq("session_id", sessionId)
-        .order("created_at", { ascending: true });
+        `
+          )
+          .eq("session_id", sessionId)
+          .order("created_at", { ascending: true });
 
       if (customEventsError) throw customEventsError;
 
-      const formattedEvents = customEventsData?.map(event => ({
-        id: event.id,
-        name: event.custom_events?.name || "Unknown",
-        created_at: event.created_at,
-        metadata: event.metadata
-      })) || [];
+      const formattedEvents =
+        customEventsData?.map(
+          (event: {
+            id: string;
+            created_at: string;
+            metadata: Record<string, unknown>;
+            custom_events: { name: string }[];
+          }) => ({
+            id: event.id,
+            name: event.custom_events?.[0]?.name || "Unknown",
+            created_at: event.created_at,
+            metadata: event.metadata,
+          })
+        ) || [];
 
       setCustomEvents(formattedEvents);
     } catch (error) {
@@ -191,51 +292,10 @@ export function UserJourney({ siteId, dateRange, isRealtimeMode }: UserJourneyPr
     await fetchSessionDetails(session.id);
   };
 
-  const getDeviceIcon = (screenSize: string) => {
-    if (screenSize?.includes("mobile")) return <Smartphone className="h-4 w-4" />;
-    if (screenSize?.includes("tablet")) return <Tablet className="h-4 w-4" />;
-    return <Monitor className="h-4 w-4" />;
-  };
+  const totalPages = Math.ceil(totalSessions / sessionsPerPage);
 
-  const getBrowserIcon = () => {
-    // For simplicity, using Chrome icon for all browsers
-    // You can expand this with more browser icons
-    return <Chrome className="h-4 w-4" />;
-  };
-
-  const getOSIcon = () => {
-    // Using Globe as a generic OS icon
-    return <Globe className="h-4 w-4" />;
-  };
-
-  const getFlagEmoji = (countryCode: string) => {
-    if (!countryCode || countryCode === "Unknown") return "🌍";
-
-    const codePoints = countryCode
-      .toUpperCase()
-      .split("")
-      .map(char => 127397 + char.charCodeAt(0));
-
-    return String.fromCodePoint(...codePoints);
-  };
-
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-
-    if (minutes > 0) {
-      return `${minutes}m ${remainingSeconds}s`;
-    }
-    return `${seconds}s`;
-  };
-
-  const isFirstVisit = (session: Session) => {
-    const createdAt = new Date(session.created_at);
-    const lastSeen = new Date(session.last_seen);
-    const diffInMinutes = (lastSeen.getTime() - createdAt.getTime()) / (1000 * 60);
-
-    // Consider it a first visit if created_at and last_seen are within 30 minutes
-    return diffInMinutes < 30;
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   if (loading) {
@@ -261,18 +321,21 @@ export function UserJourney({ siteId, dateRange, isRealtimeMode }: UserJourneyPr
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[80px]">Visitor</TableHead>
+                <TableHead className="w-[80px] pl-4">Visitor</TableHead>
                 <TableHead>Source</TableHead>
                 <TableHead>Device & System</TableHead>
-                <TableHead>First Visit</TableHead>
-                <TableHead>Last Seen</TableHead>
+                <TableHead className="text-center">First Visit</TableHead>
+                <TableHead className="text-center">Last Seen</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {sessions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={6}
+                    className="text-center text-muted-foreground"
+                  >
                     No visitors found for the selected period
                   </TableCell>
                 </TableRow>
@@ -283,7 +346,7 @@ export function UserJourney({ siteId, dateRange, isRealtimeMode }: UserJourneyPr
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => handleSessionClick(session)}
                   >
-                    <TableCell>
+                    <TableCell className="pl-4">
                       <Tooltip>
                         <TooltipTrigger>
                           <div className="flex items-center justify-center w-10 h-10 rounded-full bg-muted text-lg">
@@ -292,22 +355,63 @@ export function UserJourney({ siteId, dateRange, isRealtimeMode }: UserJourneyPr
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>{session.country || "Unknown"}</p>
-                          {session.city && <p className="text-xs">{session.city}, {session.region}</p>}
+                          {session.city && (
+                            <p className="text-xs">
+                              {session.city}, {session.region}
+                            </p>
+                          )}
                         </TooltipContent>
                       </Tooltip>
                     </TableCell>
                     <TableCell>
-                      <div className="space-y-1">
-                        <Badge variant="outline" className="text-xs">
-                          {session.channel || "Direct"}
-                        </Badge>
-                        {session.referrer_domain && (
-                          <p className="text-xs text-muted-foreground">{session.referrer_domain}</p>
-                        )}
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const faviconUrl = getFaviconUrl(
+                            session.referrer_domain
+                          );
+                          const hasFailedFavicon =
+                            faviconUrl && failedFavicons.has(faviconUrl);
+
+                          if (faviconUrl && !hasFailedFavicon) {
+                            return (
+                              <Image
+                                src={faviconUrl}
+                                alt={session.referrer_domain || ""}
+                                width={16}
+                                height={16}
+                                className="flex-shrink-0"
+                                onError={() => {
+                                  setFailedFavicons(
+                                    (prev) => new Set([...prev, faviconUrl])
+                                  );
+                                }}
+                              />
+                            );
+                          }
+
+                          return renderSourceIcon(
+                            session.channel,
+                            session.referrer_domain
+                          );
+                        })()}
+                        <div className="space-y-1">
+                          {session.referrer_domain ? (
+                            <p className="text-sm">
+                              {
+                                normalizeReferrer(session.referrer_domain)
+                                  .displayName
+                              }
+                            </p>
+                          ) : (
+                            <Badge variant="outline" className="text-xs">
+                              {session.channel || "Direct"}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
+                    <TableCell className="w-[100px]">
+                      <div className="flex items-center gap-3 justify-center">
                         <Tooltip>
                           <TooltipTrigger>
                             {getDeviceIcon(session.screen_size)}
@@ -318,32 +422,40 @@ export function UserJourney({ siteId, dateRange, isRealtimeMode }: UserJourneyPr
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger>
-                            {getOSIcon()}
+                            {getOSIcon(session.os)}
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>{session.os} {session.os_version}</p>
+                            <p>
+                              {session.os} {session.os_version}
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger>
-                            {getBrowserIcon()}
+                            {getBrowserIcon(session.browser)}
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>{session.browser} {session.browser_version}</p>
+                            <p>
+                              {session.browser} {session.browser_version}
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       </div>
                     </TableCell>
                     <TableCell>
-                      {isFirstVisit(session) ? (
-                        <UserCheck className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <UserX className="h-4 w-4 text-muted-foreground" />
-                      )}
+                      <div className="flex justify-center">
+                        {isFirstVisit(session.created_at, session.last_seen) ? (
+                          <Check className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <X className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-right w-[200px]">
                       <span className="text-sm text-muted-foreground">
-                        {formatDistanceToNow(new Date(session.last_seen), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(session.last_seen), {
+                          addSuffix: true,
+                        })}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -364,11 +476,126 @@ export function UserJourney({ siteId, dateRange, isRealtimeMode }: UserJourneyPr
             </TableBody>
           </Table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6">
+            <div className="text-sm text-muted-foreground">
+              Showing {(currentPage - 1) * sessionsPerPage + 1} to{" "}
+              {Math.min(currentPage * sessionsPerPage, totalSessions)} of{" "}
+              {totalSessions} visitors
+            </div>
+
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (currentPage > 1) handlePageChange(currentPage - 1);
+                    }}
+                    className={
+                      currentPage <= 1
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+
+                {/* First page */}
+                {currentPage > 3 && (
+                  <>
+                    <PaginationItem>
+                      <PaginationLink
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlePageChange(1);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        1
+                      </PaginationLink>
+                    </PaginationItem>
+                    {currentPage > 4 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+                  </>
+                )}
+
+                {/* Current page and neighbors */}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const pageNum =
+                    Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                  if (pageNum > totalPages) return null;
+
+                  return (
+                    <PaginationItem key={pageNum}>
+                      <PaginationLink
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlePageChange(pageNum);
+                        }}
+                        isActive={pageNum === currentPage}
+                        className="cursor-pointer"
+                      >
+                        {pageNum}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+
+                {/* Last page */}
+                {currentPage < totalPages - 2 && (
+                  <>
+                    {currentPage < totalPages - 3 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+                    <PaginationItem>
+                      <PaginationLink
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlePageChange(totalPages);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        {totalPages}
+                      </PaginationLink>
+                    </PaginationItem>
+                  </>
+                )}
+
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (currentPage < totalPages)
+                        handlePageChange(currentPage + 1);
+                    }}
+                    className={
+                      currentPage >= totalPages
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </TooltipProvider>
 
       {/* Session Details Sheet */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="w-[600px] overflow-y-auto">
+        <SheetContent className="md:w-[400px] md:max-w-full p-4 overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Visitor Journey Details</SheetTitle>
           </SheetHeader>
@@ -382,7 +609,8 @@ export function UserJourney({ siteId, dateRange, isRealtimeMode }: UserJourneyPr
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Location:</span>
                     <span>
-                      {getFlagEmoji(selectedSession.country)} {selectedSession.country}
+                      {getFlagEmoji(selectedSession.country)}{" "}
+                      {selectedSession.country}
                       {selectedSession.city && `, ${selectedSession.city}`}
                     </span>
                   </div>
@@ -396,11 +624,16 @@ export function UserJourney({ siteId, dateRange, isRealtimeMode }: UserJourneyPr
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">OS:</span>
-                    <span>{selectedSession.os} {selectedSession.os_version}</span>
+                    <span>
+                      {selectedSession.os} {selectedSession.os_version}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Browser:</span>
-                    <span>{selectedSession.browser} {selectedSession.browser_version}</span>
+                    <span>
+                      {selectedSession.browser}{" "}
+                      {selectedSession.browser_version}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -411,26 +644,39 @@ export function UserJourney({ siteId, dateRange, isRealtimeMode }: UserJourneyPr
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Channel:</span>
-                    <Badge variant="outline">{selectedSession.channel || "Direct"}</Badge>
+                    <Badge variant="outline">
+                      {selectedSession.channel || "Direct"}
+                    </Badge>
                   </div>
-                  {selectedSession.referrer && (
+                  {selectedSession.referrer_domain && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Referrer:</span>
-                      <span className="text-xs truncate max-w-[300px]">{selectedSession.referrer}</span>
+                      <span className="text-xs truncate max-w-[300px]">
+                        {
+                          normalizeReferrer(selectedSession.referrer_domain)
+                            .displayName
+                        }
+                      </span>
                     </div>
                   )}
                   {selectedSession.utm_source && (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">UTM Source:</span>
+                        <span className="text-muted-foreground">
+                          UTM Source:
+                        </span>
                         <span>{selectedSession.utm_source}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">UTM Medium:</span>
+                        <span className="text-muted-foreground">
+                          UTM Medium:
+                        </span>
                         <span>{selectedSession.utm_medium}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">UTM Campaign:</span>
+                        <span className="text-muted-foreground">
+                          UTM Campaign:
+                        </span>
                         <span>{selectedSession.utm_campaign}</span>
                       </div>
                     </>
@@ -440,7 +686,9 @@ export function UserJourney({ siteId, dateRange, isRealtimeMode }: UserJourneyPr
 
               {/* Page Views */}
               <div>
-                <h3 className="font-medium mb-3">Page Views ({pageViews.length})</h3>
+                <h3 className="font-medium mb-3">
+                  Page Views ({pageViews.length})
+                </h3>
                 {detailsLoading ? (
                   <div className="space-y-2">
                     <Skeleton className="h-12 w-full" />
@@ -452,14 +700,19 @@ export function UserJourney({ siteId, dateRange, isRealtimeMode }: UserJourneyPr
                       <div key={view.id} className="p-3 border rounded-md">
                         <div className="flex items-start justify-between">
                           <div className="space-y-1 flex-1">
-                            <p className="font-medium text-sm">{view.page_title || "Untitled"}</p>
-                            <p className="text-xs text-muted-foreground">{view.page_path}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {view.page_path}
+                            </p>
                             <div className="flex gap-2 mt-1">
                               {view.entry_page && (
-                                <Badge variant="secondary" className="text-xs">Entry</Badge>
+                                <Badge variant="secondary" className="text-xs">
+                                  Entry
+                                </Badge>
                               )}
                               {view.exit_page && (
-                                <Badge variant="secondary" className="text-xs">Exit</Badge>
+                                <Badge variant="secondary" className="text-xs">
+                                  Exit
+                                </Badge>
                               )}
                               <span className="text-xs text-muted-foreground">
                                 {formatDuration(view.duration_seconds || 0)}
@@ -474,13 +727,17 @@ export function UserJourney({ siteId, dateRange, isRealtimeMode }: UserJourneyPr
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No page views recorded</p>
+                  <p className="text-sm text-muted-foreground">
+                    No page views recorded
+                  </p>
                 )}
               </div>
 
               {/* Custom Events */}
               <div>
-                <h3 className="font-medium mb-3">Custom Events ({customEvents.length})</h3>
+                <h3 className="font-medium mb-3">
+                  Custom Events ({customEvents.length})
+                </h3>
                 {detailsLoading ? (
                   <div className="space-y-2">
                     <Skeleton className="h-12 w-full" />
@@ -492,11 +749,12 @@ export function UserJourney({ siteId, dateRange, isRealtimeMode }: UserJourneyPr
                         <div className="flex items-center justify-between">
                           <div>
                             <Badge>{event.name}</Badge>
-                            {event.metadata && Object.keys(event.metadata).length > 0 && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {JSON.stringify(event.metadata)}
-                              </p>
-                            )}
+                            {event.metadata &&
+                              Object.keys(event.metadata).length > 0 && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {JSON.stringify(event.metadata)}
+                                </p>
+                              )}
                           </div>
                           <span className="text-xs text-muted-foreground">
                             {new Date(event.created_at).toLocaleTimeString()}
@@ -506,7 +764,9 @@ export function UserJourney({ siteId, dateRange, isRealtimeMode }: UserJourneyPr
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No custom events recorded</p>
+                  <p className="text-sm text-muted-foreground">
+                    No custom events recorded
+                  </p>
                 )}
               </div>
             </div>

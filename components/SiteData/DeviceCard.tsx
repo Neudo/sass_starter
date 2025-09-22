@@ -3,17 +3,13 @@
 import React, { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Smartphone,
-  Monitor,
-  Tablet,
-  MonitorSmartphone,
   Users,
   Percent,
 } from "lucide-react";
-import Image from "next/image";
 import { DetailsModal } from "@/components/ui/details-modal";
 import { useAnalyticsStore } from "@/lib/stores/analytics";
 import { SkeletonCard } from "./SkeletonCard";
+import { getBrowserIcon, getOSIcon, getDeviceIcon } from "@/lib/device-icons";
 
 
 interface DeviceStats {
@@ -56,167 +52,6 @@ export function DeviceCard() {
     return { deviceStats, allDeviceStats };
   }, [analyticsData.devices]);
 
-  const getBrowserIcon = (browserName: string) => {
-    const name = browserName.toLowerCase();
-
-    // Check for Chrome Headless first (specific case)
-    if (name.includes("chrome") && name.includes("headless")) {
-      return (
-        <Image
-          src="/images/browser/chromium-webview.png"
-          alt={browserName}
-          width={16}
-          height={16}
-          className="w-4 h-4"
-        />
-      );
-    }
-
-    // Map browser names to image filenames
-    const browserImageMap: Record<string, string> = {
-      chrome: "chrome.png",
-      firefox: "firefox.png",
-      safari: "safari.png",
-      edge: "edge.png",
-      "edge chromium": "edge-chromium.png",
-      opera: "opera.png",
-      "opera mini": "opera-mini.png",
-      brave: "brave.png",
-      samsung: "samsung.png",
-      "internet explorer": "ie.png",
-      ie: "ie.png",
-      facebook: "facebook.png",
-      instagram: "instagram.png",
-      silk: "silk.png",
-      yandex: "yandexbrowser.png",
-      "yandex browser": "yandexbrowser.png",
-      miui: "miui.png",
-      kakaotalk: "kakaotalk.png",
-      crios: "crios.png",
-      fxios: "fxios.png",
-      "android webview": "android-webview.png",
-      "chromium webview": "chromium-webview.png",
-      "ios webview": "ios-webview.png",
-      aol: "aol.png",
-      beaker: "beaker.png",
-      blackberry: "blackberry.png",
-      curl: "curl.png",
-      searchbot: "searchbot.png",
-    };
-
-    // Find matching browser
-    for (const [browser, filename] of Object.entries(browserImageMap)) {
-      if (name.includes(browser)) {
-        return (
-          <Image
-            src={`/images/browser/${filename}`}
-            alt={browserName}
-            width={16}
-            height={16}
-            className="w-4 h-4"
-          />
-        );
-      }
-    }
-
-    // Default fallback
-    return (
-      <Image
-        src="/images/browser/unknown.png"
-        alt={browserName}
-        width={16}
-        height={16}
-        className="w-4 h-4"
-      />
-    );
-  };
-
-  const getOSIcon = (osName: string) => {
-    const name = osName.toLowerCase();
-
-    // Map OS names to image filenames
-    const osImageMap: Record<string, string> = {
-      windows: "windows-11.png",
-      "windows 11": "windows-11.png",
-      "windows 10": "windows-10.png",
-      "windows 8.1": "windows-8-1.png",
-      "windows 8": "windows-8.png",
-      "windows 7": "windows-7.png",
-      "windows vista": "windows-vista.png",
-      "windows xp": "windows-xp.png",
-      "windows 2000": "windows-2000.png",
-      "windows 98": "windows-98.png",
-      "windows 95": "windows-95.png",
-      "windows me": "windows-me.png",
-      "windows mobile": "windows-mobile.png",
-      "windows server 2003": "windows-server-2003.png",
-      "windows 3.11": "windows-3-11.png",
-      mac: "mac-os.png",
-      macos: "mac-os.png",
-      "mac os": "mac-os.png",
-      ios: "ios.png",
-      iphone: "ios.png",
-      ipad: "ios.png",
-      android: "android-os.png",
-      "android os": "android-os.png",
-      linux: "linux.png",
-      ubuntu: "linux.png",
-      debian: "linux.png",
-      "red hat": "linux.png",
-      centos: "linux.png",
-      fedora: "linux.png",
-      "chrome os": "chrome-os.png",
-      chromeos: "chrome-os.png",
-      blackberry: "blackberry-os.png",
-      "blackberry os": "blackberry-os.png",
-      beos: "beos.png",
-      "be os": "beos.png",
-      "amazon os": "amazon-os.png",
-      "fire os": "amazon-os.png",
-      qnx: "qnx.png",
-      "sun os": "sun-os.png",
-      sunos: "sun-os.png",
-      solaris: "sun-os.png",
-      "open bsd": "open-bsd.png",
-      openbsd: "open-bsd.png",
-      "os/2": "os-2.png",
-      "os 2": "os-2.png",
-    };
-
-    // Find matching OS
-    for (const [os, filename] of Object.entries(osImageMap)) {
-      if (name.includes(os)) {
-        return (
-          <Image
-            src={`/images/os/${filename}`}
-            alt={osName}
-            width={16}
-            height={16}
-            className="w-4 h-4"
-          />
-        );
-      }
-    }
-
-    // Default fallback
-    return (
-      <Image
-        src="/images/os/unknown.png"
-        alt={osName}
-        width={16}
-        height={16}
-        className="w-4 h-4"
-      />
-    );
-  };
-
-  const getScreenIcon = (screenSize: string) => {
-    const size = screenSize.toLowerCase();
-    if (size.includes("mobile")) return <Smartphone className="h-4 w-4" />;
-    if (size.includes("tablet")) return <Tablet className="h-4 w-4" />;
-    if (size.includes("desktop")) return <Monitor className="h-4 w-4" />;
-    return <MonitorSmartphone className="h-4 w-4 text-muted-foreground" />;
-  };
 
   const handleItemClick = (type: "browser" | "os" | "screen_size", value: string) => {
     const filterType = type === "screen_size" ? "screen_size" : type;
@@ -272,7 +107,7 @@ export function DeviceCard() {
               ? getBrowserIcon(name)
               : type === "os"
               ? getOSIcon(name)
-              : getScreenIcon(name);
+              : getDeviceIcon(name);
           const filterType = type === "screen" ? "screen_size" : type;
           const isActive = hasFilter(filterType, name);
           
@@ -322,7 +157,7 @@ export function DeviceCard() {
                       ? getBrowserIcon(name)
                       : type === "os"
                       ? getOSIcon(name)
-                      : getScreenIcon(name);
+                      : getDeviceIcon(name);
 
                   const filterType = type === "screen" ? "screen_size" : type;
                   const isActive = hasFilter(filterType, name);

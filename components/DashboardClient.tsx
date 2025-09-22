@@ -47,11 +47,12 @@ export function DashboardClient({
   const supabase = createClient();
 
   const { fetchAllData, loading } = useAnalyticsStore();
-  
+
   // Calculate dateRange based on selectedDateRange and timezone
-  const calculatedDateRange = selectedDateRange === "realtime" 
-    ? null 
-    : getDateRange(selectedDateRange, siteTimezone);
+  const calculatedDateRange =
+    selectedDateRange === "realtime"
+      ? null
+      : getDateRange(selectedDateRange, siteTimezone);
 
   // Load site timezone
   useEffect(() => {
@@ -128,9 +129,12 @@ export function DashboardClient({
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
+        <TabsContent value="overview" className="space-y-6 px-0">
           <ActiveFilters />
-          <AnalyticsMetrics siteId={siteId} dateRangeOption={selectedDateRange} />
+          <AnalyticsMetrics
+            siteId={siteId}
+            dateRangeOption={selectedDateRange}
+          />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <WorldMapCard />
