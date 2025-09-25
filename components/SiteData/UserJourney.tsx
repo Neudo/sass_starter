@@ -246,38 +246,53 @@ export function UserJourney({
       if (pageViewsError) throw pageViewsError;
       setPageViews(pageViewsData || []);
 
-      // Fetch custom events
+      // Fetch custom events with a manual join since there might be no FK
       const { data: customEventsData, error: customEventsError } =
         await supabase
           .from("custom_event_completions")
-          .select(
-            `
-          id,
-          created_at,
-          metadata,
-          custom_events!inner(name)
-        `
-          )
+          .select("*")
           .eq("session_id", sessionId)
           .order("created_at", { ascending: true });
 
-      if (customEventsError) throw customEventsError;
+      if (customEventsError) {
+        console.error("Error fetching custom events:", customEventsError);
+        throw customEventsError;
+      }
 
-      const formattedEvents =
-        customEventsData?.map(
-          (event: {
-            id: string;
-            created_at: string;
-            metadata: Record<string, unknown>;
-            custom_events: { name: string }[];
-          }) => ({
+      // Now fetch the event names separately if we have data
+      let formattedEvents: CustomEvent[] = [];
+
+      if (customEventsData && customEventsData.length > 0) {
+        // Get unique event IDs
+        const eventIds = [...new Set(customEventsData.map(e => e.custom_event_id).filter(id => id))];
+
+        if (eventIds.length > 0) {
+          // Fetch the event names
+          const { data: eventsInfo, error: eventsError } = await supabase
+            .from("custom_events")
+            .select("id, name")
+            .in("id", eventIds);
+
+          if (eventsError) {
+            console.error("Error fetching event names:", eventsError);
+          }
+
+          // Create a map for quick lookup
+          const eventMap = new Map(eventsInfo?.map(e => [e.id, e.name]) || []);
+
+          // Format the events
+          formattedEvents = customEventsData.map((event) => ({
             id: event.id,
-            name: event.custom_events?.[0]?.name || "Unknown",
+            name: eventMap.get(event.custom_event_id) || "Unknown Event",
             created_at: event.created_at,
-            metadata: event.metadata,
-          })
-        ) || [];
+            metadata: event.metadata || {},
+          }));
+        }
+      }
 
+      console.log("Session ID:", sessionId);
+      console.log("Custom events raw data:", customEventsData);
+      console.log("Formatted custom events:", formattedEvents);
       setCustomEvents(formattedEvents);
     } catch (error) {
       console.error("Error fetching session details:", error);
@@ -704,19 +719,21 @@ export function UserJourney({
                               {view.page_path}
                             </p>
                             <div className="flex gap-2 mt-1">
-                              {view.entry_page && (
+                              {view.entry_page === true && (
                                 <Badge variant="secondary" className="text-xs">
                                   Entry
                                 </Badge>
                               )}
-                              {view.exit_page && (
+                              {view.exit_page === true && (
                                 <Badge variant="secondary" className="text-xs">
                                   Exit
                                 </Badge>
                               )}
-                              <span className="text-xs text-muted-foreground">
-                                {formatDuration(view.duration_seconds || 0)}
-                              </span>
+                              {view.duration_seconds !== null && view.duration_seconds !== undefined && (
+                                <span className="text-xs text-muted-foreground">
+                                  {formatDuration(view.duration_seconds)}
+                                </span>
+                              )}
                             </div>
                           </div>
                           <span className="text-xs text-muted-foreground">
@@ -738,6 +755,11 @@ export function UserJourney({
                 <h3 className="font-medium mb-3">
                   Custom Events ({customEvents.length})
                 </h3>
+                {/* Debug: Check custom events */}
+                {(() => {
+                  console.log("Rendering custom events:", customEvents);
+                  return null;
+                })()}
                 {detailsLoading ? (
                   <div className="space-y-2">
                     <Skeleton className="h-12 w-full" />
