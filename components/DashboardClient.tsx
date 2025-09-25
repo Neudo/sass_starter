@@ -14,13 +14,13 @@ import { ActiveFilters } from "@/components/SiteData/ActiveFilters";
 import { DateFilter } from "@/components/DateFilter";
 import { createClient } from "@/lib/supabase/client";
 import { FunnelsAndEventsCard } from "./SiteData/FunnelsAndEventsCard";
-import { UserJourney } from "@/components/SiteData/UserJourney";
+// import { UserJourney } from "@/components/SiteData/UserJourney";
 import { useAnalyticsStore } from "@/lib/stores/analytics";
 import { usePersistedFilters } from "@/hooks/usePersistedFilters";
-import { RefreshCw, BarChart3, Users } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getDateRange } from "@/components/DateFilter";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Site {
   id: string;
