@@ -77,7 +77,6 @@ const TIMEZONE_DATA = [
   "Asia/Kuala_Lumpur",
   "Asia/Ho_Chi_Minh",
   "Asia/Kolkata",
-  "Asia/Mumbai",
   "Asia/Dubai",
   "Asia/Tel_Aviv",
   "Asia/Jerusalem",

@@ -381,7 +381,7 @@ export function MetricsChart({
       const dateMap = new Map(allDates.map((d) => [d.key, d.displayDate]));
 
       groupedData.forEach((sessions, dateKey) => {
-        // Following Plausible's approach: 1 session = 1 visitor
+        // Hector's current visitor model: 1 session = 1 visitor.
         const visitors = sessions.length;
         const totalVisits = sessions.length;
         let totalPageviews = 0;

@@ -562,10 +562,9 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       }))
       .sort((a, b) => b.count - a.count);
 
-    // Plausible-style metrics calculation
     const totalVisits = filteredSessions.length; // Total sessions/visits
 
-    // Following Plausible's approach: 1 session = 1 visitor
+    // Hector's current visitor model: 1 session = 1 visitor.
     // "If a person visits from multiple devices or on multiple days, they are counted as separate visitors"
     const visitors = totalVisits;
 
@@ -600,7 +599,6 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
       }
     });
 
-    // Plausible-style metric calculations
     const viewsPerVisit =
       totalVisits > 0
         ? parseFloat((totalPageviews / totalVisits).toFixed(2))

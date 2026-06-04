@@ -11,13 +11,11 @@ const DEFAULT_FILTERS: PersistedFilters = {
 
 /**
  * Hook pour persister les filtres de dashboard dans localStorage
- * Utilise le pattern de Plausible: period__domain.com = "today"
  */
 export function usePersistedFilters(domain: string) {
   const [filters, setFilters] = useState<PersistedFilters>(DEFAULT_FILTERS);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Clés localStorage similaires à Plausible
   const periodKey = `period__${domain}`;
 
   // Charger les filtres depuis localStorage au montage

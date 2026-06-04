@@ -48,8 +48,7 @@ export function ActiveVisitors({
       return;
     }
 
-    // Following Plausible's approach: 1 session = 1 visitor
-    // Each session represents a unique visitor
+    // Each active session currently represents one visitor.
     const visitorCount = sessions?.length || 0;
 
     setActiveCount(visitorCount);

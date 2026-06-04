@@ -1,10 +1,12 @@
 /**
- * Content Generator for Hector Analytics Blog
- * Automated SEO-optimized article generation using Claude API
+ * Editorial content generator for Hector Analytics.
+ *
+ * This keeps the existing admin blog API intact while removing the old
+ * clone-style content workflow.
  */
 
-import { createAdminClient } from "./supabase/admin";
 import { BlogPost } from "@/types";
+import { createAdminClient } from "./supabase/admin";
 
 interface GenerateArticleOptions {
   topic: string;
@@ -14,388 +16,48 @@ interface GenerateArticleOptions {
   includeCode?: boolean;
 }
 
+interface RewriteArticleOptions {
+  originalTitle: string;
+  originalContent: string;
+  targetService: string;
+  style?: "professional" | "friendly" | "technical";
+}
+
 export class ContentGenerator {
-  private anthropicApiKey: string;
+  private apiKey: string;
+  private model: string;
 
   constructor() {
-    this.anthropicApiKey = process.env.ANTHROPIC_API_KEY || "";
-    if (!this.anthropicApiKey) {
-      throw new Error("ANTHROPIC_API_KEY environment variable is required");
+    this.apiKey = process.env.OPENAI_API_KEY || "";
+    this.model = process.env.OPENAI_CONTENT_MODEL || "gpt-4.1-mini";
+
+    if (!this.apiKey) {
+      throw new Error("OPENAI_API_KEY environment variable is required");
     }
   }
 
   async generateArticle(options: GenerateArticleOptions): Promise<BlogPost> {
-    const prompt = this.createPrompt(options);
+    const content = await this.callOpenAI({
+      system:
+        "Tu es un stratège éditorial B2B SaaS. Tu écris des brouillons utiles, précis et révisables, jamais du contenu cloné ou promotionnel.",
+      prompt: this.createArticlePrompt(options),
+      maxTokens: 6000,
+      temperature: 0.65,
+    });
 
-
-    try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": this.anthropicApiKey,
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-          model: "claude-3-5-sonnet-20241022",
-          max_tokens: 8000, // Increase for complete articles
-          messages: [
-            {
-              role: "user",
-              content: prompt,
-            },
-          ],
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error("Claude API error:", {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorData,
-        });
-        throw new Error(
-          `API request failed: ${response.statusText} - ${errorData}`
-        );
-      }
-
-      const data = await response.json();
-
-      const content = data.content[0].text;
-
-      // Parse the structured response
-      return this.parseResponse(content);
-    } catch (error) {
-      console.error("Error generating article:", error);
-      throw error;
-    }
+    return this.formatBlogPost(this.parseJsonResponse(content));
   }
 
-  private createPrompt(options: GenerateArticleOptions): string {
-    const lengthWords = {
-      short: "1000-1500",
-      medium: "2000-2500",
-      long: "3000-4000",
-    };
+  async rewriteArticle(options: RewriteArticleOptions): Promise<BlogPost> {
+    const content = await this.callOpenAI({
+      system:
+        "Tu réécris des contenus SaaS en brouillons éditoriaux originaux, avec une structure nouvelle et un angle produit sobre.",
+      prompt: this.createRewritePrompt(options),
+      maxTokens: 6000,
+      temperature: 0.7,
+    });
 
-    // Load blog writing rules from the agent file
-    const blogRulesReference = `
-Reference the blog writing guidelines in .claude/agents/blog-post-rules.md for comprehensive rules.
-Key principles:
-- Conversational tone like Plausible Analytics
-- Educational before commercial
-- Never "Hector Analytics" in titles
-- Maximum 2-3 subtle product mentions
-- Natural, human-like writing style
-`;
-
-    return `You are a web writing expert specializing in analytics and privacy, with a conversational and educational tone like Plausible Analytics.
-
-${blogRulesReference}
-
-CRITICAL WRITING RULES (must be absolutely followed):
-- CONVERSATIONAL tone: write as if explaining to a friend
-- EDUCATIONAL approach: explain concepts before proposing solutions  
-- AVOID aggressive marketing and superlatives ("revolutionary", "incredible")
-- NEVER "Hector Analytics" in the title (use "a solution", "this tool")
-- Maximum 2-3 natural mentions of Hector Analytics in the article
-- Prefer "You might have wondered...", "An interesting thing..."
-
-PARAMETERS:
-- Topic: ${options.topic}
-- Main keyword: ${options.keyword}
-- Tone: ${options.tone || "professional"} (but always conversational)
-- Length: ${lengthWords[options.length || "medium"]} words
-${options.includeCode ? "- Include practical code examples" : ""}
-
-CONTEXT (Hector Analytics - subtle mentions only):
-- Privacy-respecting analytics solution
-- Works without cookies 
-- Automatic GDPR compliance
-- Lightweight and simple to install script
-
-NATURAL STRUCTURE:
-1. Conversational title (WITHOUT "Hector Analytics") focused on the problem/question
-2. Introduction: natural observation or question → context → what we'll learn
-3. 4-5 sections with natural subtitles (not marketing)
-4. Conclusion: summary + opening + subtle CTA if justified
-
-WRITING STYLE:
-- Opening phrases: "A few years ago...", "Something few people realize..."
-- Transitions: "Which brings us to...", "Now, let's talk about..."
-- Product mentions: "This is exactly what we wanted to solve", "Our approach..."
-- Avoid systematic bullet points
-- Explain the "why" before the "how"
-- Mention nuances and trade-offs
-
-SEO OPTIMIZATION (discreet):
-- Keyword in title and intro naturally
-- H1, H2, H3 structure with conversational titles
-- Engaging meta description (155 characters max)
-- Semantic keywords integrated naturally
-
-RESPONSE FORMAT:
-Return ONLY a valid JSON object (no text before/after).
-IMPORTANT: For the "content" field, write the HTML as a proper JSON string without line breaks inside the HTML content.
-
-{
-  "title": "Conversational title WITHOUT Hector Analytics",
-  "slug": "seo-friendly-url-slug", 
-  "content": "Complete HTML content as a single JSON string - use proper HTML tags like <h1>, <h2>, <p>, <strong>, etc. Make sure the content is complete and not truncated",
-  "excerpt": "Engaging summary of 150-160 characters",
-  "metaDescription": "Natural meta description of 150-155 characters",
-  "keywords": ["main keyword", "secondary keyword 1", "secondary keyword 2"],
-}
-
-CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWords[options.length || "medium"]} words) and is properly formatted as a JSON string.`;
-  }
-
-  private parseResponse(content: string): BlogPost {
-    try {
-
-      // Clean up the content first
-      const cleanContent = content.trim();
-
-      // First, try to parse the entire content as JSON
-      try {
-        const parsed = JSON.parse(cleanContent);
-        return this.formatBlogPost(parsed);
-      } catch {
-      }
-
-      // Try to extract JSON from code blocks
-      const codeBlockMatch = cleanContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (codeBlockMatch) {
-        try {
-          const parsed = JSON.parse(codeBlockMatch[1].trim());
-          return this.formatBlogPost(parsed);
-        } catch {
-        }
-      }
-
-      // Try to find a JSON object in the content
-      const jsonStart = cleanContent.indexOf("{");
-      const jsonEnd = cleanContent.lastIndexOf("}");
-
-      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-        const possibleJson = cleanContent.substring(jsonStart, jsonEnd + 1);
-        try {
-          const parsed = JSON.parse(possibleJson);
-          return this.formatBlogPost(parsed);
-        } catch (e) {
-          console.error("Failed to parse extracted JSON:", e);
-        }
-      }
-
-      console.error("No valid JSON found in response");
-      console.error("Response was:", cleanContent.substring(0, 500));
-      throw new Error("No valid JSON found in response");
-    } catch (error) {
-      console.error("Error parsing response:", error);
-      throw new Error("Failed to parse AI response");
-    }
-  }
-
-  private formatBlogPost(parsed: Record<string, unknown>): BlogPost {
-    const content = parsed.content as string;
-    const title = parsed.title as string;
-
-    // Validate content length
-    if (!content || content.length < 500) {
-      console.warn(
-        "Generated content seems too short:",
-        content?.length || 0,
-        "characters"
-      );
-      console.warn(
-        "Content preview:",
-        content?.substring(0, 200) || "No content"
-      );
-    }
-
-    // Validate that content contains proper HTML structure
-    if (content && !content.includes("<") && !content.includes(">")) {
-      console.warn("Generated content doesn't appear to contain HTML tags");
-    }
-
-    return {
-      id: "temp-id",
-      title: title || "Generated Article",
-      content: content || "<p>Article content not generated properly</p>",
-      excerpt: (parsed.excerpt as string) || "",
-      keywords: (parsed.keywords as string[]) || [],
-      meta_description:
-        (parsed.metaDescription as string) ||
-        (parsed.meta_description as string) ||
-        "",
-      slug:
-        (parsed.slug as string) ||
-        this.generateSlug(title || "generated-article"),
-      status: "draft",
-      generated_by_ai: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-  }
-
-  private parseRewriteResponse(content: string): Record<string, unknown> {
-    try {
-
-      // Clean up the content first
-      let cleanContent = content.trim();
-
-      // Remove any potential markdown formatting
-      cleanContent = cleanContent
-        .replace(/^```json\s*/g, "")
-        .replace(/```\s*$/g, "");
-      cleanContent = cleanContent
-        .replace(/^```\s*/g, "")
-        .replace(/```\s*$/g, "");
-
-      // First, try to parse the entire content as JSON
-      try {
-        const parsed = JSON.parse(cleanContent);
-        return parsed;
-      } catch {
-      }
-
-      // Try to extract JSON from code blocks (more patterns)
-      const codeBlockPatterns = [
-        /```(?:json)?\s*([\s\S]*?)```/,
-        /```\s*([\s\S]*?)```/,
-        /`([\s\S]*?)`/,
-      ];
-
-      for (const pattern of codeBlockPatterns) {
-        const match = cleanContent.match(pattern);
-        if (match) {
-          try {
-            const parsed = JSON.parse(match[1].trim());
-            return parsed;
-          } catch {
-            // Continue to next pattern
-          }
-        }
-      }
-
-      // Try to find a JSON object in the content (more robust)
-      let jsonStart = -1;
-      let jsonEnd = -1;
-      let braceCount = 0;
-
-      for (let i = 0; i < cleanContent.length; i++) {
-        if (cleanContent[i] === "{") {
-          if (jsonStart === -1) jsonStart = i;
-          braceCount++;
-        } else if (cleanContent[i] === "}") {
-          braceCount--;
-          if (braceCount === 0 && jsonStart !== -1) {
-            jsonEnd = i;
-            break;
-          }
-        }
-      }
-
-      if (jsonStart !== -1 && jsonEnd !== -1) {
-        const possibleJson = cleanContent.substring(jsonStart, jsonEnd + 1);
-        try {
-          const parsed = JSON.parse(possibleJson);
-          console.log(
-            "Found JSON object in rewrite content using brace counting"
-          );
-          return parsed;
-        } catch (extractError) {
-          console.error(
-            "Failed to parse extracted JSON for rewrite:",
-            (extractError as Error).message
-          );
-        }
-      }
-
-      // Last resort: try to extract key-value pairs manually if it looks like JSON-ish content
-      if (
-        cleanContent.includes('"title"') &&
-        cleanContent.includes('"content"')
-      ) {
-        // This is a fallback - we'll try to reconstruct based on common patterns
-        // Use more flexible patterns to handle escaped content
-        const titleMatch = cleanContent.match(
-          /"title"\s*:\s*"([^"\\]*(\\.[^"\\]*)*)"/
-        );
-        const excerptMatch = cleanContent.match(
-          /"excerpt"\s*:\s*"([^"\\]*(\\.[^"\\]*)*)"/
-        );
-        const metaMatch = cleanContent.match(
-          /"metaDescription"\s*:\s*"([^"\\]*(\\.[^"\\]*)*)"/
-        );
-
-        // For content, we need to be more careful as it can contain HTML with quotes
-        let contentMatch = null;
-        const contentStartMatch = cleanContent.match(/"content"\s*:\s*"/);
-        if (contentStartMatch && contentStartMatch.index !== undefined) {
-          const startIndex =
-            contentStartMatch.index + contentStartMatch[0].length;
-          let endIndex = startIndex;
-          let escaping = false;
-          const depth = 0;
-
-          // Find the end of the content string, accounting for escaped quotes
-          for (let i = startIndex; i < cleanContent.length; i++) {
-            const char = cleanContent[i];
-            if (escaping) {
-              escaping = false;
-              continue;
-            }
-            if (char === "\\") {
-              escaping = true;
-              continue;
-            }
-            if (char === '"' && depth === 0) {
-              endIndex = i;
-              break;
-            }
-          }
-
-          if (endIndex > startIndex) {
-            const contentText = cleanContent.substring(startIndex, endIndex);
-            // Unescape the content
-            const unescapedContent = contentText
-              .replace(/\\"/g, '"')
-              .replace(/\\\\/g, "\\");
-            contentMatch = [null, unescapedContent];
-          }
-        }
-
-        const keywordsMatch = cleanContent.match(/"keywords"\s*:\s*\[(.*?)\]/);
-
-        if (titleMatch && contentMatch) {
-          const reconstructed = {
-            title: titleMatch[1].replace(/\\"/g, '"').replace(/\\\\/g, "\\"),
-            content: contentMatch[1],
-            keywords: keywordsMatch
-              ? keywordsMatch[1]
-                  .split(",")
-                  .map((k) => k.trim().replace(/"/g, ""))
-              : [],
-            excerpt: excerptMatch
-              ? excerptMatch[1].replace(/\\"/g, '"').replace(/\\\\/g, "\\")
-              : "",
-            meta_description: metaMatch
-              ? metaMatch[1].replace(/\\"/g, '"').replace(/\\\\/g, "\\")
-              : "",
-          };
-          return reconstructed;
-        }
-      }
-
-      console.error("No valid JSON found in rewrite response");
-      console.error("Rewrite response was:", cleanContent.substring(0, 1000));
-      throw new Error("No valid JSON found in rewrite response");
-    } catch (error) {
-      console.error("Error parsing rewrite response:", error);
-      throw new Error("Failed to parse AI rewrite response");
-    }
+    return this.formatBlogPost(this.parseJsonResponse(content));
   }
 
   async saveToBlog(blogPost: BlogPost, authorId?: string): Promise<string> {
@@ -424,233 +86,215 @@ CRITICAL: Ensure the "content" field contains the COMPLETE article (${lengthWord
     return data.id;
   }
 
-  async rewriteArticle(options: {
-    originalTitle: string;
-    originalContent: string;
-    targetService: string;
-    style?: "professional" | "friendly" | "technical";
-  }): Promise<BlogPost> {
-    const { originalTitle, originalContent, targetService } = options;
+  static getTopicIdeas(): GenerateArticleOptions[] {
+    return [
+      {
+        topic: "Pourquoi vos visiteurs viennent mais ne convertissent pas",
+        keyword: "analyse conversion site web",
+        tone: "professional",
+        length: "medium",
+        includeCode: false,
+      },
+      {
+        topic: "Mesurer les pages qui créent vraiment des opportunités",
+        keyword: "pages qui convertissent",
+        tone: "professional",
+        length: "medium",
+        includeCode: false,
+      },
+      {
+        topic: "Comprendre l'origine des leads sans accepter un bandeau cookies",
+        keyword: "tracking leads sans cookies",
+        tone: "technical",
+        length: "long",
+        includeCode: true,
+      },
+      {
+        topic: "Ce que Google Analytics cache aux petites équipes marketing",
+        keyword: "analytics pour petite equipe marketing",
+        tone: "friendly",
+        length: "medium",
+        includeCode: false,
+      },
+      {
+        topic: "Suivre un tunnel de conversion sans complexifier son site",
+        keyword: "suivi tunnel conversion",
+        tone: "technical",
+        length: "long",
+        includeCode: true,
+      },
+    ];
+  }
 
-    const prompt = `You are a web writing expert with a conversational and educational style (like Plausible Analytics). You will rewrite this article for "${targetService}" following strict natural tone rules.
+  private async callOpenAI(options: {
+    system: string;
+    prompt: string;
+    maxTokens: number;
+    temperature: number;
+  }): Promise<string> {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: this.model,
+        temperature: options.temperature,
+        max_tokens: options.maxTokens,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: options.system },
+          { role: "user", content: options.prompt },
+        ],
+      }),
+    });
 
-ORIGINAL ARTICLE:
-Title: ${originalTitle}
-Content: ${originalContent.substring(0, 3000)}...
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`OpenAI API error: ${response.status} - ${error}`);
+    }
 
-WRITING RULES (CRITICAL):
-- CONVERSATIONAL tone: write as if explaining to a friend
-- EDUCATIONAL approach: explain concepts first, then solutions
-- ABSOLUTELY AVOID aggressive marketing and superlatives
-- NEVER "${targetService}" in the title (use "a solution", "this type of tool")
-- Maximum 2-3 natural mentions of ${targetService} in the article
-- Prefer: "You might have wondered...", "An interesting thing..."
+    const data = await response.json();
+    const content = data?.choices?.[0]?.message?.content;
 
-REWRITING INSTRUCTIONS:
-1. Rewrite COMPLETELY with different vocabulary and structure
-2. Adopt a conversational and pedagogical tone
-3. Keep the main message but explain rather than sell
-4. Add/remove sections if it improves understanding
-5. Replace product references with subtle mentions
-6. Avoid systematic bullet points
-7. Explain the "why" before the "how"
-8. Generate a natural title focused on the question/problem (WITHOUT ${targetService})
-9. Content between 2000-3000 words with natural tone
-10. HTML structure with conversational titles
+    if (!content) {
+      throw new Error("OpenAI response did not contain message content");
+    }
 
-NATURAL STYLE:
-- Openings: "A few years ago...", "Many wonder..."
-- Transitions: "Which brings us to...", "From a practical standpoint..."
-- Product mentions: "This is exactly the challenge we're trying to solve"
-- Nuances and trade-offs mentioned
-- Balanced approach, no overselling
+    return content;
+  }
 
-IMPORTANT:
-- 100% original, no copied phrases
-- Educational before commercial
-- Natural before SEO optimized
-- Must be publishable on any tech blog
+  private createArticlePrompt(options: GenerateArticleOptions): string {
+    const lengthWords = {
+      short: "1000-1500",
+      medium: "1800-2400",
+      long: "2600-3400",
+    };
 
-MANDATORY JSON FORMAT - CRITICAL:
-You MUST return ONLY a valid JSON object with no text before or after.
-Use double quotes for ALL strings, including HTML content.
-NEVER use backticks, template literals, or line breaks within JSON strings.
+    return `Crée un brouillon d'article pour Hector Analytics.
 
-Expected JSON structure:
+But éditorial:
+- Aider les fondateurs, freelances, consultants SEO/marketing et petites équipes SaaS à comprendre ce qui transforme des visites en décisions.
+- Se différencier des clones de Plausible: ne pas écrire "alternative privacy-first" comme angle principal par défaut.
+- Partir de problèmes métier: conversion, acquisition, sources de leads, pages qui performent, tunnels, qualité du trafic.
+- Mentionner Hector Analytics seulement quand c'est utile, sobrement, jamais comme miracle.
+
+Paramètres:
+- Sujet: ${options.topic}
+- Requête cible: ${options.keyword}
+- Ton: ${options.tone || "professional"}
+- Longueur: ${lengthWords[options.length || "medium"]} mots
+${options.includeCode ? "- Inclure un exemple de tracking concret" : ""}
+
+Contraintes:
+- Titre précis, non générique.
+- Angle fort dès l'introduction.
+- H1/H2/H3 en HTML.
+- Inclure les limites et arbitrages.
+- Ne pas copier le style Plausible.
+- Ne pas produire une page "alternative à Google Analytics" sauf si le sujet le demande.
+- Retourner uniquement un JSON valide.
+
+Format JSON:
 {
-  "title": "Conversational title WITHOUT ${targetService}",
-  "content": "Complete HTML content (2000-3000 words) as a single JSON string - use proper HTML tags and ensure the full article is included without truncation",
-  "keywords": ["keyword 1", "keyword 2", "keyword 3"],
-  "excerpt": "Natural summary of 150 characters max",
-  "metaDescription": "Conversational meta description 150-155 characters"
-}
+  "title": "Titre exact",
+  "slug": "slug-url",
+  "content": "HTML complet",
+  "excerpt": "Résumé en 150-160 caractères",
+  "metaDescription": "Meta description en 150-155 caractères",
+  "keywords": ["requête principale", "requête secondaire"]
+}`;
+  }
 
-CRITICAL: 
-- Return ONLY the JSON object, no explanatory text, no markdown formatting, no code blocks
-- Ensure the "content" field contains the COMPLETE rewritten article (not truncated)
-- Format HTML content as a proper JSON string with escaped quotes if needed`;
+  private createRewritePrompt(options: RewriteArticleOptions): string {
+    return `Réécris ce contenu pour ${options.targetService}, mais comme un article original.
+
+Titre original:
+${options.originalTitle}
+
+Contenu original:
+${options.originalContent.substring(0, 6000)}
+
+Objectif:
+- Changer l'angle, la structure et les formulations.
+- Garder uniquement les idées utiles.
+- Transformer le texte en brouillon éditorial pour Hector Analytics.
+- Ton: ${options.style || "professional"}.
+- Ne pas imiter Plausible ou une autre marque.
+- Ne pas mettre ${options.targetService} dans le titre.
+- Retourner uniquement un JSON valide.
+
+Format JSON:
+{
+  "title": "Titre exact",
+  "slug": "slug-url",
+  "content": "HTML complet",
+  "excerpt": "Résumé en 150-160 caractères",
+  "metaDescription": "Meta description en 150-155 caractères",
+  "keywords": ["requête principale", "requête secondaire"]
+}`;
+  }
+
+  private parseJsonResponse(content: string): Record<string, unknown> {
+    const cleanContent = content
+      .trim()
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/```\s*$/i, "");
 
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": this.anthropicApiKey,
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-          model: "claude-3-5-sonnet-20241022", // Use more powerful model
-          max_tokens: 8000, // Increase tokens for complete articles
-          temperature: 0.8, // Higher temperature for more creative rewriting
-          messages: [
-            {
-              role: "user",
-              content: prompt,
-            },
-          ],
-        }),
-      });
+      return JSON.parse(cleanContent);
+    } catch {
+      const jsonStart = cleanContent.indexOf("{");
+      const jsonEnd = cleanContent.lastIndexOf("}");
 
-      if (!response.ok) {
-        const error = await response.text();
-        console.error("Claude API error:", error);
-        throw new Error(`Claude API error: ${response.status}`);
+      if (jsonStart >= 0 && jsonEnd > jsonStart) {
+        return JSON.parse(cleanContent.slice(jsonStart, jsonEnd + 1));
       }
 
-      const data = await response.json();
-      const content = data.content[0].text;
-
-      // Parse the JSON response using the same robust method
-      const parsedContent = this.parseRewriteResponse(content);
-
-      const blogPost: BlogPost = {
-        id: "temp-id",
-        title: parsedContent.title as string,
-        content: parsedContent.content as string,
-        excerpt: parsedContent.excerpt as string,
-        keywords: parsedContent.keywords as string[],
-        meta_description: parsedContent.metaDescription as string,
-        slug: this.generateSlug(parsedContent.title as string),
-        status: "draft",
-        generated_by_ai: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      return blogPost;
-    } catch (error) {
-      console.error("Error rewriting article:", error);
-      throw error;
+      throw new Error("Failed to parse AI response as JSON");
     }
+  }
+
+  private formatBlogPost(parsed: Record<string, unknown>): BlogPost {
+    const title = this.asString(parsed.title) || "Article sans titre";
+    const content = this.asString(parsed.content) || "<p>Contenu à compléter.</p>";
+
+    return {
+      id: "temp-id",
+      title,
+      content,
+      excerpt: this.asString(parsed.excerpt),
+      keywords: Array.isArray(parsed.keywords)
+        ? parsed.keywords.filter((keyword): keyword is string => {
+            return typeof keyword === "string";
+          })
+        : [],
+      meta_description:
+        this.asString(parsed.metaDescription) ||
+        this.asString(parsed.meta_description),
+      slug: this.asString(parsed.slug) || this.generateSlug(title),
+      status: "draft",
+      generated_by_ai: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+  }
+
+  private asString(value: unknown): string {
+    return typeof value === "string" ? value : "";
   }
 
   private generateSlug(title: string): string {
     return title
       .toLowerCase()
-      .replace(/[àáâãäå]/g, "a")
-      .replace(/[èéêë]/g, "e")
-      .replace(/[ìíîï]/g, "i")
-      .replace(/[òóôõö]/g, "o")
-      .replace(/[ùúûü]/g, "u")
-      .replace(/[ç]/g, "c")
-      .replace(/[ñ]/g, "n")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9\s-]/g, "")
+      .trim()
       .replace(/\s+/g, "-")
       .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "")
-      .substring(0, 60);
-  }
-
-  private calculateSeoScore(parsedContent: Record<string, unknown>): number {
-    let score = 60; // Base score
-
-    const title = parsedContent.title as string;
-    const content = parsedContent.content as string;
-    const keywords = (parsedContent.keywords as string[]) || [];
-    const metaDescription = parsedContent.metaDescription as string;
-
-    // Title optimization (10 points)
-    if (title && title.length >= 30 && title.length <= 60) {
-      score += 10;
-    } else if (title && title.length > 0) {
-      score += 5;
-    }
-
-    // Content length (10 points)
-    if (content && content.length >= 1500) {
-      score += 10;
-    } else if (content && content.length >= 800) {
-      score += 5;
-    }
-
-    // Keywords (10 points)
-    if (keywords && keywords.length >= 3) {
-      score += 10;
-    } else if (keywords && keywords.length > 0) {
-      score += 5;
-    }
-
-    // Meta description (10 points)
-    if (
-      metaDescription &&
-      metaDescription.length >= 140 &&
-      metaDescription.length <= 155
-    ) {
-      score += 10;
-    } else if (metaDescription && metaDescription.length > 0) {
-      score += 5;
-    }
-
-    return Math.min(score, 100); // Cap at 100
-  }
-
-  // Predefined topics for automated generation (conversational approach)
-  static getTopicIdeas(): GenerateArticleOptions[] {
-    return [
-      {
-        topic: "Why do tracking cookies actually pose a problem?",
-        keyword: "tracking cookies problem",
-        tone: "friendly",
-        length: "long",
-        includeCode: true,
-      },
-      {
-        topic: "GDPR and web analytics: what has really changed?",
-        keyword: "GDPR web analytics",
-        tone: "professional",
-        length: "medium",
-        includeCode: false,
-      },
-      {
-        topic: "How has web analytics evolved in recent years?",
-        keyword: "web analytics evolution",
-        tone: "friendly",
-        length: "medium",
-        includeCode: false,
-      },
-      {
-        topic:
-          "Understanding your visitors without spying on them: is it possible?",
-        keyword: "privacy-respecting analytics",
-        tone: "friendly",
-        length: "medium",
-        includeCode: true,
-      },
-      {
-        topic: "What happens when you stop using Google Analytics?",
-        keyword: "stop using google analytics",
-        tone: "professional",
-        length: "long",
-        includeCode: true,
-      },
-      {
-        topic:
-          "Analytics and web performance: the real impact of tracking scripts",
-        keyword: "analytics performance impact",
-        tone: "technical",
-        length: "medium",
-        includeCode: true,
-      },
-    ];
+      .slice(0, 70);
   }
 }

@@ -34,6 +34,9 @@ yarn-error.log*
 .env*.local
 .env
 
+# local Codex MCP config and credentials
+.codex/
+
 # vercel
 .vercel
 

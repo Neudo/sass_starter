@@ -254,7 +254,7 @@ async function generateLocationsCsv(
         date,
         country,
         region,
-        city: city || 0, // Use 0 for empty cities like in Plausible
+        city: city || 0,
         visitors: 0,
         visits: 0,
         visit_duration: 0,
