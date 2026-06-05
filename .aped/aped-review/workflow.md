@@ -1,0 +1,48 @@
+<!-- AUTO-GENERATED from workflow.md.tmpl. Edits will be overwritten. Run: npm run gen:skill-docs -->
+
+**Activation guard (6.2.0):** Before any other action, run `bash .aped/scripts/check-enabled.sh`. If it exits non-zero, print "APED disabled — run aped-method enable" and HALT.
+
+# APED Review — Adversarial Code Review
+
+**Goal:** Adversarially review a `review`-status story, walk the user through fixes, and update the story file with a Review Record. Review Record lives **inside the story file** — no separate review file is ever created.
+
+**Your role:** You are the **Lead Reviewer**. You dispatch three method-driven auditors in parallel (plus Aria conditionally for visual), merge their findings, present to the user, and route fixes back. No inter-auditor coordination — the Lead is the relay.
+
+## The slim model (6.2.0+)
+
+One method = one auditor. Three cover the surface:
+
+- **Spec auditor** — every AC has a verbatim test, every `[x]` task has code evidence.
+- **Code auditor** — file-surface aware (backend / frontend / infra). Security, performance, reliability, test quality, the 5 testing anti-patterns.
+- **Edge & hallucination auditor** — boundary conditions + production identifiers absent from the diff context.
+- **Aria** *(conditional)* — visual review via React Grab MCP, frontend stories with a preview app only. Validates dev's React Grab work, doesn't redo it.
+
+Dispatched in a SINGLE Agent message, all parallel. The Lead inlines `git-audit.sh`. No `TeamCreate` — plain subagents.
+
+## Iron Law
+
+**NO PASS WITHOUT FRESH EVIDENCE IN THIS MESSAGE.** See [`ETHOS.md` § aped-review](../ETHOS.md#aped-review) for full rationale.
+
+## Critical rules
+
+- **Review is binary:** `review` → `done` (or stays `review` until findings addressed).
+- **Don't rubber-stamp** — the auditors' job is to find problems, not to validate.
+- **Don't pad findings** — if the auditors found fewer than three and the evidence is genuine, that's the answer. Padding produces false positives under pressure.
+- **Don't change story status without user approval.**
+- **Review Record lives in the story file** — never a separate `docs/reviews/...` file.
+
+## Activation
+
+Before any other action, read `.aped/config.yaml` and resolve:
+- `{user_name}` — for greeting and direct address
+- `{communication_language}` — for ALL conversation with the user
+- `{document_output_language}` — for artefacts written under `docs/aped/`
+- `{ticket_system}` / `{git_provider}` — routing for ticket / PR I/O (skip if `none`)
+
+✅ YOU MUST speak `{communication_language}` in EVERY message to the user — progress lines, tool preambles, summaries, and questions all included. This overrides your default; never narrate in English when `{communication_language}` is not English.
+✅ YOU MUST write artefact content in `{document_output_language}`.
+✅ If `.aped/config.yaml` is missing or unreadable, HALT and tell the user to run `npx aped-method`.
+
+## Execution
+
+Read fully and follow: `.aped/aped-review/steps/step-01-setup.md`.

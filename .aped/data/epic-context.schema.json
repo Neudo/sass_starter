@@ -1,0 +1,60 @@
+{
+  "artefact_name": "epic-context",
+  "description": "APED epic-context cache — produced by aped-story step-02, appended by aped-review at story→done, optionally extended by aped-discuss-epic (6.9.0+).",
+  "version": 2,
+  "top_level": [
+    "Scope from PRD",
+    "Architecture references",
+    "UX references",
+    "Project context (brownfield only)",
+    "Lessons applicable",
+    "Implementation decisions",
+    "Previous stories — outcomes"
+  ],
+  "sections": [
+    {
+      "heading": "Scope from PRD",
+      "level": 2,
+      "required": true,
+      "forbid_invented_sub_headings": true
+    },
+    {
+      "heading": "Architecture references",
+      "level": 2,
+      "required": true,
+      "forbid_invented_sub_headings": true
+    },
+    {
+      "heading": "UX references",
+      "level": 2,
+      "required": true,
+      "forbid_invented_sub_headings": true
+    },
+    {
+      "heading": "Project context (brownfield only)",
+      "level": 2,
+      "required": true,
+      "forbid_invented_sub_headings": true
+    },
+    {
+      "heading": "Lessons applicable",
+      "level": 2,
+      "required": true,
+      "forbid_invented_sub_headings": true
+    },
+    {
+      "heading": "Implementation decisions",
+      "level": 2,
+      "required": false,
+      "_note": "6.9.0 — optional section appended by aped-discuss-epic. forbid:false so SPIDR sub-axis schema can land later (cohort-3 / 6.10.0). Legacy caches without this section validate clean.",
+      "forbid_invented_sub_headings": false
+    },
+    {
+      "heading": "Previous stories — outcomes",
+      "level": 2,
+      "required": true,
+      "_note": "forbid_invented_sub_headings: false because aped-review appends '### Story {key} — done {ISO}' level-3 blocks here. Per-block schema (Decisions/Files/Contracts/Deviations) deferred to cohort-3 (6.10.0).",
+      "forbid_invented_sub_headings": false
+    }
+  ]
+}

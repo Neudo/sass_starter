@@ -1,0 +1,162 @@
+# APED Project Configuration
+project_name: hector-analytics
+user_name: Quentin
+communication_language: english
+document_output_language: english
+aped_path: .aped
+output_path: docs/aped
+aped_version: 6.14.0
+
+# Integrations
+ticket_system: none
+git_provider: github
+
+# Default base branch for ship/sprint mode. The sprint umbrella is cut from
+# this ref, and aped-ship opens its umbrella → base PR against it.
+# Override per-project if you trunk-deploy from `develop`, `master`,
+# `trunk`, etc. (Read by aped-sprint, aped-ship, sprint-dispatch.sh.)
+base_branch: main
+
+# Sprint-mode preferences (6.1.0). These were seeded under
+# state.yaml.sprint in 4.1.x–6.0.x — schema v3 migration moves them here so
+# they survive sprint resets and aren't conflated with runtime state.
+# Readers check config.yaml first, then fall back to state.yaml.sprint for
+# scaffolds that have not yet run `aped-method --update` to bump v2 → v3.
+sprint:
+  # Max stories dispatched concurrently (one worktree per story).
+  parallel_limit: 3
+  # Max reviews running concurrently. spec-teams are token-heavy so the
+  # default is intentionally lower than parallel_limit.
+  review_limit: 2
+  # Push the freshly-created sprint umbrella branch to origin at sprint
+  # start. Default true (matches 6.0 behaviour). Set false on solo or
+  # offline projects, or where push to origin requires a PR (branch
+  # protection on uncreated branches).
+  push_umbrella_on_create: true
+  # Polling timeout (seconds) for aped-lead's "merge story PR into umbrella"
+  # step. After enqueuing the merge with `gh pr merge --squash`, the lead
+  # polls `gh pr view --json state` until MERGED or this timeout elapses.
+  # Surfaces a clear error instead of fire-and-forget teardown.
+  merge_poll_timeout_seconds: 120
+  # Post-dispatch bootstrap (6.7.5). When empty, sprint-dispatch.sh runs
+  # smart defaults: detect package-runner (pnpm/yarn/bun/npm), run install,
+  # and copy .env from project root if `.env.example` exists in the worktree.
+  # Set to a non-empty array to override — each entry runs in the worktree
+  # via `bash -c`, smart defaults are skipped entirely. Best-effort: failures
+  # log but never block dispatch.
+  post_dispatch_hook: []
+  # Sprint mode (6.7.5). `parallel` (default) creates one worktree per story
+  # under the umbrella. `sequential` creates ONE shared worktree at sprint
+  # start and stacks stories on top via git-spice — requires `gs --version`
+  # at dispatch time, HALTs with install link if missing.
+  mode: parallel
+
+# Review-stage knobs.
+# `parallel_reviewers` (6.1.0) — flag for the Stage 1.5 opt-in trio
+# (Hannah / Eli / Aaron). **Deprecated in 6.2.0**: the slim review model
+# folds Edge & hallucination into the always-on auditor set, so this
+# flag is now inert. Kept in the seed for backwards-compat.
+review:
+  parallel_reviewers: false
+
+# aped-from-ticket — external ticket intake
+# All keys are optional; defaults shown below kick in when absent.
+from_ticket:
+  story_placement:
+    # mode: bucket | auto_match | ask
+    #   bucket     — always place under bucket_epic
+    #   auto_match — score against existing epics, fallback to bucket
+    #   ask        — present candidates + bucket, let user pick
+    mode: ask
+    # Epic key used when placement falls back to (or chooses) the bucket.
+    bucket_epic: external-tickets
+  ticket_comment:
+    # When true, post a comment on the source ticket after the story is drafted.
+    # Off by default to avoid noisy notifications during initial use.
+    enabled: false
+    # Template for the comment body. {story_path} is substituted at runtime.
+    template: "Picked up — story drafted at {story_path}"
+  sprint_integration:
+    # When true, the new story is appended to the active sprint's ordering.
+    # Off by default — the user explicitly promotes the story when ready.
+    auto_add: false
+  handoff:
+    # after_story: ask | stop | continue_to_dev
+    #   ask              — present [D]ev / [P]romote / [S]top options
+    #   stop             — report path and exit
+    #   continue_to_dev  — invoke aped-dev directly (no confirmation)
+    after_story: ask
+
+# Artefact placeholder lint — runs from the Self-review block of every
+# artefact-producing skill (PRD, architecture, story, epics, UX, retro,
+# brainstorm, prfaq, project-context, from-ticket).
+# Set enabled: false to opt out across all skills (e.g. for projects that
+# legitimately use TODO/TBD as in-document trackers).
+placeholder_lint:
+  enabled: true
+
+# APED runtime activation (6.2.0). Manual kill switch the activation guard
+# (.aped/scripts/check-enabled.sh) reads at the top of every skill body.
+# When false, the guard exits 1 and the skill HALTs with "APED disabled —
+# run aped-method enable" — even when the user explicitly typed /aped-X.
+#
+# How disable / enable interact with this knob (6.3.3):
+# - `aped-method disable` (full mode) — writes the .aped/.DISABLED marker
+#   + flips disable-model-invocation: true on every SKILL.md + writes a
+#   snapshot. **Does not** flip this value: the marker is the runtime
+#   signal, this value stays as your manual override slot.
+# - `aped-method disable --local` (per-developer) — writes the marker AND
+#   .aped/config.local.yaml (gitignored) with aped.enabled: false. The
+#   guard reads config.local.yaml with precedence over this file, so the
+#   team-shared config.yaml can stay enabled: true while the per-developer
+#   override flips the runtime check.
+# - Hand-flipping this value to false works (the guard reads it as a
+#   third fallback) but propagates to the team on commit. Prefer
+#   `disable --local` if that's not what you want.
+aped:
+  enabled: true
+
+# Skill-invocation discipline (Tier 4). Governs whether the
+# "## Skill Invocation Discipline" block is rendered into CLAUDE.md by the
+# scaffold/update flow. Defaults on — it carries the 1%-rule and the
+# rationalization table that keep `aped-*` skill triggers honest.
+skill_invocation_discipline:
+  enabled: true   # If false, the CLAUDE.md "Skill Invocation Discipline" block is omitted.
+
+# Visual companion server for aped-brainstorm (opt-in, Tier 4).
+# Installation is gated on `aped-method visual-companion` so the default
+# scaffold ships nothing on disk; this block only configures the server
+# once the user opts in.
+visual_companion:
+  enabled: false  # Opt-in. Install via 'aped-method visual-companion'.
+  port: 3737      # HTTP port for the brainstorm visual companion server.
+
+# Sync-log audit trail (Tier 6, 3.12.0). Ticket-system operations in
+# aped-epics, aped-from-ticket, aped-ship and aped-course emit a
+# structured JSON log per sync via aped/scripts/sync-log.sh. Set
+# enabled: false to make the helper a silent no-op (every subcommand
+# exits 0 with empty stdout — useful when you don't want forensic logs
+# committed alongside the project, e.g. on personal scratch repos).
+# `dir` is project-relative and auto-created on first `start`.
+#
+# Retention (4.1.0+, opt-in). When `mode: keep_last_n`, every successful
+# `sync-log.sh end` prunes the oldest provider-scoped logs beyond `keep_last_n`
+# (newest by mtime are kept). Default `mode: none` preserves the previous
+# behaviour (logs accumulate forever). Use `aped-method sync-logs prune` for
+# a one-shot cleanup; default is dry-run, `--apply` actually deletes.
+sync_logs:
+  enabled: true
+  dir: "docs/sync-logs/"
+  # retention:
+  #   mode: keep_last_n      # none | keep_last_n
+  #   keep_last_n: 50        # used when mode = keep_last_n
+
+# State files (4.1.0+, schema v2). The corrections log was split out of
+# state.yaml to bound its growth. `corrections_path` is project-relative
+# and overrides the default below; state.yaml itself carries a
+# `corrections_pointer` that wins at runtime, so a config edit cannot
+# desync from already-written corrections. To move the file safely,
+# edit BOTH this key and the pointer inside state.yaml in lock-step.
+# Default tracks `output_path` so the sister file lives next to state.yaml.
+state:
+  corrections_path: "docs/aped/state-corrections.yaml"
