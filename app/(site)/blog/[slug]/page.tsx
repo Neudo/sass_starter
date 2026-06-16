@@ -7,12 +7,18 @@ import { generateArticleSchema } from "@/lib/schema";
 import { Calendar } from "lucide-react";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { sanitizeHtml } from "@/lib/markdown-utils";
+import { BlogPost } from "@/types";
 
 interface BlogPostProps {
   params: Promise<{ slug: string }>;
 }
 
-async function getBlogPost(slug: string) {
+type RelatedBlogPost = Pick<
+  BlogPost,
+  "id" | "title" | "slug" | "excerpt" | "published_at"
+>;
+
+async function getBlogPost(slug: string): Promise<BlogPost | null> {
   const supabase = createAdminClient();
 
   const { data: post, error } = await supabase
@@ -26,14 +32,14 @@ async function getBlogPost(slug: string) {
     return null;
   }
 
-  return post;
+  return post as BlogPost;
 }
 
 async function getRelatedPosts(
   currentSlug: string,
   keywords: string[],
   limit = 3
-) {
+): Promise<RelatedBlogPost[]> {
   const supabase = createAdminClient();
 
   const { data: posts } = await supabase
@@ -43,7 +49,7 @@ async function getRelatedPosts(
     .neq("slug", currentSlug)
     .limit(limit);
 
-  return posts || [];
+  return (posts || []) as RelatedBlogPost[];
 }
 
 export default async function BlogPostPage({ params }: BlogPostProps) {
@@ -55,13 +61,14 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
   }
 
   const relatedPosts = await getRelatedPosts(post.slug, post.keywords);
+  const publishedAt = post.published_at || post.created_at;
 
   const articleSchema = generateArticleSchema({
     title: post.title,
     slug: post.slug,
     excerpt: post.excerpt,
     content: post.content,
-    publishedAt: post.published_at,
+    publishedAt,
     keywords: post.keywords,
     featuredImage: post.featured_image,
   });
@@ -87,7 +94,7 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
             <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
               <span className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                {new Date(post.published_at).toLocaleDateString("en-US", {
+                {new Date(publishedAt).toLocaleDateString("en-US", {
                   day: "numeric",
                   month: "long",
                   year: "numeric",
@@ -171,9 +178,9 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
                     </p>
                     <div className="flex items-center justify-end text-xs text-gray-500">
                       <span>
-                        {new Date(relatedPost.published_at).toLocaleDateString(
-                          "en-US"
-                        )}
+                        {new Date(
+                          relatedPost.published_at || new Date().toISOString()
+                        ).toLocaleDateString("en-US")}
                       </span>
                     </div>
                   </CardContent>
@@ -197,6 +204,8 @@ export async function generateMetadata({ params }: BlogPostProps) {
     };
   }
 
+  const publishedAt = post.published_at || post.created_at;
+
   return {
     title: `${post.title} | Blog Hector Analytics`,
     description: post.meta_description || post.excerpt,
@@ -209,7 +218,7 @@ export async function generateMetadata({ params }: BlogPostProps) {
       description: post.meta_description || post.excerpt,
       type: "article",
       url: `https://www.hectoranalytics.com/blog/${post.slug}`,
-      publishedTime: post.published_at,
+      publishedTime: publishedAt,
       authors: ["Hector Analytics"],
     },
     twitter: {

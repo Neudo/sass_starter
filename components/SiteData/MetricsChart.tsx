@@ -26,17 +26,7 @@ interface MetricsChartProps {
   siteId: string;
   dateRange: DateRangeOption;
   selectedMetrics: string[];
-}
-
-interface SessionData {
-  id: string;
-  site_id: string;
-  created_at: string;
-  last_seen?: string;
-  browser?: string;
-  os?: string;
-  screen_size?: string;
-  country?: string;
+  isPublic?: boolean;
 }
 
 interface ChartDataPoint {
@@ -79,6 +69,7 @@ export function MetricsChart({
   siteId,
   dateRange,
   selectedMetrics,
+  isPublic = false,
 }: MetricsChartProps) {
   // Get the display title for the selected metric
   const getMetricTitle = (metric: string): string => {
@@ -268,28 +259,15 @@ export function MetricsChart({
         return;
       }
 
-      // Build query for other metrics
-      if (!siteId) {
-        console.error("No siteId available for MetricsChart");
-        setLocalLoading(false);
-        return;
-      }
-
-      let query = supabase
-        .from("sessions")
-        .select("*")
-        .eq("site_id", siteId)
-        .order("created_at", { ascending: true });
-
       // Calculate interval based on date range
       let interval: "hour" | "day" | "month" = "hour";
       let allDates: { key: string; date: Date; displayDate: string }[] = [];
+      let from: Date;
+      let to: Date;
 
       if (range) {
-        const { from, to } = range;
-        query = query
-          .gte("created_at", from.toISOString())
-          .lte("created_at", to.toISOString());
+        from = range.from;
+        to = range.to;
 
         const daysDiff = Math.ceil(
           (to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24)
@@ -313,118 +291,61 @@ export function MetricsChart({
         const now = new Date();
         const yearAgo = new Date(now);
         yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+        from = yearAgo;
+        to = now;
         allDates = generateDateRange(yearAgo, now, interval);
       }
 
-      // Fetch sessions data
-      const { data: sessions, error } = await query;
+      const params = new URLSearchParams({
+        siteId,
+        from: from.toISOString(),
+        to: to.toISOString(),
+        interval,
+      });
 
-      if (error) {
-        console.error("Error fetching chart data:", error);
+      if (isPublic) {
+        params.set("public", "true");
+      }
+
+      const response = await fetch(
+        `/api/analytics/timeseries?${params.toString()}`
+      );
+
+      if (!response.ok) {
+        console.error("Error fetching chart data:", await response.text());
         setLocalLoading(false);
         return;
       }
 
-      // Fetch page views count for each session
-      const sessionIds = sessions?.map((s) => s.id) || [];
-      const { data: pageViewCounts } = await supabase
-        .from("page_views")
-        .select("session_id")
-        .in("session_id", sessionIds);
+      const { data } = (await response.json()) as {
+        data: Array<Omit<ChartDataPoint, "displayDate">>;
+      };
 
-      // Create a map of session_id to page view count
-      const pageViewsPerSession = new Map<string, number>();
-      pageViewCounts?.forEach((pv) => {
-        const count = pageViewsPerSession.get(pv.session_id) || 0;
-        pageViewsPerSession.set(pv.session_id, count + 1);
-      });
-
-      // Group data by interval
-      const groupedData = new Map<string, SessionData[]>();
-
-      // Initialize all dates with empty arrays
-      allDates.forEach(({ key }) => {
-        groupedData.set(key, []);
-      });
-
-      sessions?.forEach((session) => {
-        const date = new Date(session.created_at);
-        let key: string;
-
-        if (interval === "hour") {
-          key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-            2,
-            "0"
-          )}-${String(date.getDate()).padStart(2, "0")} ${String(
-            date.getHours()
-          ).padStart(2, "0")}:00`;
-        } else if (interval === "day") {
-          key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-            2,
-            "0"
-          )}-${String(date.getDate()).padStart(2, "0")}`;
-        } else {
-          // Month
-          key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-            2,
-            "0"
-          )}`;
-        }
-
-        if (groupedData.has(key)) {
-          groupedData.get(key)?.push(session);
-        }
-      });
-
-      // Calculate metrics for each interval
-      const chartPoints: ChartDataPoint[] = [];
       const dateMap = new Map(allDates.map((d) => [d.key, d.displayDate]));
+      const chartPoints = data.map((point) => {
+        const date = new Date(point.date);
+        const dateKey =
+          interval === "hour"
+            ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+                2,
+                "0"
+              )}-${String(date.getDate()).padStart(2, "0")} ${String(
+                date.getHours()
+              ).padStart(2, "0")}:00`
+            : interval === "day"
+              ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+                  2,
+                  "0"
+                )}-${String(date.getDate()).padStart(2, "0")}`
+              : `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+                  2,
+                  "0"
+                )}`;
 
-      groupedData.forEach((sessions, dateKey) => {
-        // Hector's current visitor model: 1 session = 1 visitor.
-        const visitors = sessions.length;
-        const totalVisits = sessions.length;
-        let totalPageviews = 0;
-        let totalDuration = 0;
-        let bounces = 0;
-
-        sessions.forEach((session) => {
-          const sessionPageviews = pageViewsPerSession.get(session.id) || 1;
-          totalPageviews += sessionPageviews;
-
-          if (session.created_at && session.last_seen) {
-            const duration = Math.round(
-              (new Date(session.last_seen).getTime() -
-                new Date(session.created_at).getTime()) /
-                1000
-            );
-            totalDuration += duration;
-          }
-
-          if (sessionPageviews === 1) {
-            bounces++;
-          }
-        });
-
-        const bounceRate =
-          totalVisits > 0 ? Math.round((bounces / totalVisits) * 100) : 0;
-        const avgDuration =
-          totalVisits > 0 ? Math.round(totalDuration / totalVisits) : 0;
-        const viewsPerVisit =
-          totalVisits > 0
-            ? parseFloat((totalPageviews / totalVisits).toFixed(2))
-            : 0;
-
-        chartPoints.push({
-          date: dateKey,
-          displayDate: dateMap.get(dateKey) || dateKey,
-          visitors,
-          totalVisits,
-          totalPageviews,
-          viewsPerVisit,
-          bounceRate,
-          avgDuration,
-        });
+        return {
+          ...point,
+          displayDate: dateMap.get(dateKey) || formatDateDisplay(date),
+        };
       });
 
       // Sort by date
@@ -437,7 +358,7 @@ export function MetricsChart({
     };
 
     fetchChartData();
-  }, [siteId, dateRange, selectedMetrics]);
+  }, [siteId, dateRange, selectedMetrics, isPublic]);
 
   if (loading) {
     return (

@@ -1,6 +1,49 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+
+function topBreakdowns(
+  completions: any[],
+  sessionsById: Map<string, any>
+): {
+  source_breakdown: Array<{ source: string; count: number; percentage: number }>;
+  country_breakdown: Array<{ country: string; count: number; percentage: number }>;
+} {
+  const sourceCounts: Record<string, number> = {};
+  const countryCounts: Record<string, number> = {};
+
+  completions.forEach((completion) => {
+    const session = sessionsById.get(completion.session_id);
+    if (!session) return;
+
+    const source = session.referrer || session.referrer_domain || "Direct";
+    const country = session.country || "Unknown";
+    sourceCounts[source] = (sourceCounts[source] || 0) + 1;
+    countryCounts[country] = (countryCounts[country] || 0) + 1;
+  });
+
+  const total = completions.length || 1;
+
+  return {
+    source_breakdown: Object.entries(sourceCounts)
+      .map(([source, count]) => ({
+        source,
+        count,
+        percentage: Math.round((count / total) * 100),
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3),
+    country_breakdown: Object.entries(countryCounts)
+      .map(([country, count]) => ({
+        country,
+        count,
+        percentage: Math.round((count / total) * 100),
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3),
+  };
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -73,130 +116,87 @@ export async function GET(request: NextRequest) {
       throw funnelsError;
     }
 
-    // For each funnel, get completion counts with date filtering
-    const funnelsWithAnalytics = await Promise.all(
-      (funnels || []).map(async (funnel) => {
-        const steps = (funnel.funnel_steps || []).sort(
-          (a, b) => a.step_number - b.step_number
-        );
-
-        // Get completion counts for each step with date filtering
-        const stepsWithData = await Promise.all(
-          steps.map(async (step) => {
-            let completionsQuery = adminClient
-              .from("funnel_step_completions")
-              .select("id, session_id")
-              .eq("step_id", step.id)
-              .eq("site_domain", site.domain);
-
-            // Apply date filters if provided
-            if (fromDate && toDate) {
-              completionsQuery = completionsQuery
-                .gte("completed_at", fromDate)
-                .lte("completed_at", toDate);
-            }
-
-            const { data: completions } = await completionsQuery;
-            const visitors = completions?.length || 0;
-
-            // Get session data for source and country breakdown
-            let sourceBreakdown: Array<{
-              source: string;
-              count: number;
-              percentage: number;
-            }> = [];
-            let countryBreakdown: Array<{
-              country: string;
-              count: number;
-              percentage: number;
-            }> = [];
-
-            if (completions && completions.length > 0) {
-              const sessionIds = completions
-                .map((c) => c.session_id)
-                .filter(Boolean);
-
-              if (sessionIds.length > 0) {
-                // Get sessions data
-                const { data: sessions } = await adminClient
-                  .from("sessions")
-                  .select("referrer, country")
-                  .in("id", sessionIds);
-
-                if (sessions) {
-                  // Source breakdown
-                  const sourceCounts: Record<string, number> = {};
-                  sessions.forEach((session) => {
-                    const source = session.referrer || "Direct";
-                    sourceCounts[source] = (sourceCounts[source] || 0) + 1;
-                  });
-
-                  sourceBreakdown = Object.entries(sourceCounts)
-                    .map(([source, count]) => ({
-                      source,
-                      count,
-                      percentage: Math.round((count / sessions.length) * 100),
-                    }))
-                    .sort((a, b) => b.count - a.count)
-                    .slice(0, 3);
-
-                  // Country breakdown
-                  const countryCounts: Record<string, number> = {};
-                  sessions.forEach((session) => {
-                    const country = session.country || "Unknown";
-                    countryCounts[country] = (countryCounts[country] || 0) + 1;
-                  });
-
-                  countryBreakdown = Object.entries(countryCounts)
-                    .map(([country, count]) => ({
-                      country,
-                      count,
-                      percentage: Math.round((count / sessions.length) * 100),
-                    }))
-                    .sort((a, b) => b.count - a.count)
-                    .slice(0, 3);
-                }
-              }
-            }
-
-            return {
-              ...step,
-              visitors,
-              source_breakdown: sourceBreakdown,
-              country_breakdown: countryBreakdown,
-            };
-          })
-        );
-
-        // Calculate conversion rates after getting all visitor counts
-        const stepsWithRates = stepsWithData.map((step) => {
-          const firstStepVisitors = stepsWithData[0]?.visitors || 0;
-          const conversionRate =
-            firstStepVisitors > 0
-              ? (step.visitors / firstStepVisitors) * 100
-              : 0;
-
-          return {
-            ...step,
-            conversion_rate: conversionRate,
-          };
-        });
-
-        // Calculate overall funnel conversion rate
-        const totalVisitors = stepsWithRates[0]?.visitors || 0;
-        const completedVisitors =
-          stepsWithRates[stepsWithRates.length - 1]?.visitors || 0;
-        const overallConversionRate =
-          totalVisitors > 0 ? (completedVisitors / totalVisitors) * 100 : 0;
-
-        return {
-          ...funnel,
-          steps: stepsWithRates,
-          total_visitors: totalVisitors,
-          conversion_rate: overallConversionRate,
-        };
-      })
+    const allSteps = ((funnels || []) as any[]).flatMap((funnel) =>
+      (funnel.funnel_steps || []).map((step: any) => step)
     );
+    const stepIds = allSteps.map((step) => step.id);
+    let completions: any[] = [];
+
+    if (stepIds.length > 0) {
+      let completionsQuery = adminClient
+        .from("funnel_step_completions")
+        .select("id, step_id, session_id")
+        .in("step_id", stepIds)
+        .eq("site_domain", site.domain);
+
+      if (fromDate && toDate) {
+        completionsQuery = completionsQuery
+          .gte("completed_at", fromDate)
+          .lte("completed_at", toDate);
+      }
+
+      const { data: completionsData, error: completionsError } =
+        await completionsQuery;
+
+      if (completionsError) {
+        throw completionsError;
+      }
+
+      completions = completionsData || [];
+    }
+
+    const sessionIds = [
+      ...new Set(completions.map((completion) => completion.session_id).filter(Boolean)),
+    ];
+    const { data: sessions } =
+      sessionIds.length > 0
+        ? await adminClient
+            .from("sessions")
+            .select("id, referrer, referrer_domain, country")
+            .in("id", sessionIds)
+        : { data: [] };
+    const sessionsById = new Map(
+      ((sessions || []) as any[]).map((session) => [session.id, session])
+    );
+    const completionsByStepId = new Map<string, any[]>();
+
+    completions.forEach((completion) => {
+      const stepCompletions = completionsByStepId.get(completion.step_id) || [];
+      stepCompletions.push(completion);
+      completionsByStepId.set(completion.step_id, stepCompletions);
+    });
+
+    const funnelsWithAnalytics = ((funnels || []) as any[]).map((funnel) => {
+      const steps = (funnel.funnel_steps || []).sort(
+        (a: any, b: any) => a.step_number - b.step_number
+      );
+      const stepsWithData = steps.map((step: any) => {
+        const stepCompletions = completionsByStepId.get(step.id) || [];
+        return {
+          ...step,
+          visitors: stepCompletions.length,
+          ...topBreakdowns(stepCompletions, sessionsById),
+        };
+      });
+      const firstStepVisitors = stepsWithData[0]?.visitors || 0;
+      const stepsWithRates = stepsWithData.map((step: any) => ({
+        ...step,
+        conversion_rate:
+          firstStepVisitors > 0 ? (step.visitors / firstStepVisitors) * 100 : 0,
+      }));
+      const completedVisitors =
+        stepsWithRates[stepsWithRates.length - 1]?.visitors || 0;
+
+      return {
+        ...funnel,
+        steps: stepsWithRates,
+        total_visitors: firstStepVisitors,
+        conversion_rate:
+          firstStepVisitors > 0
+            ? (completedVisitors / firstStepVisitors) * 100
+            : 0,
+      };
+    });
 
     return NextResponse.json(funnelsWithAnalytics);
   } catch (error) {
@@ -275,7 +275,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Create funnel steps
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const stepsToInsert = steps.map((step: any, index: number) => ({
       funnel_id: funnel.id,
       step_number: index + 1,
@@ -388,7 +387,6 @@ export async function PUT(request: NextRequest) {
     }
 
     // Insert new steps
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const stepsToInsert = steps.map((step: any, index: number) => ({
       funnel_id: funnelId,
       step_number: index + 1,

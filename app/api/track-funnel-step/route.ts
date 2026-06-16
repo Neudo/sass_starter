@@ -1,242 +1,216 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { emptyCorsResponse, jsonCorsResponse, readJsonBody } from "@/lib/api/http";
+import { sameRegistrableHost } from "@/lib/api/sites";
+
+interface TrackFunnelStepPayload {
+  step_id?: string;
+  session_id?: string;
+  site_domain?: string;
+}
+
+interface FunnelStepRecord {
+  id: string;
+  funnel_id: string;
+  step_number: number;
+  name: string;
+  funnels: {
+    site_id: string;
+    sites: {
+      domain: string;
+    };
+  };
+}
+
+interface PreviousFunnelStep {
+  id: string;
+  step_number: number;
+}
+
+interface PreviousStepCompletion {
+  step_id: string;
+}
 
 export async function POST(request: NextRequest) {
-  try {
-    const adminClient = createAdminClient();
-    const body = await request.json();
-    const { step_id, session_id, site_domain } = body;
+  const origin = request.headers.get("origin");
+  const { data: body, error } =
+    await readJsonBody<TrackFunnelStepPayload>(request);
 
-    if (!step_id || !session_id || !site_domain) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        {
-          status: 400,
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
-          },
-        }
-      );
-    }
+  if (error || !body) {
+    return jsonCorsResponse({ error: "Invalid payload" }, { status: 400 }, origin);
+  }
 
-    // Verify the step exists and get site info
-    const { data: stepData, error: stepError } = await adminClient
-      .from("funnel_steps")
-      .select(
-        `
-        id,
-        funnel_id,
-        step_number,
-        name,
-        funnels!inner (
-          site_id,
-          sites!inner (
-            domain
-          )
-        )
+  const { step_id, session_id, site_domain } = body;
+
+  if (!step_id || !session_id || !site_domain) {
+    return jsonCorsResponse({ error: "Missing required fields" }, { status: 400 }, origin);
+  }
+
+  const adminClient = createAdminClient();
+  const { data: stepData, error: stepError } = await adminClient
+    .from("funnel_steps")
+    .select(
       `
+      id,
+      funnel_id,
+      step_number,
+      name,
+      funnels!inner (
+        site_id,
+        sites!inner (
+          domain
+        )
       )
-      .eq("id", step_id)
-      .single();
+    `
+    )
+    .eq("id", step_id)
+    .maybeSingle();
 
-    if (stepError || !stepData) {
-      return NextResponse.json(
-        { error: "Funnel step not found" },
-        {
-          status: 404,
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
-          },
-        }
+  const step = stepData as unknown as FunnelStepRecord | null;
+
+  if (stepError || !step) {
+    return jsonCorsResponse({ error: "Funnel step not found" }, { status: 404 }, origin);
+  }
+
+  if (!sameRegistrableHost(step.funnels.sites.domain, site_domain)) {
+    return jsonCorsResponse(
+      { error: "Funnel step does not belong to this domain" },
+      { status: 403 },
+      origin
+    );
+  }
+
+  const { data: existingCompletion, error: checkError } = await adminClient
+    .from("funnel_step_completions")
+    .select("id")
+    .eq("step_id", step_id)
+    .eq("session_id", session_id)
+    .maybeSingle();
+
+  if (checkError) {
+    return jsonCorsResponse(
+      { error: "Failed to check existing completion" },
+      { status: 500 },
+      origin
+    );
+  }
+
+  if (existingCompletion) {
+    return jsonCorsResponse(
+      {
+        success: true,
+        step_name: step.name,
+        step_number: step.step_number,
+        already_completed: true,
+      },
+      {},
+      origin
+    );
+  }
+
+  if (step.step_number > 1) {
+    const { data: previousSteps, error: previousStepsError } = await adminClient
+      .from("funnel_steps")
+      .select("id, step_number")
+      .eq("funnel_id", step.funnel_id)
+      .lt("step_number", step.step_number);
+
+    if (previousStepsError) {
+      return jsonCorsResponse(
+        { error: "Failed to validate step sequence" },
+        { status: 500 },
+        origin
       );
     }
 
-    // Type assertion to fix TypeScript inference
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const typedStepData = stepData as any;
+    const typedPreviousSteps =
+      (previousSteps as PreviousFunnelStep[] | null) || [];
+    const previousStepIds = typedPreviousSteps.map(
+      (previousStep) => previousStep.id
+    );
 
-    // Check if this session has already completed this step
+    if (previousStepIds.length > 0) {
+      const { data: previousCompletions, error: previousCompletionsError } =
+        await adminClient
+          .from("funnel_step_completions")
+          .select("step_id")
+          .eq("session_id", session_id)
+          .in("step_id", previousStepIds);
 
-    const { data: existingCompletion, error: checkError } = await adminClient
-      .from("funnel_step_completions")
-      .select("id")
-      .eq("step_id", step_id)
-      .eq("session_id", session_id)
-      .single();
-
-    if (checkError && checkError.code !== "PGRST116") {
-      return NextResponse.json(
-        { error: "Failed to check existing completion" },
-        {
-          status: 500,
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
-          },
-        }
-      );
-    }
-
-    // If already completed, return success without duplicating
-    if (existingCompletion) {
-      return NextResponse.json(
-        {
-          success: true,
-          step_name: typedStepData.name,
-          step_number: typedStepData.step_number,
-          already_completed: true,
-        },
-        {
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
-          },
-        }
-      );
-    }
-
-    // Check if all previous steps have been completed by this session (sequential validation)
-    if (typedStepData.step_number > 1) {
-      // Get all steps for this funnel ordered by step_number
-      const { data: allSteps, error: allStepsError } = await adminClient
-        .from("funnel_steps")
-        .select("id, step_number")
-        .eq("funnel_id", typedStepData.funnel_id)
-        .order("step_number", { ascending: true });
-
-      if (allStepsError) {
-        return NextResponse.json(
-          { error: "Failed to validate step sequence" },
-          {
-            status: 500,
-            headers: {
-              "Access-Control-Allow-Origin": "*",
-              "Access-Control-Allow-Methods": "POST, OPTIONS",
-              "Access-Control-Allow-Headers": "Content-Type",
-            },
-          }
+      if (previousCompletionsError) {
+        return jsonCorsResponse(
+          { error: "Failed to validate previous steps" },
+          { status: 500 },
+          origin
         );
       }
 
-      // Check that all previous steps have been completed by this session
-      const previousSteps =
-        allSteps?.filter((s) => s.step_number < typedStepData.step_number) ||
-        [];
+      const completedStepIds = new Set(
+        ((previousCompletions as PreviousStepCompletion[] | null) || []).map(
+          (completion) => completion.step_id
+        )
+      );
+      const missingStep = typedPreviousSteps.find(
+        (previousStep) => !completedStepIds.has(previousStep.id)
+      );
 
-      for (const prevStep of previousSteps) {
-        const { data: prevCompletion, error: prevError } = await adminClient
-          .from("funnel_step_completions")
-          .select("id")
-          .eq("step_id", prevStep.id)
-          .eq("session_id", session_id)
-          .single();
-
-        if (prevError && prevError.code !== "PGRST116") {
-          return NextResponse.json(
-            { error: "Failed to validate previous steps" },
-            {
-              status: 500,
-              headers: {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "POST, OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type",
-              },
-            }
-          );
-        }
-
-        // If any previous step is not completed, reject this step completion
-        if (!prevCompletion) {
-          return NextResponse.json(
-            {
-              success: false,
-              error: "Previous step not completed",
-              step_name: typedStepData.name,
-              step_number: typedStepData.step_number,
-              required_previous_step: prevStep.step_number,
-            },
-            {
-              headers: {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "POST, OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type",
-              },
-            }
-          );
-        }
+      if (missingStep) {
+        return jsonCorsResponse(
+          {
+            success: false,
+            error: "Previous step not completed",
+            step_name: step.name,
+            step_number: step.step_number,
+            required_previous_step: missingStep.step_number,
+          },
+          {},
+          origin
+        );
       }
     }
+  }
 
-    // Record the completion (this will prevent future duplicates)
-    const { error: insertCompletionError } = await adminClient
-      .from("funnel_step_completions")
-      .insert({
-        step_id,
-        session_id,
-        site_domain: typedStepData.funnels.sites.domain, // Use the domain from the step's site
-        metadata: {},
-      });
+  const { error: insertCompletionError } = await adminClient
+    .from("funnel_step_completions")
+    .insert({
+      step_id,
+      session_id,
+      site_domain: step.funnels.sites.domain,
+      metadata: {},
+    });
 
-    if (insertCompletionError) {
-      return NextResponse.json(
-        { error: "Failed to record completion" },
-        {
-          status: 500,
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
-          },
-        }
-      );
-    }
-
-    // Note: Step count is calculated dynamically from funnel_step_completions table
-
-    return NextResponse.json(
+  if (insertCompletionError?.code === "23505") {
+    return jsonCorsResponse(
       {
         success: true,
-        step_name: typedStepData.name,
-        step_number: typedStepData.step_number,
+        step_name: step.name,
+        step_number: step.step_number,
+        already_completed: true,
       },
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
-        },
-      }
-    );
-  } catch (error) {
-    console.error("[Track Funnel Step] Unexpected error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      {
-        status: 500,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
-        },
-      }
+      {},
+      origin
     );
   }
+
+  if (insertCompletionError) {
+    return jsonCorsResponse(
+      { error: "Failed to record completion" },
+      { status: 500 },
+      origin
+    );
+  }
+
+  return jsonCorsResponse(
+    {
+      success: true,
+      step_name: step.name,
+      step_number: step.step_number,
+    },
+    {},
+    origin
+  );
 }
 
-// Handle OPTIONS for CORS
-export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    },
-  });
+export async function OPTIONS(request: NextRequest) {
+  return emptyCorsResponse(200, request.headers.get("origin"));
 }

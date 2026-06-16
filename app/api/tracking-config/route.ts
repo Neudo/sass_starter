@@ -1,56 +1,46 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { emptyCorsResponse, jsonCorsResponse } from "@/lib/api/http";
+import { getSiteByDomain } from "@/lib/api/sites";
+
+const CACHE_HEADERS = {
+  "Cache-Control": "public, max-age=300, stale-while-revalidate=300",
+};
 
 export async function GET(req: NextRequest) {
+  const origin = req.headers.get("origin");
+  const siteDomain = req.nextUrl.searchParams.get("siteId");
+
+  if (!siteDomain) {
+    return jsonCorsResponse({ error: "Missing siteId" }, { status: 400 }, origin);
+  }
+
   try {
-    const { searchParams } = new URL(req.url);
-    const siteDomain = searchParams.get("siteId"); // This is actually the domai
-
-    if (!siteDomain) {
-      return NextResponse.json({ error: "Missing siteId" }, { status: 400 });
-    }
-
-    const supabase = createAdminClient();
-
-    // Normalize domain - handle both with and without www
-    const domainVariants = [siteDomain];
-    if (siteDomain.startsWith("www.")) {
-      domainVariants.push(siteDomain.substring(4));
-    } else {
-      domainVariants.push(`www.${siteDomain}`);
-    }
-
-    // First, get the site_id from the domain
-    const { data: site } = await supabase
-      .from("sites")
-      .select("id")
-      .in("domain", domainVariants)
-      .single();
+    const site = await getSiteByDomain(siteDomain);
 
     if (!site) {
-      return NextResponse.json(
-        {
-          funnelSteps: [],
-          customEvents: [],
-        },
-        {
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
-            "Cache-Control": "public, max-age=300",
-          },
-        }
+      return jsonCorsResponse(
+        { funnelSteps: [], customEvents: [] },
+        { headers: CACHE_HEADERS },
+        origin
       );
     }
 
-    // Get both funnel steps and custom events in parallel
+    const supabase = createAdminClient();
     const [funnelStepsResult, customEventsResult] = await Promise.all([
       supabase
         .from("funnel_steps")
         .select(
           `
-          *,
+          id,
+          funnel_id,
+          step_number,
+          name,
+          step_type,
+          event_type,
+          event_config,
+          url_pattern,
+          match_type,
           funnels!inner (
             is_active,
             site_id
@@ -61,48 +51,37 @@ export async function GET(req: NextRequest) {
         .eq("funnels.is_active", true),
       supabase
         .from("custom_events")
-        .select("*")
+        .select("id, name, event_type, event_selector, trigger_config, is_active")
         .eq("site_id", site.id)
         .eq("is_active", true),
     ]);
 
-    return NextResponse.json(
+    if (funnelStepsResult.error || customEventsResult.error) {
+      console.error("Tracking config query failed", {
+        funnelSteps: funnelStepsResult.error,
+        customEvents: customEventsResult.error,
+      });
+      return jsonCorsResponse(
+        { error: "Failed to fetch tracking config" },
+        { status: 500 },
+        origin
+      );
+    }
+
+    return jsonCorsResponse(
       {
         funnelSteps: funnelStepsResult.data || [],
         customEvents: customEventsResult.data || [],
       },
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
-          "Cache-Control": "public, max-age=300", // Cache 5 minutes
-        },
-      }
+      { headers: CACHE_HEADERS },
+      origin
     );
   } catch (error) {
     console.error("Error fetching tracking config:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      {
-        status: 500,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
-        },
-      }
-    );
+    return jsonCorsResponse({ error: "Internal server error" }, { status: 500 }, origin);
   }
 }
 
-export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    },
-  });
+export async function OPTIONS(req: NextRequest) {
+  return emptyCorsResponse(200, req.headers.get("origin"));
 }

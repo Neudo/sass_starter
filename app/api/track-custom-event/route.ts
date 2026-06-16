@@ -1,230 +1,147 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { emptyCorsResponse, jsonCorsResponse, readJsonBody } from "@/lib/api/http";
+import { getSiteByDomain } from "@/lib/api/sites";
 
-export async function POST(request: NextRequest) {
-  try {
-    const adminClient = createAdminClient();
-
-    // Get request data
-    const body = await request.json();
-    const { site_domain, event_name, session_id, page_url, metadata } = body;
-
-    if (!site_domain || !event_name || !session_id || !page_url) {
-      return NextResponse.json(
-        {
-          error:
-            "site_domain, event_name, session_id, and page_url are required",
-        },
-        {
-          status: 400,
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
-          },
-        }
-      );
-    }
-
-    // Normalize domain - handle both with and without www
-    const domainVariants = [site_domain];
-    if (site_domain.startsWith("www.")) {
-      domainVariants.push(site_domain.substring(4));
-    } else {
-      domainVariants.push(`www.${site_domain}`);
-    }
-
-    // Find the site by domain
-    const { data: sites, error: siteError } = await adminClient
-      .from("sites")
-      .select("id")
-      .in("domain", domainVariants);
-
-    const siteData = sites && sites.length > 0 ? sites[0] : null;
-
-    if (siteError || !siteData) {
-      return NextResponse.json(
-        { error: "Site not found" },
-        {
-          status: 404,
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
-          },
-        }
-      );
-    }
-
-    // Find the custom event by name and site
-    const { data: customEventData, error: eventError } = await adminClient
-      .from("custom_events")
-      .select("id, is_active")
-      .eq("site_id", siteData.id)
-      .eq("name", event_name)
-      .eq("is_active", true)
-      .single();
-
-    if (eventError || !customEventData) {
-      return NextResponse.json(
-        { error: "Custom event not found or inactive" },
-        {
-          status: 404,
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
-          },
-        }
-      );
-    }
-
-    // Check if this session has already completed this custom event
-    const { data: existingCompletion, error: checkError } = await adminClient
-      .from("custom_event_completions")
-      .select("id")
-      .eq("custom_event_id", customEventData.id)
-      .eq("session_id", session_id)
-      .single();
-
-    if (checkError && checkError.code !== "PGRST116") {
-      console.error(
-        "Error checking existing custom event completion:",
-        checkError
-      );
-      return NextResponse.json(
-        { error: "Failed to check existing completion" },
-        {
-          status: 500,
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
-          },
-        }
-      );
-    }
-
-    // If already completed, return success without duplicating
-    if (existingCompletion) {
-      return NextResponse.json(
-        {
-          success: true,
-          message: "Custom event already recorded for this session",
-          already_completed: true,
-        },
-        {
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
-          },
-        }
-      );
-    }
-
-    // Get session data for metadata (don't fail if session doesn't exist yet)
-    const { data: sessionData, error: sessionError } = await adminClient
-      .from("sessions")
-      .select("referrer_domain, country")
-      .eq("id", session_id)
-      .maybeSingle(); // Use maybeSingle instead of single to avoid errors if not found
-
-    if (sessionError) {
-      console.log("Session not found or error:", sessionError.message);
-    }
-
-    // Build metadata with session info (fallback if no session data)
-    const eventMetadata = {
-      ...metadata,
-      source: sessionData?.referrer_domain || "direct",
-      country: sessionData?.country || null,
-    };
-
-    // Insert completion record
-    const { error: insertError } = await adminClient
-      .from("custom_event_completions")
-      .insert({
-        custom_event_id: customEventData.id,
-        session_id: session_id,
-        page_url: page_url,
-        metadata: eventMetadata,
-      });
-
-    if (insertError) {
-      console.error("Error inserting custom event completion:", insertError);
-
-      // Check if it's a foreign key constraint error
-      if (insertError.code === "23503") {
-        console.error(
-          "Foreign key violation - session does not exist:",
-          session_id
-        );
-        // Don't create a fallback session - the main /api/track endpoint should handle session creation
-        // Custom events should only be tracked for existing valid sessions
-        return NextResponse.json(
-          { error: "Session not found. Please ensure the main tracking script is loaded." },
-          {
-            status: 400,
-            headers: {
-              "Access-Control-Allow-Origin": "*",
-              "Access-Control-Allow-Methods": "POST, OPTIONS",
-              "Access-Control-Allow-Headers": "Content-Type",
-            },
-          }
-        );
-      } else {
-        return NextResponse.json(
-          { error: "Failed to record completion" },
-          {
-            status: 500,
-            headers: {
-              "Access-Control-Allow-Origin": "*",
-              "Access-Control-Allow-Methods": "POST, OPTIONS",
-              "Access-Control-Allow-Headers": "Content-Type",
-            },
-          }
-        );
-      }
-    }
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Custom event recorded successfully",
-      },
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
-        },
-      }
-    );
-  } catch (error) {
-    console.error("Error in track-custom-event:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      {
-        status: 500,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
-        },
-      }
-    );
-  }
+interface TrackCustomEventPayload {
+  site_domain?: string;
+  event_name?: string;
+  session_id?: string;
+  page_url?: string;
+  metadata?: Record<string, unknown>;
 }
 
-// Handle OPTIONS for CORS
-export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
+export async function POST(request: NextRequest) {
+  const origin = request.headers.get("origin");
+  const { data: body, error } =
+    await readJsonBody<TrackCustomEventPayload>(request);
+
+  if (error || !body) {
+    return jsonCorsResponse({ error: "Invalid payload" }, { status: 400 }, origin);
+  }
+
+  const { site_domain, event_name, session_id, page_url, metadata } = body;
+
+  if (!site_domain || !event_name || !session_id || !page_url) {
+    return jsonCorsResponse(
+      { error: "site_domain, event_name, session_id, and page_url are required" },
+      { status: 400 },
+      origin
+    );
+  }
+
+  const site = await getSiteByDomain(site_domain);
+  if (!site) {
+    return jsonCorsResponse({ error: "Site not found" }, { status: 404 }, origin);
+  }
+
+  const adminClient = createAdminClient();
+  const [{ data: customEventData, error: eventError }, { data: sessionData }] =
+    await Promise.all([
+      adminClient
+        .from("custom_events")
+        .select("id, is_active")
+        .eq("site_id", site.id)
+        .eq("name", event_name)
+        .eq("is_active", true)
+        .maybeSingle(),
+      adminClient
+        .from("sessions")
+        .select("referrer_domain, country")
+        .eq("id", session_id)
+        .maybeSingle(),
+    ]);
+
+  if (eventError || !customEventData) {
+    return jsonCorsResponse(
+      { error: "Custom event not found or inactive" },
+      { status: 404 },
+      origin
+    );
+  }
+
+  const { data: existingCompletion, error: checkError } = await adminClient
+    .from("custom_event_completions")
+    .select("id")
+    .eq("custom_event_id", customEventData.id)
+    .eq("session_id", session_id)
+    .maybeSingle();
+
+  if (checkError) {
+    console.error("Error checking existing custom event completion:", checkError);
+    return jsonCorsResponse(
+      { error: "Failed to check existing completion" },
+      { status: 500 },
+      origin
+    );
+  }
+
+  if (existingCompletion) {
+    return jsonCorsResponse(
+      {
+        success: true,
+        message: "Custom event already recorded for this session",
+        already_completed: true,
+      },
+      {},
+      origin
+    );
+  }
+
+  const eventMetadata = {
+    ...(metadata || {}),
+    source: sessionData?.referrer_domain || "direct",
+    country: sessionData?.country || null,
+  };
+
+  const { error: insertError } = await adminClient
+    .from("custom_event_completions")
+    .insert({
+      custom_event_id: customEventData.id,
+      session_id,
+      page_url,
+      metadata: eventMetadata,
+    });
+
+  if (insertError?.code === "23505") {
+    return jsonCorsResponse(
+      {
+        success: true,
+        message: "Custom event already recorded for this session",
+        already_completed: true,
+      },
+      {},
+      origin
+    );
+  }
+
+  if (insertError?.code === "23503") {
+    return jsonCorsResponse(
+      { error: "Session not found. Please ensure the main tracking script is loaded." },
+      { status: 400 },
+      origin
+    );
+  }
+
+  if (insertError) {
+    console.error("Error inserting custom event completion:", insertError);
+    return jsonCorsResponse(
+      { error: "Failed to record completion" },
+      { status: 500 },
+      origin
+    );
+  }
+
+  return jsonCorsResponse(
+    {
+      success: true,
+      message: "Custom event recorded successfully",
     },
-  });
+    {},
+    origin
+  );
+}
+
+export async function OPTIONS(request: NextRequest) {
+  return emptyCorsResponse(200, request.headers.get("origin"));
 }

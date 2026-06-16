@@ -18,6 +18,7 @@ interface AnalyticsMetricsProps {
   siteId: string;
   dateRange?: { from: Date; to: Date } | null;
   dateRangeOption?: DateRangeOption;
+  isPublic?: boolean;
 }
 
 interface Metrics {
@@ -39,6 +40,7 @@ interface Metrics {
 export function AnalyticsMetrics({
   siteId,
   dateRangeOption = "today",
+  isPublic = false,
 }: AnalyticsMetricsProps) {
   const { getAnalyticsData, loading, setSelectedMetric, selectedMetric } =
     useAnalyticsStore();
@@ -229,6 +231,7 @@ export function AnalyticsMetrics({
         siteId={siteId}
         dateRange={dateRangeOption}
         selectedMetrics={selectedMetric ? [selectedMetric] : []}
+        isPublic={isPublic}
       />
     </div>
   );

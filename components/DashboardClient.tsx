@@ -131,7 +131,11 @@ export function DashboardClient({
 
       {/* <TabsContent value="overview" className="space-y-6 px-0"> */}
       <ActiveFilters />
-      <AnalyticsMetrics siteId={siteId} dateRangeOption={selectedDateRange} />
+      <AnalyticsMetrics
+        siteId={siteId}
+        dateRangeOption={selectedDateRange}
+        isPublic={isPublic}
+      />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2">
           <WorldMapCard />
