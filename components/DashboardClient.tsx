@@ -46,7 +46,8 @@ export function DashboardClient({
   const [timezoneLoaded, setTimezoneLoaded] = useState(false);
   const supabase = createClient();
 
-  const { fetchAllData, loading } = useAnalyticsStore();
+  const { fetchAllData, loading, filters: analyticsFilters } =
+    useAnalyticsStore();
 
   // Calculate dateRange based on selectedDateRange and timezone
   const calculatedDateRange =
@@ -81,14 +82,22 @@ export function DashboardClient({
   // Only fetch after both filters and timezone are loaded
   useEffect(() => {
     if (isLoaded && timezoneLoaded) {
-      fetchAllData(siteId, selectedDateRange, siteTimezone);
+      fetchAllData(siteId, selectedDateRange, siteTimezone, isPublic);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [siteId, selectedDateRange, siteTimezone, isLoaded, timezoneLoaded]);
+  }, [
+    siteId,
+    selectedDateRange,
+    siteTimezone,
+    isLoaded,
+    timezoneLoaded,
+    analyticsFilters,
+    isPublic,
+  ]);
 
   // Handle manual refresh
   const handleRefresh = async () => {
-    await fetchAllData(siteId, selectedDateRange, siteTimezone);
+    await fetchAllData(siteId, selectedDateRange, siteTimezone, isPublic);
   };
 
   return (

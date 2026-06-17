@@ -18,6 +18,7 @@ import { SkeletonCard } from "./SkeletonCard";
 interface SourceData {
   name: string;
   rawValue?: string; // The actual DB value for filtering
+  filterType?: "channel" | "referrer_domain" | "utm_source";
   count: number;
   percentage: number;
 }
@@ -122,6 +123,7 @@ export function SourcesCard() {
       .map((item) => ({
         name: item.name,
         rawValue: item.rawValue,
+        filterType: item.filterType,
         count: item.count,
         percentage: item.percentage,
       }));
@@ -146,6 +148,7 @@ export function SourcesCard() {
       (item) => ({
         name: item.name,
         rawValue: item.rawValue,
+        filterType: item.filterType,
         count: item.count,
         percentage: item.percentage,
       })
@@ -215,7 +218,9 @@ export function SourcesCard() {
           const icon = showIcons ? getSourceIcon(item.name) : null;
           // Use rawValue for filtering if available, otherwise use name
           const filterValue = item.rawValue || item.name;
-          const isActive = clickType && hasFilter(clickType, filterValue);
+          const effectiveClickType = item.filterType || clickType;
+          const isActive =
+            effectiveClickType && hasFilter(effectiveClickType, filterValue);
 
           return (
             <div key={index} className="space-y-1">
@@ -226,7 +231,8 @@ export function SourcesCard() {
                     : ""
                 } ${isActive ? "ring-2 ring-primary" : ""}`}
                 onClick={() =>
-                  clickType && handleItemClick(clickType, filterValue)
+                  effectiveClickType &&
+                  handleItemClick(effectiveClickType, filterValue)
                 }
               >
                 <div

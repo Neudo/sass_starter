@@ -90,6 +90,7 @@ export interface AnalyticsData {
     sources: Array<{
       name: string;
       rawValue?: string;
+      filterType?: "channel" | "referrer_domain" | "utm_source";
       count: number;
       percentage: number;
     }>;
@@ -167,7 +168,8 @@ interface AnalyticsStore {
   fetchAllData: (
     siteId: string,
     dateRangeOption: DateRangeOption,
-    timezone: string
+    timezone: string,
+    isPublic?: boolean
   ) => Promise<void>;
   addFilter: (filter: Filter) => void;
   removeFilter: (type: FilterType, value: string) => void;
@@ -800,7 +802,8 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
   fetchAllData: async (
     siteId: string,
     dateRangeOption: DateRangeOption,
-    timezone: string
+    timezone: string,
+    isPublic = false
   ) => {
     const dateRange = getDateRange(dateRangeOption, timezone);
     set({
@@ -813,6 +816,65 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
     });
 
     try {
+      const { filters, selectedMetric } = get();
+      const canUseServerAggregates = filters.every((filter) =>
+        Boolean(filter.type && filter.value)
+      );
+
+      if (canUseServerAggregates) {
+        const previousRange = getPreviousDateRange(
+          dateRangeOption as DateRangeOption,
+          timezone
+        );
+        const params = new URLSearchParams({ siteId });
+
+        if (dateRange) {
+          params.set("from", dateRange.from.toISOString());
+          params.set("to", dateRange.to.toISOString());
+        }
+
+        if (previousRange && dateRangeOption !== "realtime") {
+          params.set("previousFrom", previousRange.from.toISOString());
+          params.set("previousTo", previousRange.to.toISOString());
+        }
+
+        if (isPublic) {
+          params.set("public", "true");
+        }
+
+        if (filters.length > 0) {
+          params.set(
+            "filters",
+            JSON.stringify(
+              filters.map((filter) => ({
+                type: filter.type,
+                value: filter.value,
+              }))
+            )
+          );
+        }
+
+        const response = await fetch(
+          `/api/analytics/dashboard?${params.toString()}`
+        );
+
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
+
+        const analyticsData = (await response.json()) as AnalyticsData;
+        const currentFiltersHash = JSON.stringify({ filters, selectedMetric });
+
+        set({
+          allSessions: [],
+          previousSessions: [],
+          loading: false,
+          cachedAnalyticsData: analyticsData,
+          lastFiltersHash: currentFiltersHash,
+        });
+        return;
+      }
+
       const supabase = createClient();
       const isRealtimeMode = dateRangeOption === "realtime";
 

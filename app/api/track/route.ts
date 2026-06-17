@@ -6,6 +6,7 @@ import { parseTrafficSource } from "@/lib/analytics/sources";
 import { shouldBlockRequest } from "@/lib/analytics/bot-detector";
 import { emptyCorsResponse, jsonCorsResponse, readJsonBody } from "@/lib/api/http";
 import { getSiteByDomain, normalizeDomain, sameRegistrableHost } from "@/lib/api/sites";
+import { getChannel } from "@/lib/referrer-helper";
 
 interface TrackPayload {
   sessionId?: string;
@@ -128,6 +129,11 @@ export async function POST(req: NextRequest) {
     serializeUrlParams(urlParams),
     externalReferrer(referrer, domain)
   );
+  const channel = getChannel(
+    trafficSource.utmParams.utm_medium,
+    trafficSource.utmParams.utm_source,
+    trafficSource.referrerDomain
+  );
   const supabase = createAdminClient();
   const currentTime = new Date().toISOString();
 
@@ -159,6 +165,7 @@ export async function POST(req: NextRequest) {
           utm_campaign: trafficSource.utmParams.utm_campaign,
           utm_term: trafficSource.utmParams.utm_term,
           utm_content: trafficSource.utmParams.utm_content,
+          channel,
           created_at: currentTime,
         }
       : {}),
